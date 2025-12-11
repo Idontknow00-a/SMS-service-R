@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Service + Gerador de Dados</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%);
+            min-height: 100vh; 
+            padding: 10px; 
+        }
+        
+        .main-container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .section {
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
+            overflow: hidden; 
+        }
+        
+        /* SMS Section */
+        .sms-section .boxes { 
+            display: flex; 
+            height: 85px;
+        }
+        
+        .sms-section .box { 
+            flex: 1; 
+            padding: 12px;
+            display: flex; 
+            flex-direction: column; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            border-bottom: 3px solid transparent; 
+            position: relative; 
+            min-width: 45%; 
+        }
+        
+        .sms-section .box:first-child { 
+            border-right: 1px solid #e2e8f0; 
+        }
+        
+        .sms-section .box:hover { 
+            background: #f8fafc; 
+        }
+        
+        .sms-section .box.active { 
+            border-bottom-color: #10b981; 
+            background: #f0fdf4; 
+        }
+        
+        .sms-section .box.cancelled { 
+            border-bottom-color: #ef4444; 
+            background: #fef2f2; 
+        }
+        
+        .sms-section .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .sms-section .label { 
+            font-size: 0.7rem;
+            color: #64748b; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+            font-weight: 600; 
+            white-space: nowrap; 
+        }
+        
+        .sms-section .price {
+            font-size: 0.65rem;
+            color: #10b981;
+            font-weight: 600;
+            background: #f0fdf4;
+            padding: 1px 5px;
+            border-radius: 8px;
+            border: 1px solid #d1fae5;
+        }
+        
+        .sms-section .value { 
+            font-size: 1.15rem;
+            font-weight: 700; 
+            color: #1e293b; 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            word-break: break-all; 
+            padding: 0 3px; 
+            min-height: 25px;
+        }
+        
+        .sms-section .value.empty { 
+            color: #94a3b8; 
+            font-size: 0.85rem;
+            font-weight: 500; 
+        }
+        
+        .sms-section .counter {
+            font-size: 0.7rem;
+            color: #475569;
+            font-weight: 600;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 8px;
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+        }
+        
+        .sms-section .copy-indicator { 
+            position: absolute; 
+            top: 8px;
+            right: 8px;
+            background: #10b981; 
+            color: white; 
+            padding: 2px 5px; 
+            border-radius: 8px; 
+            font-size: 0.6rem;
+            opacity: 0; 
+            transition: opacity 0.2s; 
+            z-index: 2;
+        }
+        
+        .sms-section .copy-indicator.show { 
+            opacity: 1; 
+        }
+        
+        .sms-section .status { 
+            font-size: 0.65rem;
+            color: #64748b; 
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+            margin-top: 3px;
+        }
+        
+        .sms-section .dot { 
+            width: 5px;
+            height: 5px;
+            border-radius: 50%; 
+            background: #f59e0b; 
+            animation: pulse 1.5s infinite; 
+        }
+        
+        .sms-section .dot.received { 
+            background: #10b981; 
+            animation: none; 
+        }
+        
+        .sms-section .dot.cancelled { 
+            background: #ef4444; 
+            animation: none; 
+        }
+        
+        /* Data Generator Section */
+        .data-section {
+            padding: 15px;
+        }
+        
+        .gender-btn.male { 
+            background: #e0f2fe; 
+            color: #0369a1; 
+        }
+        
+        .gender-btn.male.active { 
+            background: #0369a1; 
+            color: white; 
+        }
+        
+        .gender-btn.female { 
+            background: #fce7f3; 
+            color: #db2777; 
+        }
+        
+        .gender-btn.female.active { 
+            background: #db2777; 
+            color: white; 
+        }
+        
+        .action-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.action-btn, .gender-btn {
+    flex: 1;
+    padding: 6px 2px; /* Versão mais compacta */
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.gender-btn {
+    padding: 6px 2px;
+    font-size: 0.9rem; /* Emoji um pouco maior */
+}
+
+/* Versão mais compacta */
+.action-btn.copy-sms { 
+    background: #f1f5f9; 
+    color: #64748b; 
+    flex: 0 0 auto;
+    width: 32px; /* Menor ainda */
+    min-width: 32px;
+    height: 32px; /* Altura fixa igual à largura */
+    padding: 0;
+    border-radius: 6px;
+    font-size: 1.2rem; /* Emoji maior */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn.copy-sms:hover {
+    background: #e2e8f0;
+}
+
+/* Ajuste os outros botões para mesma altura */
+.action-btn:not(.copy-sms), .gender-btn {
+    height: 32px; /* Mesma altura do botão de copiar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn.generate { 
+    background: #64748b; 
+    color: white; 
+}
+
+.action-btn.generate:hover {
+    background: #475569;
+}
+
+.gender-btn.male { 
+    background: #e0f2fe; 
+    color: #0369a1; 
+}
+
+.gender-btn.male.active { 
+    background: #0369a1; 
+    color: white; 
+}
+
+.gender-btn.male:hover:not(.active) {
+    background: #bae6fd;
+}
+
+.gender-btn.female { 
+    background: #fce7f3; 
+    color: #db2777; 
+}
+
+.gender-btn.female.active { 
+    background: #db2777; 
+    color: white; 
+}
+
+.gender-btn.female:hover:not(.active) {
+    background: #fbcfe8;
+}
+        
+        .data-field {
+    margin-bottom: 8px;
+    border: 1px solid #e2e8f0; /* borda igual ao botão limpar */
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f8fafc; /* fundo ROXO da sessão GIFTS */
+}
+
+.data-field:hover {
+    border-color: #e2e8f0; /* igual ao hover do limpar */
+    background: #f1f5f9; /* roxo levemente mais forte */
+}
+
+.data-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    font-size: 0.9rem;
+    background: transparent; /* usa o fundo roxo */
+    color: #64748b; /* texto igual ao botão limpar */
+    cursor: pointer;
+}
+
+.data-input:focus {
+    outline: none;
+    background: #ffffffaa; /* leve destaque no foco */
+}
+
+        /* Gift Section */
+        .gift-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        
+        .gift-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            background: white;
+        }
+        
+        .gift-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+        }
+        
+        .gift-list {
+            max-height: 60px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .gift-item {
+            padding: 6px 8px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 0.8rem;
+            color: #64748b;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .gift-item:hover {
+            background: #cbd5e1;
+        }
+        
+        .gift-item:last-child {
+            border-bottom: none;
+        }
+        
+        .gift-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        .gift-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .gift-footer-btn {
+            background: #cbd5e1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .gift-count {
+            font-weight: 700;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        /* Settings Section */
+        .settings-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 5px;
+        }
+        
+        .settings-section h3 {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .settings-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .settings-btn {
+            padding: 8px 12px;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 10px;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .notification { 
+            position: fixed; 
+            top: 15px; 
+            right: 15px; 
+            background: #10b981;
+            color: white; 
+            padding: 8px 14px;
+            border-radius: 6px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            opacity: 0; 
+            transform: translateX(100%); 
+            transition: all 0.2s; 
+            font-size: 0.8rem;
+            max-width: 280px; 
+            z-index: 1000; 
+        }
+        
+        .notification.show { 
+            opacity: 1; 
+            transform: translateX(0); 
+        }
+        
+        .notification.error { 
+            background: #ef4444; 
+        }
+        
+        .notification.warning { 
+            background: #f59e0b; 
+        }
+        
+        @keyframes pulse { 
+            0%, 100% { opacity: 1; } 
+            50% { opacity: 0.5; } 
+        }
+        
+        @media (max-width: 350px) {
+            .sms-section .boxes { 
+                height: 90px; 
+            }
+            
+            .sms-section .box { 
+                padding: 10px; 
+            }
+            
+            .sms-section .value { 
+                font-size: 1.1rem; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- SMS Section -->
+        <div class="section sms-section">
+            <div class="boxes">
+                <div class="box" id="numberBox" onclick="getNumber()" title="Clique para obter número">
+                    <div class="copy-indicator" id="numberCopy">✓</div>
+                    <div class="box-header">
+                        <div class="label">Número</div>
+                        <div class="price" id="numberPrice"></div>
+                    </div>
+                    <div class="value empty" id="numberValue">Obter</div>
+                    <div class="counter" id="attempts">0</div>
+                    <div class="status">
+                        <div class="dot"></div>
+                        <span id="numberStatus">Pronto</span>
+                    </div>
+                </div>
+                
+                <div class="box" id="codeBox" onclick="getCode()" title="Clique para receber código">
+                    <div class="copy-indicator" id="codeCopy">✓</div>
+                    <div class="label">Código</div>
+                    <div class="value empty" id="codeValue">Receber</div>
+                    <div class="counter" id="successes">0</div>
+                    <div class="status">
+                        <div class="dot"></div>
+                        <span id="codeStatus">Aguardando</span>
+                    </div>
+                </div>
+            </div>
+<!-- Data Generator Section -->  
+<div class="section data-section">  
+    <div class="action-buttons">  
+        <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>  
+        <button class="gender-btn male active" onclick="setGender('male')" id="maleBtn">MAS</button>  
+        <button class="gender-btn female" onclick="setGender('female')" id="femaleBtn">FEM</button>  
+        <button class="action-btn generate" onclick="generateData()">GERAR</button>  
+    </div>
+            
+            <div class="data-field" onclick="copyDataField('firstName')">
+                <input type="text" class="data-input" id="firstName" readonly placeholder="Nome">
+            </div>
+            
+            <div class="data-field" onclick="copyDataField('lastName')">
+                <input type="text" class="data-input" id="lastName" readonly placeholder="Sobrenome">
+            </div>
+            
+            <div class="data-field" onclick="copyDataField('cpf')">
+                <input type="text" class="data-input" id="cpf" readonly placeholder="CPF">
+            </div>
+            
+            <div class="data-field" onclick="copyDataField('email')">
+                <input type="text" class="data-input" id="email" readonly placeholder="Email">
+            </div>
+            
+            <div class="data-field" onclick="copyDataField('birthdate')">
+                <input type="text" class="data-input" id="birthdate" readonly placeholder="Data Nascimento">
+            </div>
+            
+            <!-- Gift Section -->
+            <div class="gift-section">
+                <input type="text" class="gift-input" id="giftInput" 
+                       placeholder="Cole o código do gift aqui (auto-salva)"
+                       oninput="handleGiftInput(event)">
+                <div class="gift-list" id="giftList">
+                    <!-- Gift items will appear here -->
+                </div>
+                
+                <div class="gift-footer">
+                    <button class="gift-footer-btn" onclick="clearAllGifts()" title="Limpar todos os gifts">🗑️</button>
+                    <div class="gift-count" id="giftCount">0</div>
+                    <button class="gift-footer-btn" onclick="copyAllGifts()" title="Copiar todos os gifts">📋</button>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div class="settings-section">
+                <h3>Configurações</h3>
+                <div class="settings-row">
+                    <input type="number" class="settings-input" id="aliasNumber" placeholder="Número do alias">
+                    <button class="settings-btn" onclick="setAliasNumber()">Definir</button>
+                </div>
+                <div class="settings-row">
+                    <input type="email" class="settings-input" id="baseEmail" placeholder="seuemail@gmail.com">
+                    <button class="settings-btn" onclick="setBaseEmail()">Definir</button>
+                </div>
+                <button class="reset-btn" onclick="resetAlias()">Resetar Alias</button>
+                <button class="reset-btn" onclick="resetSMSStats()" style="margin-top: 8px; background: #64748b;">Resetar Tentativas BOT-SMS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // ================= SMS FUNCTIONS =================
+        let smsState = {
+    id: localStorage.getItem('sms_id') || '',
+    number: localStorage.getItem('sms_number') || '',
+    price: localStorage.getItem('sms_price') || '',
+    code: localStorage.getItem('sms_code') || '',
+    attempts: parseInt(localStorage.getItem('sms_attempts') || '0'),
+    successes: parseInt(localStorage.getItem('sms_successes') || '0'),
+    loading: false,
+    firstStatusCheck: localStorage.getItem('sms_first_check') === 'true' || false,
+    hasReceivedCode: localStorage.getItem('sms_hasReceivedCode') === 'true' || false, // NOVA FLAG
+    autoCheckInterval: null
+};
+
+        function loadSmsState() {
+    if (smsState.number) {
+        document.getElementById('numberValue').textContent = smsState.number;
+        document.getElementById('numberBox').classList.remove('empty');
+        document.getElementById('numberPrice').textContent = smsState.price ? `$${smsState.price}` : '';
+        if (smsState.price) document.getElementById('numberBox').classList.add('active');
+    }
+    
+    if (smsState.code) {
+        document.getElementById('codeValue').textContent = smsState.code;
+        document.getElementById('codeBox').classList.remove('empty');
+        document.getElementById('codeBox').classList.add('active');
+        document.getElementById('codeStatus').textContent = 'Recebido ✓';
+        document.querySelector('#codeBox .dot').classList.add('received');
+        // Marca que já recebeu código
+        smsState.hasReceivedCode = true;
+    }
+    
+    document.getElementById('attempts').textContent = smsState.attempts;
+    document.getElementById('successes').textContent = smsState.successes;
+    
+    // Carrega a flag do localStorage
+    smsState.hasReceivedCode = localStorage.getItem('sms_hasReceivedCode') === 'true' || false;
+    
+    if (smsState.id) {
+        startAutoCodeCheck();
+    }
+}
+
+        function saveSmsState() {
+    localStorage.setItem('sms_id', smsState.id);
+    localStorage.setItem('sms_number', smsState.number);
+    localStorage.setItem('sms_price', smsState.price);
+    localStorage.setItem('sms_code', smsState.code);
+    localStorage.setItem('sms_attempts', smsState.attempts.toString());
+    localStorage.setItem('sms_successes', smsState.successes.toString());
+    localStorage.setItem('sms_first_check', smsState.firstStatusCheck.toString());
+    localStorage.setItem('sms_hasReceivedCode', smsState.hasReceivedCode.toString());
+}
+
+        function notify(msg, type = 'info') {
+            const notif = document.getElementById('notification');
+            notif.textContent = msg;
+            notif.className = `notification ${type} show`;
+            setTimeout(() => notif.classList.remove('show'), 1800);
+        }
+
+        async function copy(text, type) {
+            try {
+                const cleanText = text.replace(/\$\d+\.\d{4}\s*/, '').trim();
+                await navigator.clipboard.writeText(cleanText);
+                
+                const indicator = document.getElementById(type + 'Copy');
+                if (indicator) {
+                    indicator.classList.add('show');
+                    setTimeout(() => indicator.classList.remove('show'), 800);
+                }
+                
+                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`);
+                return true;
+            } catch {
+                const el = document.createElement('textarea');
+                const cleanText = text.replace(/\$\d+\.\d{4}\s*/, '').trim();
+                el.value = cleanText;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`);
+                return true;
+            }
+        }
+
+        async function cancelCurrentNumber() {
+            if (!smsState.id) return false;
+            
+            try {
+                const response = await fetch(`/cancel_number/${smsState.id}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('numberBox').classList.remove('active');
+                    document.getElementById('numberBox').classList.add('cancelled');
+                    document.getElementById('numberStatus').textContent = 'Cancelado';
+                    document.querySelector('#numberBox .dot').classList.add('cancelled');
+                    
+                    document.getElementById('codeValue').textContent = 'Nenhum';
+                    document.getElementById('codeBox').classList.remove('active');
+                    document.getElementById('codeStatus').textContent = 'Cancelado';
+                    document.querySelector('#codeBox .dot').classList.add('cancelled');
+                    
+                    smsState.id = '';
+                    smsState.code = '';
+                    stopAutoCodeCheck();
+                    saveSmsState();
+                    
+                    notify('Número cancelado (sem SMS)', 'warning');
+                    return true;
+                }
+            } catch (error) {
+                console.error('Erro ao cancelar número:', error);
+            }
+            return false;
+        }
+
+        // Função para verificar código automaticamente
+        async function autoCheckCode() {
+    if (!smsState.id || smsState.loading) return;
+    
+    try {
+        const response = await fetch(`/get_status/${smsState.id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.has_code && data.code) {
+                // Código recebido automaticamente!
+                smsState.code = data.code;
+                smsState.successes++;
+                smsState.hasReceivedCode = true;
+                smsState.firstStatusCheck = true;
+                
+                document.getElementById('codeValue').textContent = smsState.code;
+                document.getElementById('codeBox').classList.add('active');
+                document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                document.querySelector('#codeBox .dot').classList.add('received');
+                document.getElementById('successes').textContent = smsState.successes;
+                
+                saveSmsState();
+                
+                await copy(smsState.code, 'code');
+                notify(`Código recebido: ${smsState.code}`, 'info');
+                
+            } else if (data.status === 'waiting_code' && !smsState.hasReceivedCode) {
+                // Se passou tempo suficiente sem código, copia "Nenhum" automaticamente
+                // (opcional: você pode adicionar um timeout aqui)
+            }
+        } else {
+            // Se a API retornar erro, copia "Erro"
+            if (!smsState.hasReceivedCode) {
+                document.getElementById('codeValue').textContent = 'Erro';
+                await copy('Erro', 'code');
+            }
+        }
+    } catch (error) {
+        // Em caso de erro de rede, copia "Erro"
+        if (!smsState.hasReceivedCode) {
+            document.getElementById('codeValue').textContent = 'Erro';
+            await copy('Erro', 'code');
+        }
+    }
+}
+
+        function startAutoCodeCheck() {
+            if (smsState.autoCheckInterval) {
+                clearInterval(smsState.autoCheckInterval);
+            }
+            // Verifica a cada 3 segundos
+            smsState.autoCheckInterval = setInterval(autoCheckCode, 3000);
+        }
+
+        function stopAutoCodeCheck() {
+            if (smsState.autoCheckInterval) {
+                clearInterval(smsState.autoCheckInterval);
+                smsState.autoCheckInterval = null;
+            }
+        }
+
+// ================= MODIFICAR getNumber PARA VERIFICAR SALDO =================
+async function getNumber() {
+    if (smsState.loading) return;
+    
+    smsState.loading = true;
+    smsState.attempts++;
+    smsState.firstStatusCheck = false;
+    smsState.hasReceivedCode = false;
+    saveSmsState();
+    
+    document.getElementById('attempts').textContent = smsState.attempts;
+    document.getElementById('numberValue').textContent = '...';
+    document.getElementById('numberStatus').textContent = 'Verificando';
+    document.getElementById('numberPrice').textContent = '';
+    
+    // Timeout de 10 segundos (agora o backend é rápido)
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout')), 10000);
+    });
+    
+    try {
+        if (smsState.id) {
+            try {
+                await fetch(`/cancel_number/${smsState.id}`);
+                stopAutoCodeCheck();
+            } catch (e) {
+                console.log('Erro ao cancelar número anterior:', e);
+            }
+        }
+        
+        const res = await Promise.race([
+            fetch('/get_number'),
+            timeoutPromise
+        ]);
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            smsState.id = data.number_id;
+            smsState.number = data.phone_number;
+            smsState.price = data.price;
+            smsState.code = '';
+            
+            document.getElementById('numberValue').textContent = smsState.number;
+            document.getElementById('numberPrice').textContent = `$${smsState.price}`;
+            document.getElementById('numberBox').classList.remove('empty', 'cancelled');
+            document.getElementById('numberBox').classList.add('active');
+            document.getElementById('numberStatus').textContent = 'Pronto';
+            document.querySelector('#numberBox .dot').classList.remove('cancelled');
+            
+            document.getElementById('codeValue').textContent = 'Receber';
+            document.getElementById('codeBox').classList.remove('active', 'cancelled', 'empty');
+            document.getElementById('codeStatus').textContent = 'Aguardando';
+            document.querySelector('#codeBox .dot').classList.remove('received', 'cancelled');
+            
+            saveSmsState();
+            
+            startAutoCodeCheck();
+            
+            await copy(smsState.number, 'number');
+            notify(`Número: ${smsState.number} ($${smsState.price})`);
+        } else {
+            // DETECTA TIPO DE ERRO PELA MENSAGEM
+            let errorMessage = data.message || 'Erro';
+            let copyText = 'Erro';
+            let statusText = 'Erro';
+            
+            if (errorMessage.includes('NO_BALANCE') || data.response === 'NO_BALANCE') {
+                copyText = 'Sem saldo';
+                statusText = 'Sem saldo';
+                errorMessage = 'Saldo insuficiente!';
+            } else if (errorMessage.includes('NO_NUMBERS') || data.response === 'NO_NUMBERS') {
+                copyText = 'Sem números';
+                statusText = 'Indisponível';
+                errorMessage = 'Sem números disponíveis';
+            } else if (errorMessage.includes('NO_NUMBER') || data.response === 'NO_NUMBER') {
+                copyText = 'Indisponível';
+                statusText = 'Indisponível';
+                errorMessage = 'Nenhum número disponível';
+            } else if (errorMessage.includes('BAD_KEY') || errorMessage.includes('API_KEY_NOT_VALID')) {
+                copyText = 'API Inválida';
+                statusText = 'API Inválida';
+                errorMessage = 'API key inválida ou inativa';
+            }
+            
+            document.getElementById('numberValue').textContent = copyText;
+            await copy(copyText, 'number');
+            
+            document.getElementById('numberStatus').textContent = statusText;
+            document.getElementById('numberBox').classList.remove('active');
+            
+            notify(errorMessage, 'error');
+        }
+    } catch (error) {
+        let copyText = 'Erro';
+        let errorMessage = 'Erro de conexão';
+        let statusText = 'Erro';
+        
+        if (error.message.includes('Timeout')) {
+            copyText = 'Timeout';
+            statusText = 'Timeout';
+            errorMessage = 'Servidor demorou muito (>10s)';
+        }
+        
+        document.getElementById('numberValue').textContent = copyText;
+        await copy(copyText, 'number');
+        
+        document.getElementById('numberStatus').textContent = statusText;
+        document.getElementById('numberBox').classList.remove('active');
+        
+        notify(errorMessage, 'error');
+    } finally {
+        smsState.loading = false;
+        saveSmsState();
+    }
+}
+
+        async function getCode() {
+    if (!smsState.id || smsState.loading) {
+        if (!smsState.id) {
+            notify('Obtenha um número primeiro', 'error');
+            await copy('Erro', 'code'); // Copia "Erro" se não tem número
+        }
+        return;
+    }
+    
+    smsState.loading = true;
+    document.getElementById('codeValue').textContent = '...';
+    document.getElementById('codeStatus').textContent = 'Verificando';
+    document.getElementById('codeBox').classList.remove('empty');
+    
+    try {
+        const res = await fetch(`/get_status/${smsState.id}`);
+        const data = await res.json();
+        
+        if (data.success) {
+            if (data.has_code && data.code) {
+                // Código recebido
+                smsState.code = data.code;
+                smsState.successes++;
+                smsState.hasReceivedCode = true;
+                smsState.firstStatusCheck = true;
+                
+                document.getElementById('codeValue').textContent = smsState.code;
+                document.getElementById('codeBox').classList.add('active');
+                document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                document.querySelector('#codeBox .dot').classList.add('received');
+                document.getElementById('successes').textContent = smsState.successes;
+                
+                saveSmsState();
+                
+                await copy(smsState.code, 'code');
+                notify(`Código: ${smsState.code}`, 'info');
+                
+            } else if (data.status === 'waiting_code') {
+                if (smsState.code && smsState.hasReceivedCode) {
+                    // Já tem código
+                    document.getElementById('codeValue').textContent = smsState.code;
+                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                    
+                    await copy(smsState.code, 'code');
+                    notify(`Código atual: ${smsState.code}`, 'info');
+                    
+                    smsState.firstStatusCheck = true;
+                    
+                } else if (!smsState.firstStatusCheck) {
+                    // Primeiro check sem código - copia "Nenhum"
+                    document.getElementById('codeValue').textContent = 'Nenhum';
+                    document.getElementById('codeStatus').textContent = 'Cancelando...';
+                    
+                    await copy('Nenhum', 'code'); // COPIA "NENHUM" AUTOMATICAMENTE
+                    
+                    if (!smsState.hasReceivedCode) {
+                        setTimeout(async () => {
+                            await cancelCurrentNumber();
+                        }, 500);
+                    }
+                    
+                    smsState.firstStatusCheck = true;
+                    notify('Nenhum SMS recebido - Cancelando número', 'warning');
+                    
+                } else {
+                    // Já fez primeiro check
+                    document.getElementById('codeValue').textContent = smsState.code || 'Aguardando...';
+                    document.getElementById('codeStatus').textContent = 'Verificando...';
+                    notify('Aguardando SMS...', 'info');
+                }
+            }
+        } else {
+            // ERRO NA API - copia "Erro"
+            document.getElementById('codeValue').textContent = 'Erro';
+            await copy('Erro', 'code');
+            
+            document.getElementById('codeStatus').textContent = 'Erro';
+            notify(data.message || 'Erro ao verificar', 'error');
+        }
+    } catch (error) {
+        // ERRO DE CONEXÃO - copia "Erro"
+        document.getElementById('codeValue').textContent = 'Erro';
+        await copy('Erro', 'code');
+        
+        document.getElementById('codeStatus').textContent = 'Erro';
+        notify('Erro de conexão', 'error');
+    } finally {
+        smsState.loading = false;
+        saveSmsState();
+    }
+}
+
+        // ================= DATA GENERATOR FUNCTIONS =================
+        const maleNames = ["Abelardo", "Adriano", "Agnaldo", "Alan", "Alberto", "Aldo", "Alex", "Alexandre", "Alfredo", "Alvaro",
+            "Anderson", "Andre", "Antonio", "Ariel", "Augusto", "Aureliano", "Bruno", "Caio", "Cassio",
+            "Cesar", "Cristiano", "Daniel", "Davi", "Diego", "Douglas", "Eduardo", "Elias", "Emilio", "Enzo",
+            "Felipe", "Fernando", "Francisco", "Gabriel", "Gustavo", "Henrique", "Hugo", "Igor", "Ivo", "Jackson",
+            "Jair", "James", "Jander", "Joao", "Jorge", "Jose", "Juan", "Julio", "Junior", "Kaio", "Leonardo",
+            "Leandro", "Luis", "Luciano", "Lucas", "Marcelo", "Marcos", "Mario", "Martin", "Matheus", "Mauricio",
+            "Miguel", "Moises", "Nicolas", "Nilton", "Nivaldo", "Otavio", "Paulo", "Pedro", "Rafael", "Renato", "Ricardo",
+            "Roberto", "Rogerio", "Romulo", "Ronaldo", "Rodrigo", "Samuel", "Sergio", "Silvio", "Thales", "Tiago",
+            "Tobias", "Tomas", "Vagner", "Vitor", "Vinicius", "Wagner", "Wallace", "Washington", "Willian", "Wilson",
+            "Walter", "Ademir", "Adolfo", "Agostinho", "Ailton", "Alcides", "Alfredo", "Altair", "Amadeu", "Americo",
+            "Anselmo", "Antonino", "Arnaldo", "Artur", "Aurelio", "Bento", "Benjamim", "Benicio", "Bernard",
+            "Brendon", "Caetano", "Carlos", "Carmelo", "Cassio", "Celso", "Claudinei", "Claudemir", "Claudio",
+            "Cleo", "Cristiano", "Damiao", "Danilo", "Dario", "Edgard", "Edilson", "Edson", "Efraim", "Eike",
+            "Eliseu", "Emiliano", "Enrico", "Epitacio", "Erico", "Eugenio", "Evaldo", "Evandro", "Everaldo", "Fabiano",
+            "Fabricio", "Fabio", "Feliciano", "Filomeno", "Flavio", "Florencio", "Frederico", "Geraldo", "Gideon",
+            "Gilberto", "Giordano", "Giovani", "Gregorio", "Heitor", "Icaro", "Ilson", "Ismael", "Israel", "Italo",
+            "Jaime", "Joaquim", "Jose Maria", "Josuel", "Joviano", "Luan", "Luiz Felipe", "Marcio", "Marco", "Nelio",
+            "Nestor", "Nilson", "Norberto", "Nuno", "Osmar", "Paulo", "Plinio", "Rubens", "Ruy", "Salomao",
+            "Samir", "Sandro", "Severino", "Sidnei", "Silvano", "Silvio", "Tadeu", "Tarcisio", "Teodoro", "Thiago", "Tomas",
+            "Ulysses", "Urbano", "Valdir", "Valter", "Vicente", "Vladmir", "Waldemar", "Wilmar", "Wladimir"];
+        const femaleNames = ["Abigail", "Adelaide", "Adelia", "Adriana", "Agatha", "Agnes", "Aida", "Aileen", "Aira", "Alana", "Alice", "Aline", "Alzira", "Amalia", "Amanda", "Amelia", "Ana", "Analia", "Andrea", "Andressa", "Angela", "Angelica", "Anita", "Antonia", "Aparecida", "Ariana", "Ariane", "Arlete", "Arya", "Aurora", "Barbara", "Beatriz", "Benedita", "Berenice", "Bernadete", "Bianca", "Bruna", "Brunilda", "Caetana", "Camila", "Carina", "Carla", "Carmem", "Carmo", "Carolina", "Cassia", "Catarina", "Cecilia", "Celina", "Celia", "Clara", "Clarice", "Clarinda", "Claudia", "Clementina", "Cleonice", "Clotilde", "Conceicao", "Constancia", "Cristina", "Dafne", "Dalva", "Daniela", "Daphne", "Dara", "Debora", "Deise", "Denise", "Diana", "Dilma", "Diolinda", "Diva", "Dora", "Doroteia", "Eduarda", "Elaine", "Eliana", "Elisabete", "Elisabeth", "Elisa", "Elisete", "Elizangela", "Elsa", "Elza", "Emanuela", "Emilia", "Emily", "Eneida", "Ercilia", "Erica", "Ermelinda", "Ester", "Esther", "Eunice", "Eva", "Evelyn", "Fabiana", "Fabiola", "Fatima", "Felicia", "Fernanda", "Filomena", "Flavia", "Francisca", "Gabriela", "Gabrielle", "Geralda", "Gertrudes", "Giovanna", "Giselle", "Gloria", "Graca", "Graciela", "Graziella", "Guadalupe", "Helena", "Heloisa", "Henriqueta", "Hilda", "Idalina", "Idalia", "Idalina", "Ieda", "Ileana", "Ilma", "Ilona", "Ines", "Iolanda", "Ione", "Irene", "Iris", "Isabel", "Isabela", "Isis", "Ivana", "Ivone", "Jacinta", "Janaina", "Janete", "Janice", "Jasmin", "Jeane", "Jocasta", "Joceline", "Joana", "Jordana", "Josefa", "Josefina", "Jovita", "Judite", "Julia", "Juliana", "Julieta", "Jurema", "Justina", "Karla", "Karoline", "Katharina", "Katia", "Katrina", "Kelly", "Kim", "Lais", "Lara", "Laura", "Laurinda", "Leandra", "Leila", "Lena", "Leonor", "Leticia", "Lia", "Liana", "Lilian", "Liliana", "Linda", "Lineia", "Livia", "Loren", "Lorena", "Luana", "Lucia", "Luciana", "Luciene", "Lucrecia", "Ludmila", "Luisa", "Luzia", "Madalena", "Magda", "Magnolia", "Maia", "Maira", "Manuela", "Mara", "Marcela", "Marcia", "Marcilia", "Margarida", "Maria", "Mariana", "Marilda", "Marina", "Marisa", "Marlene", "Marta", "Matilde", "Maura", "Mavi", "Maxima", "Mayara", "Maysa", "Melania", "Melinda", "Melissa", "Mercedes", "Milena", "Miriam", "Mirian", "Mirela", "Miriam", "Monica", "Nadia", "Nair", "Nancy", "Nara", "Natividade", "Natalia", "Natasha", "Nazare", "Nela", "Nelia", "Nely", "Nereida", "Neyde", "Neuza", "Nidia", "Nila", "Nilza", "Nina", "Ninfa", "Nisia", "Noemia", "Noemi", "Norma", "Nubia", "Odalicia", "Odete", "Ofelia", "Olga", "Olimpia", "Otilia", "Palmira", "Patricia", "Paula", "Paulina", "Pauline", "Penelope", "Perpetua", "Piedade", "Pilar", "Priscila", "Querina", "Quintina", "Rafaela", "Raquel", "Rebeca", "Regina", "Renata", "Rita", "Roberta", "Rosa", "Rosalina", "Rosana", "Rosangela", "Rosario", "Rosilene", "Rosimeire", "Rubia", "Rute", "Sabrina", "Samanta", "Sandra", "Sara", "Sasha", "Selena", "Selma", "Severina", "Sheila", "Sibila", "Sibila", "Silvana", "Silvia", "Simone", "Sofia", "Solange", "Sonia", "Soraya", "Suellen", "Sulamita", "Suzana", "Tania", "Tassia", "Tatiana", "Telma", "Teresa", "Tereza", "Thereza", "Tiana", "Tina", "Tirza", "Tomasia", "Valeria", "Valesca", "Valquiria", "Vanessa", "Vanda", "Verena", "Veridiana", "Veronica", "Victoria", "Vilma", "Violeta", "Virginia", "Vitoria", "Vivian", "Viviane", "Wanda", "Xenia", "Yara", "Yasmin", "Yeda", "Yolanda", "Yone", "Yvone", "Zaira", "Zelia", "Zenaide", "Zenilda", "Zilda"];
+        const lastNames = ["Abreu", "Albuquerque", "Almeida", "Andrade", "Araujo", "Barbosa", "Barros", "Borges", "Brandao", "Brazil",
+            "Campos", "Carvalho", "Castro", "Chaves", "Clemente", "Costa", "Cruz", "Dias", "Duarte", "Faria",
+            "Fernandes", "Ferreira", "Freitas", "Gama", "Garcia", "Goncalves", "Gomes", "Goncalves", "Guimaraes",
+            "Henrique", "Lima", "Lopes", "Lourenco", "Macedo", "Machado", "Martins", "Melo", "Mesquita", "Miranda",
+            "Moraes", "Moreira", "Mota", "Neto", "Oliveira", "Pereira", "Pinto", "Rezende", "Ribeiro", "Rodrigues",
+            "Romero", "Rosa", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
+            "Vargas", "Vieira", "Vila", "Vieira", "Araujo", "Alves", "Bezerra", "Campos", "Cardoso", "Castro",
+            "Cruz", "Dantas", "Falcao", "Ferreira", "Freitas", "Goncalves", "Gomes", "Guimaraes", "Lima", "Lopes",
+            "Melo", "Mendes", "Moraes", "Moreira", "Mota", "Oliveira", "Pacheco", "Pereira", "Pinto", "Reis",
+            "Ribeiro", "Rodrigues", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
+            "Vargas", "Vieira", "Vila", "Viana", "Antunes", "Araujo", "Albuquerque", "Almeida", "Barbosa", "Barros",
+            "Brandao", "Brazil", "Campos", "Carvalho", "Castro", "Chaves", "Clemente", "Costa", "Cruz", "Dias",
+            "Duarte", "Faria", "Fernandes", "Ferreira", "Freitas", "Gama", "Garcia", "Goncalves", "Gomes", "Guimaraes",
+            "Henrique", "Lima", "Lopes", "Lourenco", "Macedo", "Machado", "Martins", "Melo", "Mesquita", "Miranda",
+            "Moraes", "Moreira", "Mota", "Neto", "Oliveira", "Pereira", "Pinto", "Rezende", "Ribeiro", "Rodrigues",
+            "Romero", "Rosa", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
+            "Vargas", "Vieira", "Vila", "Vieira", "Araujo", "Alves", "Bezerra", "Campos", "Cardoso", "Castro",
+            "Cruz", "Dantas", "Falcao", "Ferreira", "Freitas", "Goncalves", "Gomes", "Guimaraes", "Lima", "Lopes",
+            "Melo", "Mendes", "Moraes", "Moreira", "Mota", "Oliveira", "Pacheco", "Pereira", "Pinto", "Reis",
+            "Ribeiro", "Rodrigues", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
+            "Vargas", "Vieira", "Vila", "Viana", "Antunes", "Barros", "Carvalho", "Castro", "Cavalcante", "Chaves",
+            "Costa", "Cruz", "Dias", "Duarte", "Ferreira", "Freitas", "Gomes", "Goncalves", "Guimaraes", "Lima",
+            "Lopes", "Machado", "Mendes", "Melo", "Moraes", "Moreira", "Neto", "Oliveira", "Pereira", "Pinto",
+            "Reis", "Ribeiro", "Rodrigues", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente"];
+        
+        let currentGender = localStorage.getItem('currentGender') || 'male';
+        let currentData = JSON.parse(localStorage.getItem('currentData')) || null;
+        let gifts = JSON.parse(localStorage.getItem('gifts')) || [];
+
+        function setGender(gender) {
+            currentGender = gender;
+            localStorage.setItem('currentGender', gender);
+            document.getElementById('maleBtn').classList.toggle('active', gender === 'male');
+            document.getElementById('femaleBtn').classList.toggle('active', gender === 'female');
+        }
+        
+        function generateCPF() {
+            let cpf = '';
+            for (let i = 0; i < 9; i++) cpf += Math.floor(Math.random() * 10);
+            
+            let sum = 0;
+            for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
+            let digit1 = 11 - (sum % 11);
+            if (digit1 > 9) digit1 = 0;
+            cpf += digit1;
+            
+            sum = 0;
+            for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
+            let digit2 = 11 - (sum % 11);
+            if (digit2 > 9) digit2 = 0;
+            cpf += digit2;
+            
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1$2$3$4');
+        }
+        
+        function generateBirthdate() {
+            const date = new Date(1950 + Math.floor(Math.random() * 53), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28));
+            const day = ('0' + date.getDate()).slice(-2);
+            const month = ('0' + (date.getMonth() + 1)).slice(-2);
+            const year = date.getFullYear();
+            return day + month + year;
+        }
+        
+        function generateEmail(isNewGeneration = true) {
+            let alias = parseInt(localStorage.getItem('aliasNumber')) || 1;
+            const base = localStorage.getItem('baseEmail') || "teste@gmail.com";
+            
+            if (isNewGeneration) {
+                const email = base.split('@')[0] + '+' + alias + '@' + base.split('@')[1];
+                localStorage.setItem('aliasNumber', alias + 1);
+                return email;
+            } else {
+                return base.split('@')[0] + '+' + alias + '@' + base.split('@')[1];
+            }
+        }
+        
+        function generateData() {
+            const firstNames = currentGender === 'male' ? maleNames : femaleNames;
+            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            
+            const newData = {
+                firstName: firstName,
+                lastName: lastName,
+                cpf: generateCPF(),
+                email: generateEmail(true),
+                birthdate: generateBirthdate()
+            };
+            
+            currentData = newData;
+            localStorage.setItem('currentData', JSON.stringify(newData));
+            
+            document.getElementById('firstName').value = newData.firstName;
+            document.getElementById('lastName').value = newData.lastName;
+            document.getElementById('cpf').value = newData.cpf;
+            document.getElementById('email').value = newData.email;
+            document.getElementById('birthdate').value = newData.birthdate;
+            
+            // Atualiza o número do alias no campo
+            const alias = parseInt(localStorage.getItem('aliasNumber')) || 1;
+            document.getElementById('aliasNumber').value = alias;
+            
+            notify('Sucesso!');
+        }
+
+        function generateDataOnLoad() {
+            const firstNames = currentGender === 'male' ? maleNames : femaleNames;
+            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            
+            const newData = {
+                firstName: firstName,
+                lastName: lastName,
+                cpf: generateCPF(),
+                email: generateEmail(false),
+                birthdate: generateBirthdate()
+            };
+            
+            currentData = newData;
+            localStorage.setItem('currentData', JSON.stringify(newData));
+            
+            document.getElementById('firstName').value = newData.firstName;
+            document.getElementById('lastName').value = newData.lastName;
+            document.getElementById('cpf').value = newData.cpf;
+            document.getElementById('email').value = newData.email;
+            document.getElementById('birthdate').value = newData.birthdate;
+        }
+
+        function loadSavedData() {
+            if (currentData) {
+                document.getElementById('firstName').value = currentData.firstName;
+                document.getElementById('lastName').value = currentData.lastName;
+                document.getElementById('cpf').value = currentData.cpf;
+                document.getElementById('email').value = currentData.email;
+                document.getElementById('birthdate').value = currentData.birthdate;
+            } else {
+                generateDataOnLoad();
+            }
+        }
+        
+        function copyDataField(fieldId) {
+            const field = document.getElementById(fieldId);
+            const text = field.value;
+            
+            if (!text || text === '-' || text === 'Clique em Gerar') {
+                notify('Nenhum dado para copiar', 'warning');
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                notify('Copiado!');
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify('Copiado!');
+            });
+        }
+        
+        // ================= FUNÇÃO PARA COPIAR NÚMERO DO SMS =================
+function copyCurrentSMSNumber() {
+    if (!smsState.number || smsState.number === 'Obter' || smsState.number === '...' || smsState.number === 'Erro') {
+        notify('Nenhum número SMS disponível', 'error');
+        return;
+    }
+    
+    // Remove o símbolo de preço se existir
+    const cleanNumber = smsState.number.replace(/\$\d+\.\d{4}\s*/, '').trim();
+    
+    navigator.clipboard.writeText(cleanNumber).then(() => {
+        notify(`Núm copiado`);
+    }).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = cleanNumber;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        notify(`Núm copiado`);
+    });
+}
+        
+        function setAliasNumber() {
+            const number = document.getElementById('aliasNumber').value;
+            if (number) {
+                localStorage.setItem('aliasNumber', number);
+                notify('Número definido: ' + number);
+            }
+        }
+        
+        function setBaseEmail() {
+            const email = document.getElementById('baseEmail').value;
+            if (email && email.includes('@')) {
+                localStorage.setItem('baseEmail', email);
+                notify('Email base definido');
+            }
+        }
+        
+        function resetAlias() {
+            localStorage.removeItem('aliasNumber');
+            notify('Alias resetado');
+        }
+
+        // ================= GIFT FUNCTIONS =================
+        function handleGiftInput(event) {
+    const giftInput = document.getElementById('giftInput');
+    const giftCode = giftInput.value.trim();
+    
+    // Se o campo estiver vazio ou muito curto, ignora
+    if (giftCode.length < 3) return;
+    
+    // Verifica se parece um código de gift (pode ajustar conforme necessidade)
+    // Exemplo: códigos geralmente têm números, letras, hífens
+    const giftPattern = /[A-Za-z0-9\-_]{6,}/;
+    if (!giftPattern.test(giftCode)) return;
+    
+    // Adiciona um pequeno delay para garantir que o usuário terminou de digitar/colar
+    clearTimeout(giftInput.timer);
+    giftInput.timer = setTimeout(() => {
+        addGiftToCollection(giftCode);
+        giftInput.value = ''; // Limpa o campo
+    }, 800); // 800ms de delay
+}
+
+// Função separada para adicionar gift
+function addGiftToCollection(giftCode) {
+    if (!currentData || !currentData.email) {
+        notify('Gere dados primeiro!', 'error');
+        return;
+    }
+    
+    if (!smsState.number || smsState.number === 'Obter' || smsState.number === 'Erro') {
+        notify('Obtenha um número primeiro!', 'error');
+        return;
+    }
+    
+    // Verifica se já existe este gift na lista
+    if (gifts.some(g => g.code === giftCode)) {
+        notify('Este gift já foi adicionado!', 'warning');
+        return;
+    }
+    
+    const gift = {
+        code: giftCode,
+        number: smsState.number,
+        email: currentData.email,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+        })
+    };
+    
+    gifts.unshift(gift);
+    
+    localStorage.setItem('gifts', JSON.stringify(gifts));
+    updateGiftList();
+    
+    notify(`✓ Gift adicionado! Conta #${gifts.length}`);
+}
+
+        function updateGiftList() {
+    const giftList = document.getElementById('giftList');
+    const giftCount = document.getElementById('giftCount');
+    
+    giftCount.textContent = gifts.length;
+    
+    if (gifts.length === 0) {
+        giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
+        return;
+    }
+    
+    giftList.innerHTML = '';
+    
+    // Mostra apenas os 3 mais recentes
+    const recentGifts = gifts.slice(0, 3); // Apenas 3 mais recentes para exibição
+    
+    recentGifts.forEach((gift, index) => {
+        const item = document.createElement('div');
+        item.className = 'gift-item';
+        item.onclick = () => copySingleGift(gift);
+        
+        // Formata o email para mostrar apenas o +alias
+        const emailParts = gift.email.split('@');
+        const username = emailParts[0];
+        const plusIndex = username.indexOf('+');
+        const aliasPart = plusIndex !== -1 ? username.substring(plusIndex) : '';
+        
+        item.innerHTML = `
+            <div style="font-weight: 600; color: #64748b; margin-bottom: 3px;">
+                ${gift.code}
+            </div>
+            <div class="gift-info">
+                <span title="${gift.number}">${gift.number.substring(0, 8)}...</span>
+                <span title="${gift.email}">${aliasPart || gift.email.split('@')[0].substring(0, 6)}...</span>
+                <span>${gift.timestamp}</span>
+            </div>
+        `;
+        
+        item.title = `Número: ${gift.number}\nEmail: ${gift.email}\nClique para copiar este gift`;
+        giftList.appendChild(item);
+    });
+    
+    // Se tiver mais de 3, mostra indicador
+    if (gifts.length > 3) {
+        const moreItem = document.createElement('div');
+        moreItem.className = 'gift-item';
+        moreItem.style.textAlign = 'center';
+        moreItem.style.color = '#64748b';
+        moreItem.style.fontStyle = 'italic';
+        moreItem.style.fontSize = '0.7rem';
+        moreItem.style.padding = '4px 8px';
+        moreItem.textContent = `... e mais ${gifts.length - 3} gifts (total: ${gifts.length})`;
+        moreItem.onclick = () => showAllGifts();
+        moreItem.title = 'Clique para ver detalhes';
+        giftList.appendChild(moreItem);
+    }
+}
+
+// Função opcional para mostrar todos os gifts em um modal ou alerta
+function showAllGifts() {
+    if (gifts.length === 0) return;
+    
+    let message = `=== TODOS OS GIFTS (${gifts.length}) ===\n\n`;
+    
+    gifts.forEach((gift, index) => {
+        message += `Gift #${index + 1}:\n`;
+        message += `Código: ${gift.code}\n`;
+        message += `Número: ${gift.number}\n`;
+        message += `Email: ${gift.email}\n`;
+        message += `Horário: ${gift.timestamp}\n`;
+        message += `\n`;
+    });
+    
+    // Mostra em um alert ou modal
+    alert(message);
+    
+    // Ou copia todos automaticamente
+    // copyAllGifts();
+}
+
+        function copySingleGift(gift) {
+            const text = `${gift.code}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                notify('Gift copiado!');
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify('Gift copiado!');
+            });
+        }
+
+        function copyAllGifts() {
+    if (gifts.length === 0) {
+        notify('Nenhum gift para copiar', 'warning');
+        return;
+    }
+    
+    let text = `=== Lista de GIFTS e CONTAS ===\n\n`;
+    
+    gifts.forEach((gift, index) => {
+        // Formato limpo, sem rótulos
+        text += `${gift.code}\n`;
+        text += `${gift.number}\n`;
+        text += `${gift.email}\n`;
+        text += `${gift.timestamp}\n`;
+        
+        // Adiciona linha em branco entre contas (exceto após a última)
+        if (index < gifts.length - 1) {
+            text += '\n';
+        }
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+        notify(`✓ ${gifts.length} gifts copiados!`);
+    }).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        notify(`✓ ${gifts.length} gifts copiados!`);
+    });
+}
+        function clearAllGifts() {
+    if (gifts.length === 0) {
+        notify('Nenhum gift para limpar', 'warning');
+        return;
+    }
+    
+    // Limpa diretamente sem confirmação
+    const count = gifts.length;
+    gifts = [];
+    localStorage.setItem('gifts', JSON.stringify(gifts));
+    updateGiftList();
+    notify(`✓ ${count} gifts removidos`);
+}
+        
+        // ================= FUNÇÃO PARA RESETAR SMS STATS =================
+function resetSMSStats() {
+    // Reseta os valores
+    smsState.attempts = 0;
+    smsState.successes = 0;
+    
+    // Atualiza UI
+    document.getElementById('attempts').textContent = '0';
+    document.getElementById('successes').textContent = '0';
+    
+    // Salva
+    localStorage.setItem('sms_attempts', '0');
+    localStorage.setItem('sms_successes', '0');
+    
+    notify('✓ Contadores resetados');
+}
+
+        // ================= INITIALIZATION =================
+        function init() {
+            // SMS
+            loadSmsState();
+            
+            // Data Generator
+            setGender(currentGender);
+            loadSavedData();
+            
+            const savedAlias = localStorage.getItem('aliasNumber');
+            const savedBaseEmail = localStorage.getItem('baseEmail');
+            
+            if (savedAlias) {
+                document.getElementById('aliasNumber').value = savedAlias;
+            }
+            if (savedBaseEmail) {
+                document.getElementById('baseEmail').value = savedBaseEmail;
+            }
+            
+            // Gifts
+            updateGiftList();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
