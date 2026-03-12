@@ -720,42 +720,26 @@
         const response = await fetch(`/get_status/${smsState.id}`);
         const data = await response.json();
         
-        if (data.success) {
-            if (data.has_code && data.code) {
-                // Código recebido automaticamente!
-                smsState.code = data.code;
-                smsState.successes++;
-                smsState.hasReceivedCode = true;
-                smsState.firstStatusCheck = true;
-                
-                document.getElementById('codeValue').textContent = smsState.code;
-                document.getElementById('codeBox').classList.add('active');
-                document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                document.querySelector('#codeBox .dot').classList.add('received');
-                document.getElementById('successes').textContent = smsState.successes;
-                
-                saveSmsState();
-                
-                await copy(smsState.code, 'code');
-                notify(`Código recebido: ${smsState.code}`, 'info');
-                
-            } else if (data.status === 'waiting_code' && !smsState.hasReceivedCode) {
-                // Se passou tempo suficiente sem código, copia "Nenhum" automaticamente
-                // (opcional: você pode adicionar um timeout aqui)
-            }
-        } else {
-            // Se a API retornar erro, copia "Erro"
-            if (!smsState.hasReceivedCode) {
-                document.getElementById('codeValue').textContent = 'Erro';
-                await copy('Erro', 'code');
-            }
+        if (data.success && data.has_code && data.code) {
+            // Código recebido automaticamente!
+            smsState.code = data.code;
+            smsState.successes++;
+            smsState.hasReceivedCode = true;
+            smsState.firstStatusCheck = true; // MARCA QUE JÁ FEZ CHECK
+            
+            document.getElementById('codeValue').textContent = smsState.code;
+            document.getElementById('codeBox').classList.add('active');
+            document.getElementById('codeStatus').textContent = 'Recebido ✓';
+            document.querySelector('#codeBox .dot').classList.add('received');
+            document.getElementById('successes').textContent = smsState.successes;
+            
+            saveSmsState();
+            
+            await copy(smsState.code, 'code');
+            notify(`Código recebido: ${smsState.code}`, 'info');
         }
     } catch (error) {
-        // Em caso de erro de rede, copia "Erro"
-        if (!smsState.hasReceivedCode) {
-            document.getElementById('codeValue').textContent = 'Erro';
-            await copy('Erro', 'code');
-        }
+        // Silencia erros
     }
 }
 
@@ -774,129 +758,80 @@
             }
         }
 
-// ================= MODIFICAR getNumber PARA VERIFICAR SALDO =================
-async function getNumber() {
+        async function getNumber() {
     if (smsState.loading) return;
     
     smsState.loading = true;
     smsState.attempts++;
     smsState.firstStatusCheck = false;
-    smsState.hasReceivedCode = false;
+    smsState.hasReceivedCode = false; // RESETA ao obter novo número
     saveSmsState();
-    
-    document.getElementById('attempts').textContent = smsState.attempts;
-    document.getElementById('numberValue').textContent = '...';
-    document.getElementById('numberStatus').textContent = 'Verificando';
-    document.getElementById('numberPrice').textContent = '';
-    
-    // Timeout de 10 segundos (agora o backend é rápido)
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), 10000);
-    });
-    
-    try {
-        if (smsState.id) {
+            
+            document.getElementById('attempts').textContent = smsState.attempts;
+            document.getElementById('numberValue').textContent = '...';
+            document.getElementById('numberStatus').textContent = 'Obtendo';
+            document.getElementById('numberPrice').textContent = '';
+            
             try {
-                await fetch(`/cancel_number/${smsState.id}`);
-                stopAutoCodeCheck();
-            } catch (e) {
-                console.log('Erro ao cancelar número anterior:', e);
+                if (smsState.id) {
+                    try {
+                        await fetch(`/cancel_number/${smsState.id}`);
+                        stopAutoCodeCheck();
+                    } catch (e) {
+                        console.log('Erro ao cancelar número anterior:', e);
+                    }
+                }
+                
+                const res = await fetch('/get_number');
+                const data = await res.json();
+                
+                if (data.success) {
+                    smsState.id = data.number_id;
+                    smsState.number = data.phone_number;
+                    smsState.price = data.price;
+                    smsState.code = '';
+                    
+                    document.getElementById('numberValue').textContent = smsState.number;
+                    document.getElementById('numberPrice').textContent = `$${smsState.price}`;
+                    document.getElementById('numberBox').classList.remove('empty', 'cancelled');
+                    document.getElementById('numberBox').classList.add('active');
+                    document.getElementById('numberStatus').textContent = 'Pronto';
+                    document.querySelector('#numberBox .dot').classList.remove('cancelled');
+                    
+                    document.getElementById('codeValue').textContent = 'Receber';
+                    document.getElementById('codeBox').classList.remove('active', 'cancelled', 'empty');
+                    document.getElementById('codeStatus').textContent = 'Aguardando';
+                    document.querySelector('#codeBox .dot').classList.remove('received', 'cancelled');
+                    
+                    saveSmsState();
+                    
+                    // Inicia verificação automática
+                    startAutoCodeCheck();
+                    
+                    await copy(smsState.number, 'number');
+                    notify(`Número: ${smsState.number} ($${smsState.price})`);
+                } else {
+                    notify(data.message || 'Sem números disponíveis', 'error');
+                    document.getElementById('numberValue').textContent = 'Erro';
+                    document.getElementById('numberStatus').textContent = 'Erro';
+                    document.getElementById('numberBox').classList.remove('active');
+                    saveSmsState();
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                notify('Erro de conexão', 'error');
+                document.getElementById('numberValue').textContent = 'Erro';
+                document.getElementById('numberStatus').textContent = 'Erro';
+                document.getElementById('numberBox').classList.remove('active');
+                saveSmsState();
+            } finally {
+                smsState.loading = false;
             }
         }
-        
-        const res = await Promise.race([
-            fetch('/get_number'),
-            timeoutPromise
-        ]);
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            smsState.id = data.number_id;
-            smsState.number = data.phone_number;
-            smsState.price = data.price;
-            smsState.code = '';
-            
-            document.getElementById('numberValue').textContent = smsState.number;
-            document.getElementById('numberPrice').textContent = `$${smsState.price}`;
-            document.getElementById('numberBox').classList.remove('empty', 'cancelled');
-            document.getElementById('numberBox').classList.add('active');
-            document.getElementById('numberStatus').textContent = 'Pronto';
-            document.querySelector('#numberBox .dot').classList.remove('cancelled');
-            
-            document.getElementById('codeValue').textContent = 'Receber';
-            document.getElementById('codeBox').classList.remove('active', 'cancelled', 'empty');
-            document.getElementById('codeStatus').textContent = 'Aguardando';
-            document.querySelector('#codeBox .dot').classList.remove('received', 'cancelled');
-            
-            saveSmsState();
-            
-            startAutoCodeCheck();
-            
-            await copy(smsState.number, 'number');
-            notify(`Número: ${smsState.number} ($${smsState.price})`);
-        } else {
-            // DETECTA TIPO DE ERRO PELA MENSAGEM
-            let errorMessage = data.message || 'Erro';
-            let copyText = 'Erro';
-            let statusText = 'Erro';
-            
-            if (errorMessage.includes('NO_BALANCE') || data.response === 'NO_BALANCE') {
-                copyText = 'Sem saldo';
-                statusText = 'Sem saldo';
-                errorMessage = 'Saldo insuficiente!';
-            } else if (errorMessage.includes('NO_NUMBERS') || data.response === 'NO_NUMBERS') {
-                copyText = 'Sem números';
-                statusText = 'Indisponível';
-                errorMessage = 'Sem números disponíveis';
-            } else if (errorMessage.includes('NO_NUMBER') || data.response === 'NO_NUMBER') {
-                copyText = 'Indisponível';
-                statusText = 'Indisponível';
-                errorMessage = 'Nenhum número disponível';
-            } else if (errorMessage.includes('BAD_KEY') || errorMessage.includes('API_KEY_NOT_VALID')) {
-                copyText = 'API Inválida';
-                statusText = 'API Inválida';
-                errorMessage = 'API key inválida ou inativa';
-            }
-            
-            document.getElementById('numberValue').textContent = copyText;
-            await copy(copyText, 'number');
-            
-            document.getElementById('numberStatus').textContent = statusText;
-            document.getElementById('numberBox').classList.remove('active');
-            
-            notify(errorMessage, 'error');
-        }
-    } catch (error) {
-        let copyText = 'Erro';
-        let errorMessage = 'Erro de conexão';
-        let statusText = 'Erro';
-        
-        if (error.message.includes('Timeout')) {
-            copyText = 'Timeout';
-            statusText = 'Timeout';
-            errorMessage = 'Servidor demorou muito (>10s)';
-        }
-        
-        document.getElementById('numberValue').textContent = copyText;
-        await copy(copyText, 'number');
-        
-        document.getElementById('numberStatus').textContent = statusText;
-        document.getElementById('numberBox').classList.remove('active');
-        
-        notify(errorMessage, 'error');
-    } finally {
-        smsState.loading = false;
-        saveSmsState();
-    }
-}
 
         async function getCode() {
     if (!smsState.id || smsState.loading) {
-        if (!smsState.id) {
-            notify('Obtenha um número primeiro', 'error');
-            await copy('Erro', 'code'); // Copia "Erro" se não tem número
-        }
+        if (!smsState.id) notify('Obtenha um número primeiro', 'error');
         return;
     }
     
@@ -911,11 +846,11 @@ async function getNumber() {
         
         if (data.success) {
             if (data.has_code && data.code) {
-                // Código recebido
+                // Código recebido manualmente
                 smsState.code = data.code;
                 smsState.successes++;
-                smsState.hasReceivedCode = true;
-                smsState.firstStatusCheck = true;
+                smsState.hasReceivedCode = true; // MARCA QUE RECEBEU CÓDIGO
+                smsState.firstStatusCheck = true; // MARCA QUE JÁ FEZ CHECK
                 
                 document.getElementById('codeValue').textContent = smsState.code;
                 document.getElementById('codeBox').classList.add('active');
@@ -929,23 +864,25 @@ async function getNumber() {
                 notify(`Código: ${smsState.code}`, 'info');
                 
             } else if (data.status === 'waiting_code') {
+                // Verifica se JÁ TEM CÓDIGO SALVO (chegou automaticamente)
                 if (smsState.code && smsState.hasReceivedCode) {
-                    // Já tem código
+                    // Já tem código, copia o código atual
                     document.getElementById('codeValue').textContent = smsState.code;
                     document.getElementById('codeStatus').textContent = 'Recebido ✓';
                     
                     await copy(smsState.code, 'code');
                     notify(`Código atual: ${smsState.code}`, 'info');
                     
-                    smsState.firstStatusCheck = true;
+                    smsState.firstStatusCheck = true; // Marca que já fez check
                     
                 } else if (!smsState.firstStatusCheck) {
-                    // Primeiro check sem código - copia "Nenhum"
+                    // PRIMEIRO CHECK MANUAL sem código ainda
                     document.getElementById('codeValue').textContent = 'Nenhum';
                     document.getElementById('codeStatus').textContent = 'Cancelando...';
                     
-                    await copy('Nenhum', 'code'); // COPIA "NENHUM" AUTOMATICAMENTE
+                    await copy('Nenhum', 'code');
                     
+                    // Só cancela se NUNCA recebeu código
                     if (!smsState.hasReceivedCode) {
                         setTimeout(async () => {
                             await cancelCurrentNumber();
@@ -956,27 +893,26 @@ async function getNumber() {
                     notify('Nenhum SMS recebido - Cancelando número', 'warning');
                     
                 } else {
-                    // Já fez primeiro check
+                    // Já fez primeiro check, apenas verifica
                     document.getElementById('codeValue').textContent = smsState.code || 'Aguardando...';
                     document.getElementById('codeStatus').textContent = 'Verificando...';
                     notify('Aguardando SMS...', 'info');
                 }
+                
+            } else {
+                document.getElementById('codeStatus').textContent = data.message || 'Status';
+                document.getElementById('codeValue').textContent = smsState.code || '...';
+                notify(data.message || 'Status', 'info');
             }
         } else {
-            // ERRO NA API - copia "Erro"
-            document.getElementById('codeValue').textContent = 'Erro';
-            await copy('Erro', 'code');
-            
-            document.getElementById('codeStatus').textContent = 'Erro';
             notify(data.message || 'Erro ao verificar', 'error');
+            document.getElementById('codeStatus').textContent = 'Erro';
+            document.getElementById('codeValue').textContent = smsState.code || 'Erro';
         }
     } catch (error) {
-        // ERRO DE CONEXÃO - copia "Erro"
-        document.getElementById('codeValue').textContent = 'Erro';
-        await copy('Erro', 'code');
-        
-        document.getElementById('codeStatus').textContent = 'Erro';
         notify('Erro de conexão', 'error');
+        document.getElementById('codeStatus').textContent = 'Erro';
+        document.getElementById('codeValue').textContent = smsState.code || 'Erro';
     } finally {
         smsState.loading = false;
         saveSmsState();
