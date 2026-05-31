@@ -1104,112 +1104,166 @@
         }
 
         // ================= GIFT FUNCTIONS =================
-        function handleGiftInput(event) {
-            const giftInput = document.getElementById('giftInput');
-            const giftCode = giftInput.value.trim();
-            
-            if (giftCode.length < 3) return;
-            
-            const giftPattern = /[A-Za-z0-9\-_]{6,}/;
-            if (!giftPattern.test(giftCode)) return;
-            
-            clearTimeout(giftInput.timer);
-            giftInput.timer = setTimeout(() => {
-                addGiftToCollection(giftCode);
-                giftInput.value = '';
-            }, 800);
+function handleGiftInput(event) {
+    const giftInput = document.getElementById('giftInput');
+    const giftCode = giftInput.value.trim();
+    
+    // Verifica apenas se tem conteúdo mínimo (reduzido para 3 caracteres)
+    if (giftCode.length < 3) return;
+    
+    // Verifica se o texto colado parece um código (mais flexível)
+    // Aceita: letras, números, hífens, underscores, e códigos como "ABCD-1234"
+    const looksLikeCode = /^[A-Za-z0-9\-_]+$/.test(giftCode) || 
+                         giftCode.includes('-') || 
+                         giftCode.includes('_') ||
+                         giftCode.length >= 6; // Qualquer coisa com 6+ caracteres
+    
+    if (!looksLikeCode) return;
+    
+    // Limpa timer anterior e configura novo
+    clearTimeout(giftInput.timer);
+    giftInput.timer = setTimeout(() => {
+        // Verifica se não é o mesmo código que já está sendo processado
+        if (giftCode && giftCode.length >= 3) {
+            addGiftToCollection(giftCode);
+            giftInput.value = ''; // Limpa o campo
         }
+    }, 500); // Reduzido para 500ms para resposta mais rápida
+}
 
-        function addGiftToCollection(giftCode) {
-            if (!currentData || !currentData.email) {
-                notify('Gere dados primeiro!', 'error');
-                return;
+function addGiftToCollection(giftCode) {
+    // Verificações mais flexíveis
+    if (!currentData || !currentData.email) {
+        notify('Gere dados primeiro!', 'warning');
+        return false;
+    }
+    
+    if (!smsState.number || smsState.number === 'Obter' || smsState.number === '...' || smsState.number === 'Erro') {
+        notify('Obtenha um número primeiro!', 'warning');
+        return false;
+    }
+    
+    // Verifica se já existe este gift (case insensitive)
+    if (gifts.some(g => g.code.toLowerCase() === giftCode.toLowerCase())) {
+        notify('Este gift já foi adicionado!', 'warning');
+        return false;
+    }
+    
+    const gift = {
+        code: giftCode,
+        number: smsState.number,
+        operator: smsState.operator || '',
+        email: currentData.email,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+        })
+    };
+    
+    gifts.unshift(gift);
+    
+    // Salva no localStorage
+    localStorage.setItem('gifts', JSON.stringify(gifts));
+    
+    // Atualiza a lista visual
+    updateGiftList();
+    
+    notify(`✓ Gift adicionado! Total: ${gifts.length}`);
+    console.log('Gift adicionado:', gift); // Debug
+    
+    return true;
+}
+
+// Adicione também um evento de paste (colar) como backup
+document.addEventListener('DOMContentLoaded', function() {
+    const giftInput = document.getElementById('giftInput');
+    if (giftInput) {
+        // Evento de colar (CTRL+V)
+        giftInput.addEventListener('paste', function(e) {
+            // Pequeno delay para pegar o valor colado
+            setTimeout(() => {
+                const value = giftInput.value.trim();
+                if (value.length >= 3) {
+                    handleGiftInput({ target: giftInput });
+                }
+            }, 100);
+        });
+        
+        // Evento de blur (quando sai do campo) como backup
+        giftInput.addEventListener('blur', function() {
+            const value = giftInput.value.trim();
+            if (value.length >= 3 && !gifts.some(g => g.code === value)) {
+                handleGiftInput({ target: giftInput });
             }
-            
-            if (!smsState.number || smsState.number === 'Obter' || smsState.number === 'Erro') {
-                notify('Obtenha um número primeiro!', 'error');
-                return;
-            }
-            
-            if (gifts.some(g => g.code === giftCode)) {
-                notify('Este gift já foi adicionado!', 'warning');
-                return;
-            }
-            
-            const gift = {
-                code: giftCode,
-                number: smsState.number,
-                operator: smsState.operator || '',
-                email: currentData.email,
-                timestamp: new Date().toLocaleTimeString('pt-BR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit'
-                })
-            };
-            
-            gifts.unshift(gift);
-            
-            localStorage.setItem('gifts', JSON.stringify(gifts));
-            updateGiftList();
-            
-            notify(`✓ Gift adicionado! Conta #${gifts.length}`);
-        }
+        });
+    }
+});
 
         function updateGiftList() {
-            const giftList = document.getElementById('giftList');
-            const giftCount = document.getElementById('giftCount');
-            
-            giftCount.textContent = gifts.length;
-            
-            if (gifts.length === 0) {
-                giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
-                return;
-            }
-            
-            giftList.innerHTML = '';
-            
-            const recentGifts = gifts.slice(0, 3);
-            
-            recentGifts.forEach((gift, index) => {
-                const item = document.createElement('div');
-                item.className = 'gift-item';
-                item.onclick = () => copySingleGift(gift);
-                
-                const emailParts = gift.email.split('@');
-                const username = emailParts[0];
-                const plusIndex = username.indexOf('+');
-                const aliasPart = plusIndex !== -1 ? username.substring(plusIndex) : '';
-                
-                item.innerHTML = `
-                    <div style="font-weight: 600; color: #64748b; margin-bottom: 3px;">
-                        ${gift.code}
-                    </div>
-                    <div class="gift-info">
-                        <span title="${gift.number} ${gift.operator}">${gift.number.substring(0, 8)}...</span>
-                        <span title="${gift.email}">${aliasPart || gift.email.split('@')[0].substring(0, 6)}...</span>
-                        <span>${gift.timestamp}</span>
-                    </div>
-                `;
-                
-                item.title = `Número: ${gift.number} ${gift.operator}\nEmail: ${gift.email}\nClique para copiar este gift`;
-                giftList.appendChild(item);
-            });
-            
-            if (gifts.length > 3) {
-                const moreItem = document.createElement('div');
-                moreItem.className = 'gift-item';
-                moreItem.style.textAlign = 'center';
-                moreItem.style.color = '#64748b';
-                moreItem.style.fontStyle = 'italic';
-                moreItem.style.fontSize = '0.7rem';
-                moreItem.style.padding = '4px 8px';
-                moreItem.textContent = `... e mais ${gifts.length - 3} gifts (total: ${gifts.length})`;
-                moreItem.onclick = () => showAllGifts();
-                moreItem.title = 'Clique para ver detalhes';
-                giftList.appendChild(moreItem);
-            }
-        }
+    const giftList = document.getElementById('giftList');
+    const giftCount = document.getElementById('giftCount');
+    
+    if (!giftList || !giftCount) {
+        console.error('Elementos da lista de gifts não encontrados');
+        return;
+    }
+    
+    giftCount.textContent = gifts.length;
+    
+    if (gifts.length === 0) {
+        giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
+        return;
+    }
+    
+    giftList.innerHTML = '';
+    
+    // Mostra até 5 gifts recentes (aumentado de 3 para 5)
+    const recentGifts = gifts.slice(0, 5);
+    
+    recentGifts.forEach((gift) => {
+        const item = document.createElement('div');
+        item.className = 'gift-item';
+        item.onclick = () => copySingleGift(gift);
+        item.style.cursor = 'pointer';
+        
+        // Mostra informações resumidas
+        const shortCode = gift.code.length > 15 ? gift.code.substring(0, 15) + '...' : gift.code;
+        const shortNumber = gift.number.length > 10 ? gift.number.substring(0, 10) + '...' : gift.number;
+        
+        item.innerHTML = `
+            <div style="font-weight: 600; color: #1e293b; margin-bottom: 3px; font-size: 0.85rem;">
+                ${shortCode}
+            </div>
+            <div class="gift-info" style="font-size: 0.7rem;">
+                <span title="${gift.number} ${gift.operator}">📱 ${shortNumber}</span>
+                <span title="${gift.email}">📧 ${gift.email.split('@')[0].substring(0, 8)}...</span>
+                <span>🕐 ${gift.timestamp}</span>
+            </div>
+        `;
+        
+        item.title = `Clique para copiar: ${gift.code}\nNúmero: ${gift.number} ${gift.operator}\nEmail: ${gift.email}`;
+        giftList.appendChild(item);
+    });
+    
+    // Se tiver mais gifts, mostra indicador
+    if (gifts.length > 5) {
+        const moreItem = document.createElement('div');
+        moreItem.className = 'gift-item';
+        moreItem.style.textAlign = 'center';
+        moreItem.style.color = '#64748b';
+        moreItem.style.fontStyle = 'italic';
+        moreItem.style.fontSize = '0.75rem';
+        moreItem.style.padding = '8px';
+        moreItem.style.background = '#f1f5f9';
+        moreItem.style.cursor = 'pointer';
+        moreItem.textContent = `📋 Ver todos os ${gifts.length} gifts`;
+        moreItem.onclick = () => showAllGifts();
+        giftList.appendChild(moreItem);
+    }
+    
+    console.log(`Lista de gifts atualizada: ${gifts.length} items`); // Debug
+}
 
         function showAllGifts() {
             if (gifts.length === 0) return;
@@ -1303,29 +1357,64 @@
         }
 
         // ================= INITIALIZATION =================
-        function init() {
-            // SMS
-            loadSmsState();
-            
-            // Data Generator
-            setGender(currentGender);
-            loadSavedData();
-            
-            const savedAlias = localStorage.getItem('aliasNumber');
-            const savedBaseEmail = localStorage.getItem('baseEmail');
-            
-            if (savedAlias) {
-                document.getElementById('aliasNumber').value = savedAlias;
-            }
-            if (savedBaseEmail) {
-                document.getElementById('baseEmail').value = savedBaseEmail;
-            }
-            
-            // Gifts
-            updateGiftList();
-        }
+function init() {
+    // SMS
+    loadSmsState();
+    
+    // Data Generator
+    setGender(currentGender);
+    loadSavedData();
+    
+    const savedAlias = localStorage.getItem('aliasNumber');
+    const savedBaseEmail = localStorage.getItem('baseEmail');
+    
+    if (savedAlias) {
+        document.getElementById('aliasNumber').value = savedAlias;
+    }
+    if (savedBaseEmail) {
+        document.getElementById('baseEmail').value = savedBaseEmail;
+    }
+    
+    // Gifts
+    updateGiftList();
+    
+    // Configurar eventos do gift input
+    const giftInput = document.getElementById('giftInput');
+    if (giftInput) {
+        // Remove eventos antigos para não duplicar
+        giftInput.removeEventListener('paste', handlePaste);
+        giftInput.removeEventListener('blur', handleBlur);
+        
+        // Adiciona novos eventos
+        giftInput.addEventListener('paste', handlePaste);
+        giftInput.addEventListener('blur', handleBlur);
+        
+        console.log('Eventos do gift input configurados');
+    }
+}
 
-        document.addEventListener('DOMContentLoaded', init);
+// Funções separadas para os eventos
+function handlePaste(e) {
+    setTimeout(() => {
+        const giftInput = document.getElementById('giftInput');
+        const value = giftInput.value.trim();
+        console.log('Paste detectado:', value); // Debug
+        if (value.length >= 3) {
+            handleGiftInput({ target: giftInput });
+        }
+    }, 100);
+}
+
+function handleBlur() {
+    const giftInput = document.getElementById('giftInput');
+    const value = giftInput.value.trim();
+    console.log('Blur detectado:', value); // Debug
+    if (value.length >= 3) {
+        handleGiftInput({ target: giftInput });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
