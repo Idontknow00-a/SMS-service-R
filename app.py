@@ -95,7 +95,7 @@ def get_service_price():
                     if isinstance(service_info, dict) and 'cost' in service_info:
                         price = float(service_info['cost'])
                         # Formata em reais
-                        formatted_price = f"R$ {price:.2f}"
+                        formatted_price = f"${price:.4f}"
                         logger.info(f"💰 Preço do serviço {SERVICE}: {formatted_price}")
                         return formatted_price
             
@@ -106,14 +106,14 @@ def get_service_price():
                         service_info = item[SERVICE]
                         if isinstance(service_info, dict) and 'cost' in service_info:
                             price = float(service_info['cost'])
-                            formatted_price = f"R$ {price:.2f}"
+                            formatted_price = f"${price:.4f}"
                             return formatted_price
             
             logger.warning(f"Formato de preço não reconhecido: {data}")
     except Exception as e:
         logger.error(f"Erro ao obter preço: {e}")
     
-    return "R$ 0.00"
+    return "$0.00"
 
 
 def get_number():
@@ -122,7 +122,7 @@ def get_number():
         # Verifica se está em período de muitas falhas
         if check_failure_rate():
             logger.warning("⚠️ Período de espera para evitar bloqueio")
-            return 'RATE_LIMIT', "R$ 0.00"
+            return 'RATE_LIMIT', "$0.00"
         
         # Obtém preço real do serviço
         price = get_service_price()
@@ -177,7 +177,7 @@ def get_number():
         
     except Exception as e:
         logger.error(f"Erro ao obter número: {e}")
-        return 'NO_NUMBER', "R$ 0.00"
+        return 'NO_NUMBER', "$0.00"
 
 
 # REMOVIDA função de cancelamento automático para evitar bloqueios
@@ -273,7 +273,7 @@ def get_price(number_id):
     """Retorna o preço atualizado de um número específico"""
     try:
         if number_id in active_numbers:
-            price = active_numbers[number_id].get('price', 'R$ 0.00')
+            price = active_numbers[number_id].get('price', '$0.00')
             operator = active_numbers[number_id].get('operator', '')
             return jsonify({
                 'success': True,
