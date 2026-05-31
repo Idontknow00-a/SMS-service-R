@@ -14,6 +14,7 @@ API_KEY = os.environ.get('API_KEY_SMS', '')
 COUNTRY_CODE = 73  # Brasil
 SERVICE = 'mm'
 TIMEOUT_DURATION = 120  # segundos
+OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
 
 # Armazenamento em memória
 number_timeouts = {}
@@ -29,6 +30,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://hero-sms.com/stubs/handler_api.php"
+
+
+def get_available_operators():
+    """Obtém a lista de operadoras disponíveis"""
+    try:
+        url = f"{BASE_URL}?api_key={API_KEY}&action=getOperators"
+        response = requests.get(url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                country_operators = data.get('countryOperators', {})
+                return country_operators.get(str(COUNTRY_CODE), [])
+        return []
+    except Exception as e:
+        logger.error(f"Erro ao obter operadoras: {e}")
+        return []
+
+
+def filter_operators(available_operators):
+    """Filtra apenas operadoras TIM e ARQIA"""
+    filtered = [op for op in available_operators if op.lower() in OPERATORS]
+    logger.info(f"Operadoras disponíveis: {available_operators}")
+    logger.info(f"Operadoras filtradas (TIM/ARQIA): {filtered}")
+    return filtered
 
 
 def get_service_price_async(number_id):
@@ -60,31 +86,49 @@ def get_service_price_async(number_id):
 
 
 def get_number():
-    """Obtém um número DIRETO - sem verificações prévias"""
+    """Obtém um número com filtro por operadora"""
     try:
-        url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={COUNTRY_CODE}"
-        response = requests.get(url, timeout=10)
+        # Primeiro, obtém as operadoras disponíveis
+        available_operators = get_available_operators()
         
-        if response.status_code == 200:
-            data = response.text.strip()
+        if not available_operators:
+            logger.warning("Não foi possível obter a lista de operadoras")
+            return 'NO_NUMBERS', "0.0000"
+        
+        # Filtra apenas TIM e ARQIA
+        filtered_operators = filter_operators(available_operators)
+        
+        if not filtered_operators:
+            logger.warning("Nenhuma operadora TIM ou ARQIA disponível")
+            return 'NO_NUMBERS', "0.0000"
+        
+        # Tenta obter número para cada operadora filtrada
+        for operator in filtered_operators:
+            url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={COUNTRY_CODE}&operator={operator}"
+            response = requests.get(url, timeout=10)
             
-            if data.startswith('ACCESS_NUMBER'):
-                logger.info(f"✓ Número obtido com sucesso")
-                return data, "..."  # Placeholder - será atualizado em background
-            elif 'NO_NUMBERS' in data:
-                logger.info("✗ Sem números disponíveis")
-                return 'NO_NUMBERS', "0.0000"
-            elif 'NO_BALANCE' in data:
-                logger.error("✗ Saldo insuficiente!")
-                return 'NO_BALANCE', "0.0000"
-            elif 'BAD_KEY' in data:
-                logger.error("✗ API Key inválida!")
-                return 'BAD_KEY', "0.0000"
-            else:
-                logger.warning(f"Resposta inesperada: {data}")
-                return data, "0.0000"
+            if response.status_code == 200:
+                data = response.text.strip()
+                
+                if data.startswith('ACCESS_NUMBER'):
+                    logger.info(f"✓ Número obtido com sucesso (Operadora: {operator})")
+                    return data, "..."  # Placeholder - será atualizado em background
+                elif 'NO_NUMBERS' in data:
+                    logger.info(f"✗ Sem números disponíveis para operadora {operator}")
+                    continue  # Tenta próxima operadora
+                elif 'NO_BALANCE' in data:
+                    logger.error("✗ Saldo insuficiente!")
+                    return 'NO_BALANCE', "0.0000"
+                elif 'BAD_KEY' in data:
+                    logger.error("✗ API Key inválida!")
+                    return 'BAD_KEY', "0.0000"
+                else:
+                    logger.warning(f"Resposta inesperada para operadora {operator}: {data}")
+                    continue
         
-        return 'NO_NUMBER', "0.0000"
+        # Se chegou aqui, nenhuma operadora tinha números
+        logger.info("✗ Nenhum número disponível para as operadoras TIM e ARQIA")
+        return 'NO_NUMBERS', "0.0000"
         
     except Exception as e:
         logger.error(f"Erro ao obter número: {e}")
@@ -122,9 +166,8 @@ def index():
 
 @app.route('/get_number', methods=['GET'])
 def get_number_route():
-    """Obtém novo número DIRETO - preço atualizado em background"""
+    """Obtém novo número com filtro por operadora (TIM/ARQIA)"""
     try:
-        # Compra direto - 1 REQUISIÇÃO APENAS!
         data, price = get_number()
         
         if data.startswith('ACCESS_NUMBER'):
@@ -155,7 +198,7 @@ def get_number_route():
         else:
             msg_map = {
                 'NO_BALANCE': 'Saldo insuficiente!',
-                'NO_NUMBERS': 'Sem números disponíveis',
+                'NO_NUMBERS': 'Sem números disponíveis para TIM/ARQIA',
                 'NO_NUMBER': 'Falha ao obter número',
                 'BAD_KEY': 'API Key inválida'
             }
@@ -312,13 +355,15 @@ def get_stats():
         'success': True,
         'successful_numbers': len(successful_numbers),
         'active_numbers': len(active_numbers),
-        'total_codes': sum(len(num.get('received_codes', [])) for num in active_numbers.values())
+        'total_codes': sum(len(num.get('received_codes', [])) for num in active_numbers.values()),
+        'allowed_operators': OPERATORS
     })
 
 
 if __name__ == '__main__':
     logger.info("🚀 Servidor SMS iniciado (HeroSMS)")
     logger.info("📞 Números brasileiros (73) - Serviço: mm")
+    logger.info("📱 Operadoras: TIM e ARQIA")
     logger.info("⏰ Timeout: 50s")
     logger.info("⚡ Compra direta - Preço atualizado em background!")
     print("\n" + "="*50)
