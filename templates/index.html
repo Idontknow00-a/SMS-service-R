@@ -173,6 +173,64 @@
             padding: 15px;
         }
         
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .action-btn, .gender-btn {
+            flex: 1;
+            padding: 6px 2px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .gender-btn {
+            padding: 6px 2px;
+            font-size: 0.9rem;
+        }
+        
+        .action-btn.copy-sms { 
+            background: #f1f5f9; 
+            color: #64748b; 
+            flex: 0 0 auto;
+            width: 32px;
+            min-width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn.copy-sms:hover {
+            background: #e2e8f0;
+        }
+        
+        .action-btn:not(.copy-sms), .gender-btn {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn.generate { 
+            background: #64748b; 
+            color: white; 
+        }
+        
+        .action-btn.generate:hover {
+            background: #475569;
+        }
+        
         .gender-btn.male { 
             background: #e0f2fe; 
             color: #0369a1; 
@@ -181,6 +239,10 @@
         .gender-btn.male.active { 
             background: #0369a1; 
             color: white; 
+        }
+        
+        .gender-btn.male:hover:not(.active) {
+            background: #bae6fd;
         }
         
         .gender-btn.female { 
@@ -193,125 +255,41 @@
             color: white; 
         }
         
-        .action-buttons {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-}
-
-.action-btn, .gender-btn {
-    flex: 1;
-    padding: 6px 2px; /* Versão mais compacta */
-    border: none;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-}
-
-.gender-btn {
-    padding: 6px 2px;
-    font-size: 0.9rem; /* Emoji um pouco maior */
-}
-
-/* Versão mais compacta */
-.action-btn.copy-sms { 
-    background: #f1f5f9; 
-    color: #64748b; 
-    flex: 0 0 auto;
-    width: 32px; /* Menor ainda */
-    min-width: 32px;
-    height: 32px; /* Altura fixa igual à largura */
-    padding: 0;
-    border-radius: 6px;
-    font-size: 1.2rem; /* Emoji maior */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn.copy-sms:hover {
-    background: #e2e8f0;
-}
-
-/* Ajuste os outros botões para mesma altura */
-.action-btn:not(.copy-sms), .gender-btn {
-    height: 32px; /* Mesma altura do botão de copiar */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn.generate { 
-    background: #64748b; 
-    color: white; 
-}
-
-.action-btn.generate:hover {
-    background: #475569;
-}
-
-.gender-btn.male { 
-    background: #e0f2fe; 
-    color: #0369a1; 
-}
-
-.gender-btn.male.active { 
-    background: #0369a1; 
-    color: white; 
-}
-
-.gender-btn.male:hover:not(.active) {
-    background: #bae6fd;
-}
-
-.gender-btn.female { 
-    background: #fce7f3; 
-    color: #db2777; 
-}
-
-.gender-btn.female.active { 
-    background: #db2777; 
-    color: white; 
-}
-
-.gender-btn.female:hover:not(.active) {
-    background: #fbcfe8;
-}
+        .gender-btn.female:hover:not(.active) {
+            background: #fbcfe8;
+        }
         
         .data-field {
-    margin-bottom: 8px;
-    border: 1px solid #e2e8f0; /* borda igual ao botão limpar */
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: #f8fafc; /* fundo ROXO da sessão GIFTS */
-}
-
-.data-field:hover {
-    border-color: #e2e8f0; /* igual ao hover do limpar */
-    background: #f1f5f9; /* roxo levemente mais forte */
-}
-
-.data-input {
-    flex: 1;
-    padding: 10px 12px;
-    border: none;
-    font-size: 0.9rem;
-    background: transparent; /* usa o fundo roxo */
-    color: #64748b; /* texto igual ao botão limpar */
-    cursor: pointer;
-}
-
-.data-input:focus {
-    outline: none;
-    background: #ffffffaa; /* leve destaque no foco */
-}
-
+            margin-bottom: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        
+        .data-field:hover {
+            border-color: #e2e8f0;
+            background: #f1f5f9;
+        }
+        
+        .data-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            font-size: 0.9rem;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+        }
+        
+        .data-input:focus {
+            outline: none;
+            background: #ffffffaa;
+        }
+        
         /* Gift Section */
         .gift-section {
             background: #f8fafc;
@@ -526,14 +504,16 @@
                     </div>
                 </div>
             </div>
-<!-- Data Generator Section -->  
-<div class="section data-section">  
-    <div class="action-buttons">  
-        <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>  
-        <button class="gender-btn male active" onclick="setGender('male')" id="maleBtn">MAS</button>  
-        <button class="gender-btn female" onclick="setGender('female')" id="femaleBtn">FEM</button>  
-        <button class="action-btn generate" onclick="generateData()">GERAR</button>  
-    </div>
+        </div>
+
+        <!-- Data Generator Section -->  
+        <div class="section data-section">  
+            <div class="action-buttons">  
+                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>  
+                <button class="gender-btn male active" onclick="setGender('male')" id="maleBtn">MAS</button>  
+                <button class="gender-btn female" onclick="setGender('female')" id="femaleBtn">FEM</button>  
+                <button class="action-btn generate" onclick="generateData()">GERAR</button>  
+            </div>
             
             <div class="data-field" onclick="copyDataField('firstName')">
                 <input type="text" class="data-input" id="firstName" readonly placeholder="Nome">
@@ -584,7 +564,6 @@
                 </div>
                 <button class="reset-btn" onclick="resetAlias()">Resetar Alias</button>
                 <button class="reset-btn" onclick="resetSMSStats()" style="margin-top: 8px; background: #64748b;">Resetar Tentativas BOT-SMS</button>
-                </div>
             </div>
         </div>
     </div>
@@ -595,57 +574,62 @@
     <script>
         // ================= SMS FUNCTIONS =================
         let smsState = {
-    id: localStorage.getItem('sms_id') || '',
-    number: localStorage.getItem('sms_number') || '',
-    price: localStorage.getItem('sms_price') || '',
-    code: localStorage.getItem('sms_code') || '',
-    attempts: parseInt(localStorage.getItem('sms_attempts') || '0'),
-    successes: parseInt(localStorage.getItem('sms_successes') || '0'),
-    loading: false,
-    firstStatusCheck: localStorage.getItem('sms_first_check') === 'true' || false,
-    hasReceivedCode: localStorage.getItem('sms_hasReceivedCode') === 'true' || false, // NOVA FLAG
-    autoCheckInterval: null
-};
+            id: localStorage.getItem('sms_id') || '',
+            number: localStorage.getItem('sms_number') || '',
+            operator: localStorage.getItem('sms_operator') || '',
+            price: localStorage.getItem('sms_price') || '',
+            code: localStorage.getItem('sms_code') || '',
+            attempts: parseInt(localStorage.getItem('sms_attempts') || '0'),
+            successes: parseInt(localStorage.getItem('sms_successes') || '0'),
+            loading: false,
+            firstStatusCheck: localStorage.getItem('sms_first_check') === 'true' || false,
+            hasReceivedCode: localStorage.getItem('sms_hasReceivedCode') === 'true' || false,
+            autoCheckInterval: null
+        };
 
         function loadSmsState() {
-    if (smsState.number) {
-        document.getElementById('numberValue').textContent = smsState.number;
-        document.getElementById('numberBox').classList.remove('empty');
-        document.getElementById('numberPrice').textContent = smsState.price ? `$${smsState.price}` : '';
-        if (smsState.price) document.getElementById('numberBox').classList.add('active');
-    }
-    
-    if (smsState.code) {
-        document.getElementById('codeValue').textContent = smsState.code;
-        document.getElementById('codeBox').classList.remove('empty');
-        document.getElementById('codeBox').classList.add('active');
-        document.getElementById('codeStatus').textContent = 'Recebido ✓';
-        document.querySelector('#codeBox .dot').classList.add('received');
-        // Marca que já recebeu código
-        smsState.hasReceivedCode = true;
-    }
-    
-    document.getElementById('attempts').textContent = smsState.attempts;
-    document.getElementById('successes').textContent = smsState.successes;
-    
-    // Carrega a flag do localStorage
-    smsState.hasReceivedCode = localStorage.getItem('sms_hasReceivedCode') === 'true' || false;
-    
-    if (smsState.id) {
-        startAutoCodeCheck();
-    }
-}
+            if (smsState.number) {
+                // Mostra número com operadora
+                const displayNumber = smsState.operator ? 
+                    `${smsState.number} (${smsState.operator})` : 
+                    smsState.number;
+                
+                document.getElementById('numberValue').textContent = displayNumber;
+                document.getElementById('numberBox').classList.remove('empty');
+                document.getElementById('numberPrice').textContent = smsState.price || '';
+                if (smsState.price) document.getElementById('numberBox').classList.add('active');
+            }
+            
+            if (smsState.code) {
+                document.getElementById('codeValue').textContent = smsState.code;
+                document.getElementById('codeBox').classList.remove('empty');
+                document.getElementById('codeBox').classList.add('active');
+                document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                document.querySelector('#codeBox .dot').classList.add('received');
+                smsState.hasReceivedCode = true;
+            }
+            
+            document.getElementById('attempts').textContent = smsState.attempts;
+            document.getElementById('successes').textContent = smsState.successes;
+            
+            smsState.hasReceivedCode = localStorage.getItem('sms_hasReceivedCode') === 'true' || false;
+            
+            if (smsState.id) {
+                startAutoCodeCheck();
+            }
+        }
 
         function saveSmsState() {
-    localStorage.setItem('sms_id', smsState.id);
-    localStorage.setItem('sms_number', smsState.number);
-    localStorage.setItem('sms_price', smsState.price);
-    localStorage.setItem('sms_code', smsState.code);
-    localStorage.setItem('sms_attempts', smsState.attempts.toString());
-    localStorage.setItem('sms_successes', smsState.successes.toString());
-    localStorage.setItem('sms_first_check', smsState.firstStatusCheck.toString());
-    localStorage.setItem('sms_hasReceivedCode', smsState.hasReceivedCode.toString());
-}
+            localStorage.setItem('sms_id', smsState.id);
+            localStorage.setItem('sms_number', smsState.number);
+            localStorage.setItem('sms_operator', smsState.operator);
+            localStorage.setItem('sms_price', smsState.price);
+            localStorage.setItem('sms_code', smsState.code);
+            localStorage.setItem('sms_attempts', smsState.attempts.toString());
+            localStorage.setItem('sms_successes', smsState.successes.toString());
+            localStorage.setItem('sms_first_check', smsState.firstStatusCheck.toString());
+            localStorage.setItem('sms_hasReceivedCode', smsState.hasReceivedCode.toString());
+        }
 
         function notify(msg, type = 'info') {
             const notif = document.getElementById('notification');
@@ -656,7 +640,12 @@
 
         async function copy(text, type) {
             try {
-                const cleanText = text.replace(/\$\d+\.\d{4}\s*/, '').trim();
+                // Remove informações de preço e operadora para copiar apenas o número
+                let cleanText = text;
+                if (type === 'number') {
+                    cleanText = text.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').replace(/R\$\s*[\d.,]+\s*/, '').trim();
+                }
+                
                 await navigator.clipboard.writeText(cleanText);
                 
                 const indicator = document.getElementById(type + 'Copy');
@@ -669,7 +658,10 @@
                 return true;
             } catch {
                 const el = document.createElement('textarea');
-                const cleanText = text.replace(/\$\d+\.\d{4}\s*/, '').trim();
+                let cleanText = text;
+                if (type === 'number') {
+                    cleanText = text.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').replace(/R\$\s*[\d.,]+\s*/, '').trim();
+                }
                 el.value = cleanText;
                 document.body.appendChild(el);
                 el.select();
@@ -680,68 +672,37 @@
             }
         }
 
-        async function cancelCurrentNumber() {
-            if (!smsState.id) return false;
-            
-            try {
-                const response = await fetch(`/cancel_number/${smsState.id}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('numberBox').classList.remove('active');
-                    document.getElementById('numberBox').classList.add('cancelled');
-                    document.getElementById('numberStatus').textContent = 'Cancelado';
-                    document.querySelector('#numberBox .dot').classList.add('cancelled');
-                    
-                    document.getElementById('codeValue').textContent = 'Nenhum';
-                    document.getElementById('codeBox').classList.remove('active');
-                    document.getElementById('codeStatus').textContent = 'Cancelado';
-                    document.querySelector('#codeBox .dot').classList.add('cancelled');
-                    
-                    smsState.id = '';
-                    smsState.code = '';
-                    stopAutoCodeCheck();
-                    saveSmsState();
-                    
-                    notify('Número cancelado (sem SMS)', 'warning');
-                    return true;
-                }
-            } catch (error) {
-                console.error('Erro ao cancelar número:', error);
-            }
-            return false;
-        }
-
         // Função para verificar código automaticamente
         async function autoCheckCode() {
-    if (!smsState.id || smsState.loading) return;
-    
-    try {
-        const response = await fetch(`/get_status/${smsState.id}`);
-        const data = await response.json();
-        
-        if (data.success && data.has_code && data.code) {
-            // Código recebido automaticamente!
-            smsState.code = data.code;
-            smsState.successes++;
-            smsState.hasReceivedCode = true;
-            smsState.firstStatusCheck = true; // MARCA QUE JÁ FEZ CHECK
+            if (!smsState.id || smsState.loading) return;
             
-            document.getElementById('codeValue').textContent = smsState.code;
-            document.getElementById('codeBox').classList.add('active');
-            document.getElementById('codeStatus').textContent = 'Recebido ✓';
-            document.querySelector('#codeBox .dot').classList.add('received');
-            document.getElementById('successes').textContent = smsState.successes;
-            
-            saveSmsState();
-            
-            await copy(smsState.code, 'code');
-            notify(`Código recebido: ${smsState.code}`, 'info');
+            try {
+                const response = await fetch(`/get_status/${smsState.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.has_code && data.code) {
+                    // Código recebido automaticamente!
+                    smsState.code = data.code;
+                    smsState.successes++;
+                    smsState.hasReceivedCode = true;
+                    smsState.firstStatusCheck = true;
+                    
+                    document.getElementById('codeValue').textContent = smsState.code;
+                    document.getElementById('codeBox').classList.add('active');
+                    document.getElementById('codeBox').classList.remove('empty');
+                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                    document.querySelector('#codeBox .dot').classList.add('received');
+                    document.getElementById('successes').textContent = smsState.successes;
+                    
+                    saveSmsState();
+                    
+                    await copy(smsState.code, 'code');
+                    notify(`Código recebido: ${smsState.code}`, 'info');
+                }
+            } catch (error) {
+                // Silencia erros
+            }
         }
-    } catch (error) {
-        // Silencia erros
-    }
-}
 
         function startAutoCodeCheck() {
             if (smsState.autoCheckInterval) {
@@ -759,13 +720,13 @@
         }
 
         async function getNumber() {
-    if (smsState.loading) return;
-    
-    smsState.loading = true;
-    smsState.attempts++;
-    smsState.firstStatusCheck = false;
-    smsState.hasReceivedCode = false; // RESETA ao obter novo número
-    saveSmsState();
+            if (smsState.loading) return;
+            
+            smsState.loading = true;
+            smsState.attempts++;
+            smsState.firstStatusCheck = false;
+            smsState.hasReceivedCode = false;
+            saveSmsState();
             
             document.getElementById('attempts').textContent = smsState.attempts;
             document.getElementById('numberValue').textContent = '...';
@@ -773,14 +734,7 @@
             document.getElementById('numberPrice').textContent = '';
             
             try {
-                if (smsState.id) {
-                    try {
-                        await fetch(`/cancel_number/${smsState.id}`);
-                        stopAutoCodeCheck();
-                    } catch (e) {
-                        console.log('Erro ao cancelar número anterior:', e);
-                    }
-                }
+                // REMOVIDO cancelamento de número anterior para evitar bloqueios
                 
                 const res = await fetch('/get_number');
                 const data = await res.json();
@@ -788,11 +742,17 @@
                 if (data.success) {
                     smsState.id = data.number_id;
                     smsState.number = data.phone_number;
+                    smsState.operator = data.operator || '';
                     smsState.price = data.price;
                     smsState.code = '';
                     
-                    document.getElementById('numberValue').textContent = smsState.number;
-                    document.getElementById('numberPrice').textContent = `$${smsState.price}`;
+                    // Mostra número com operadora
+                    const displayNumber = data.operator ? 
+                        `${data.phone_number} (${data.operator})` : 
+                        data.phone_number;
+                    
+                    document.getElementById('numberValue').textContent = displayNumber;
+                    document.getElementById('numberPrice').textContent = data.price;
                     document.getElementById('numberBox').classList.remove('empty', 'cancelled');
                     document.getElementById('numberBox').classList.add('active');
                     document.getElementById('numberStatus').textContent = 'Pronto';
@@ -809,7 +769,7 @@
                     startAutoCodeCheck();
                     
                     await copy(smsState.number, 'number');
-                    notify(`Número: ${smsState.number} ($${smsState.price})`);
+                    notify(`Número ${data.operator || ''}: ${smsState.number} (${data.price})`);
                 } else {
                     notify(data.message || 'Sem números disponíveis', 'error');
                     document.getElementById('numberValue').textContent = 'Erro';
@@ -830,94 +790,90 @@
         }
 
         async function getCode() {
-    if (!smsState.id || smsState.loading) {
-        if (!smsState.id) notify('Obtenha um número primeiro', 'error');
-        return;
-    }
-    
-    smsState.loading = true;
-    document.getElementById('codeValue').textContent = '...';
-    document.getElementById('codeStatus').textContent = 'Verificando';
-    document.getElementById('codeBox').classList.remove('empty');
-    
-    try {
-        const res = await fetch(`/get_status/${smsState.id}`);
-        const data = await res.json();
-        
-        if (data.success) {
-            if (data.has_code && data.code) {
-                // Código recebido manualmente
-                smsState.code = data.code;
-                smsState.successes++;
-                smsState.hasReceivedCode = true; // MARCA QUE RECEBEU CÓDIGO
-                smsState.firstStatusCheck = true; // MARCA QUE JÁ FEZ CHECK
-                
-                document.getElementById('codeValue').textContent = smsState.code;
-                document.getElementById('codeBox').classList.add('active');
-                document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                document.querySelector('#codeBox .dot').classList.add('received');
-                document.getElementById('successes').textContent = smsState.successes;
-                
-                saveSmsState();
-                
-                await copy(smsState.code, 'code');
-                notify(`Código: ${smsState.code}`, 'info');
-                
-            } else if (data.status === 'waiting_code') {
-                // Verifica se JÁ TEM CÓDIGO SALVO (chegou automaticamente)
-                if (smsState.code && smsState.hasReceivedCode) {
-                    // Já tem código, copia o código atual
-                    document.getElementById('codeValue').textContent = smsState.code;
-                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                    
-                    await copy(smsState.code, 'code');
-                    notify(`Código atual: ${smsState.code}`, 'info');
-                    
-                    smsState.firstStatusCheck = true; // Marca que já fez check
-                    
-                } else if (!smsState.firstStatusCheck) {
-                    // PRIMEIRO CHECK MANUAL sem código ainda
-                    document.getElementById('codeValue').textContent = 'Nenhum';
-                    document.getElementById('codeStatus').textContent = 'Cancelando...';
-                    
-                    await copy('Nenhum', 'code');
-                    
-                    // Só cancela se NUNCA recebeu código
-                    if (!smsState.hasReceivedCode) {
-                        setTimeout(async () => {
-                            await cancelCurrentNumber();
-                        }, 500);
-                    }
-                    
-                    smsState.firstStatusCheck = true;
-                    notify('Nenhum SMS recebido - Cancelando número', 'warning');
-                    
-                } else {
-                    // Já fez primeiro check, apenas verifica
-                    document.getElementById('codeValue').textContent = smsState.code || 'Aguardando...';
-                    document.getElementById('codeStatus').textContent = 'Verificando...';
-                    notify('Aguardando SMS...', 'info');
-                }
-                
-            } else {
-                document.getElementById('codeStatus').textContent = data.message || 'Status';
-                document.getElementById('codeValue').textContent = smsState.code || '...';
-                notify(data.message || 'Status', 'info');
+            if (!smsState.id || smsState.loading) {
+                if (!smsState.id) notify('Obtenha um número primeiro', 'error');
+                return;
             }
-        } else {
-            notify(data.message || 'Erro ao verificar', 'error');
-            document.getElementById('codeStatus').textContent = 'Erro';
-            document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+            
+            smsState.loading = true;
+            document.getElementById('codeValue').textContent = '...';
+            document.getElementById('codeStatus').textContent = 'Verificando';
+            document.getElementById('codeBox').classList.remove('empty');
+            
+            try {
+                const res = await fetch(`/get_status/${smsState.id}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    if (data.has_code && data.code) {
+                        // Código recebido manualmente
+                        smsState.code = data.code;
+                        smsState.successes++;
+                        smsState.hasReceivedCode = true;
+                        smsState.firstStatusCheck = true;
+                        
+                        document.getElementById('codeValue').textContent = smsState.code;
+                        document.getElementById('codeBox').classList.add('active');
+                        document.getElementById('codeBox').classList.remove('empty');
+                        document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                        document.querySelector('#codeBox .dot').classList.add('received');
+                        document.getElementById('successes').textContent = smsState.successes;
+                        
+                        saveSmsState();
+                        
+                        await copy(smsState.code, 'code');
+                        notify(`Código: ${smsState.code}`, 'info');
+                        
+                    } else if (data.status === 'waiting_code') {
+                        // Verifica se JÁ TEM CÓDIGO SALVO
+                        if (smsState.code && smsState.hasReceivedCode) {
+                            document.getElementById('codeValue').textContent = smsState.code;
+                            document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                            
+                            await copy(smsState.code, 'code');
+                            notify(`Código atual: ${smsState.code}`, 'info');
+                            
+                            smsState.firstStatusCheck = true;
+                            
+                        } else {
+                            // Ainda aguardando - NÃO CANCELA AUTOMATICAMENTE
+                            document.getElementById('codeValue').textContent = 'Aguardando...';
+                            document.getElementById('codeStatus').textContent = 'Aguardando SMS...';
+                            notify('Aguardando SMS...', 'info');
+                        }
+                        
+                    } else if (data.status === 'cancelled') {
+                        document.getElementById('codeStatus').textContent = 'Expirado';
+                        document.getElementById('codeValue').textContent = 'Expirado';
+                        document.getElementById('numberBox').classList.remove('active');
+                        document.getElementById('numberBox').classList.add('cancelled');
+                        notify('Número expirado', 'warning');
+                        
+                        // Limpa estado
+                        smsState.id = '';
+                        smsState.code = '';
+                        stopAutoCodeCheck();
+                        saveSmsState();
+                        
+                    } else {
+                        document.getElementById('codeStatus').textContent = data.message || 'Status';
+                        document.getElementById('codeValue').textContent = smsState.code || '...';
+                        notify(data.message || 'Status', 'info');
+                    }
+                } else {
+                    notify(data.message || 'Erro ao verificar', 'error');
+                    document.getElementById('codeStatus').textContent = 'Erro';
+                    document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+                }
+            } catch (error) {
+                notify('Erro de conexão', 'error');
+                document.getElementById('codeStatus').textContent = 'Erro';
+                document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+            } finally {
+                smsState.loading = false;
+                saveSmsState();
+            }
         }
-    } catch (error) {
-        notify('Erro de conexão', 'error');
-        document.getElementById('codeStatus').textContent = 'Erro';
-        document.getElementById('codeValue').textContent = smsState.code || 'Erro';
-    } finally {
-        smsState.loading = false;
-        saveSmsState();
-    }
-}
 
         // ================= DATA GENERATOR FUNCTIONS =================
         const maleNames = ["Abelardo", "Adriano", "Agnaldo", "Alan", "Alberto", "Aldo", "Alex", "Alexandre", "Alfredo", "Alvaro",
@@ -940,7 +896,9 @@
             "Nestor", "Nilson", "Norberto", "Nuno", "Osmar", "Paulo", "Plinio", "Rubens", "Ruy", "Salomao",
             "Samir", "Sandro", "Severino", "Sidnei", "Silvano", "Silvio", "Tadeu", "Tarcisio", "Teodoro", "Thiago", "Tomas",
             "Ulysses", "Urbano", "Valdir", "Valter", "Vicente", "Vladmir", "Waldemar", "Wilmar", "Wladimir"];
+            
         const femaleNames = ["Abigail", "Adelaide", "Adelia", "Adriana", "Agatha", "Agnes", "Aida", "Aileen", "Aira", "Alana", "Alice", "Aline", "Alzira", "Amalia", "Amanda", "Amelia", "Ana", "Analia", "Andrea", "Andressa", "Angela", "Angelica", "Anita", "Antonia", "Aparecida", "Ariana", "Ariane", "Arlete", "Arya", "Aurora", "Barbara", "Beatriz", "Benedita", "Berenice", "Bernadete", "Bianca", "Bruna", "Brunilda", "Caetana", "Camila", "Carina", "Carla", "Carmem", "Carmo", "Carolina", "Cassia", "Catarina", "Cecilia", "Celina", "Celia", "Clara", "Clarice", "Clarinda", "Claudia", "Clementina", "Cleonice", "Clotilde", "Conceicao", "Constancia", "Cristina", "Dafne", "Dalva", "Daniela", "Daphne", "Dara", "Debora", "Deise", "Denise", "Diana", "Dilma", "Diolinda", "Diva", "Dora", "Doroteia", "Eduarda", "Elaine", "Eliana", "Elisabete", "Elisabeth", "Elisa", "Elisete", "Elizangela", "Elsa", "Elza", "Emanuela", "Emilia", "Emily", "Eneida", "Ercilia", "Erica", "Ermelinda", "Ester", "Esther", "Eunice", "Eva", "Evelyn", "Fabiana", "Fabiola", "Fatima", "Felicia", "Fernanda", "Filomena", "Flavia", "Francisca", "Gabriela", "Gabrielle", "Geralda", "Gertrudes", "Giovanna", "Giselle", "Gloria", "Graca", "Graciela", "Graziella", "Guadalupe", "Helena", "Heloisa", "Henriqueta", "Hilda", "Idalina", "Idalia", "Idalina", "Ieda", "Ileana", "Ilma", "Ilona", "Ines", "Iolanda", "Ione", "Irene", "Iris", "Isabel", "Isabela", "Isis", "Ivana", "Ivone", "Jacinta", "Janaina", "Janete", "Janice", "Jasmin", "Jeane", "Jocasta", "Joceline", "Joana", "Jordana", "Josefa", "Josefina", "Jovita", "Judite", "Julia", "Juliana", "Julieta", "Jurema", "Justina", "Karla", "Karoline", "Katharina", "Katia", "Katrina", "Kelly", "Kim", "Lais", "Lara", "Laura", "Laurinda", "Leandra", "Leila", "Lena", "Leonor", "Leticia", "Lia", "Liana", "Lilian", "Liliana", "Linda", "Lineia", "Livia", "Loren", "Lorena", "Luana", "Lucia", "Luciana", "Luciene", "Lucrecia", "Ludmila", "Luisa", "Luzia", "Madalena", "Magda", "Magnolia", "Maia", "Maira", "Manuela", "Mara", "Marcela", "Marcia", "Marcilia", "Margarida", "Maria", "Mariana", "Marilda", "Marina", "Marisa", "Marlene", "Marta", "Matilde", "Maura", "Mavi", "Maxima", "Mayara", "Maysa", "Melania", "Melinda", "Melissa", "Mercedes", "Milena", "Miriam", "Mirian", "Mirela", "Miriam", "Monica", "Nadia", "Nair", "Nancy", "Nara", "Natividade", "Natalia", "Natasha", "Nazare", "Nela", "Nelia", "Nely", "Nereida", "Neyde", "Neuza", "Nidia", "Nila", "Nilza", "Nina", "Ninfa", "Nisia", "Noemia", "Noemi", "Norma", "Nubia", "Odalicia", "Odete", "Ofelia", "Olga", "Olimpia", "Otilia", "Palmira", "Patricia", "Paula", "Paulina", "Pauline", "Penelope", "Perpetua", "Piedade", "Pilar", "Priscila", "Querina", "Quintina", "Rafaela", "Raquel", "Rebeca", "Regina", "Renata", "Rita", "Roberta", "Rosa", "Rosalina", "Rosana", "Rosangela", "Rosario", "Rosilene", "Rosimeire", "Rubia", "Rute", "Sabrina", "Samanta", "Sandra", "Sara", "Sasha", "Selena", "Selma", "Severina", "Sheila", "Sibila", "Sibila", "Silvana", "Silvia", "Simone", "Sofia", "Solange", "Sonia", "Soraya", "Suellen", "Sulamita", "Suzana", "Tania", "Tassia", "Tatiana", "Telma", "Teresa", "Tereza", "Thereza", "Tiana", "Tina", "Tirza", "Tomasia", "Valeria", "Valesca", "Valquiria", "Vanessa", "Vanda", "Verena", "Veridiana", "Veronica", "Victoria", "Vilma", "Violeta", "Virginia", "Vitoria", "Vivian", "Viviane", "Wanda", "Xenia", "Yara", "Yasmin", "Yeda", "Yolanda", "Yone", "Yvone", "Zaira", "Zelia", "Zenaide", "Zenilda", "Zilda"];
+            
         const lastNames = ["Abreu", "Albuquerque", "Almeida", "Andrade", "Araujo", "Barbosa", "Barros", "Borges", "Brandao", "Brazil",
             "Campos", "Carvalho", "Castro", "Chaves", "Clemente", "Costa", "Cruz", "Dias", "Duarte", "Faria",
             "Fernandes", "Ferreira", "Freitas", "Gama", "Garcia", "Goncalves", "Gomes", "Goncalves", "Guimaraes",
@@ -1103,28 +1061,28 @@
             });
         }
         
-        // ================= FUNÇÃO PARA COPIAR NÚMERO DO SMS =================
-function copyCurrentSMSNumber() {
-    if (!smsState.number || smsState.number === 'Obter' || smsState.number === '...' || smsState.number === 'Erro') {
-        notify('Nenhum número SMS disponível', 'error');
-        return;
-    }
-    
-    // Remove o símbolo de preço se existir
-    const cleanNumber = smsState.number.replace(/\$\d+\.\d{4}\s*/, '').trim();
-    
-    navigator.clipboard.writeText(cleanNumber).then(() => {
-        notify(`Núm copiado`);
-    }).catch(() => {
-        const el = document.createElement('textarea');
-        el.value = cleanNumber;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        notify(`Núm copiado`);
-    });
-}
+        // Função para copiar número do SMS (apenas números, sem operadora)
+        function copyCurrentSMSNumber() {
+            if (!smsState.number || smsState.number === 'Obter' || smsState.number === '...' || smsState.number === 'Erro') {
+                notify('Nenhum número SMS disponível', 'error');
+                return;
+            }
+            
+            // Remove informações de operadora e preço
+            const cleanNumber = smsState.number.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').trim();
+            
+            navigator.clipboard.writeText(cleanNumber).then(() => {
+                notify(`Núm copiado`);
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = cleanNumber;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify(`Núm copiado`);
+            });
+        }
         
         function setAliasNumber() {
             const number = document.getElementById('aliasNumber').value;
@@ -1149,141 +1107,127 @@ function copyCurrentSMSNumber() {
 
         // ================= GIFT FUNCTIONS =================
         function handleGiftInput(event) {
-    const giftInput = document.getElementById('giftInput');
-    const giftCode = giftInput.value.trim();
-    
-    // Se o campo estiver vazio ou muito curto, ignora
-    if (giftCode.length < 3) return;
-    
-    // Verifica se parece um código de gift (pode ajustar conforme necessidade)
-    // Exemplo: códigos geralmente têm números, letras, hífens
-    const giftPattern = /[A-Za-z0-9\-_]{6,}/;
-    if (!giftPattern.test(giftCode)) return;
-    
-    // Adiciona um pequeno delay para garantir que o usuário terminou de digitar/colar
-    clearTimeout(giftInput.timer);
-    giftInput.timer = setTimeout(() => {
-        addGiftToCollection(giftCode);
-        giftInput.value = ''; // Limpa o campo
-    }, 800); // 800ms de delay
-}
+            const giftInput = document.getElementById('giftInput');
+            const giftCode = giftInput.value.trim();
+            
+            if (giftCode.length < 3) return;
+            
+            const giftPattern = /[A-Za-z0-9\-_]{6,}/;
+            if (!giftPattern.test(giftCode)) return;
+            
+            clearTimeout(giftInput.timer);
+            giftInput.timer = setTimeout(() => {
+                addGiftToCollection(giftCode);
+                giftInput.value = '';
+            }, 800);
+        }
 
-// Função separada para adicionar gift
-function addGiftToCollection(giftCode) {
-    if (!currentData || !currentData.email) {
-        notify('Gere dados primeiro!', 'error');
-        return;
-    }
-    
-    if (!smsState.number || smsState.number === 'Obter' || smsState.number === 'Erro') {
-        notify('Obtenha um número primeiro!', 'error');
-        return;
-    }
-    
-    // Verifica se já existe este gift na lista
-    if (gifts.some(g => g.code === giftCode)) {
-        notify('Este gift já foi adicionado!', 'warning');
-        return;
-    }
-    
-    const gift = {
-        code: giftCode,
-        number: smsState.number,
-        email: currentData.email,
-        timestamp: new Date().toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit'
-        })
-    };
-    
-    gifts.unshift(gift);
-    
-    localStorage.setItem('gifts', JSON.stringify(gifts));
-    updateGiftList();
-    
-    notify(`✓ Gift adicionado! Conta #${gifts.length}`);
-}
+        function addGiftToCollection(giftCode) {
+            if (!currentData || !currentData.email) {
+                notify('Gere dados primeiro!', 'error');
+                return;
+            }
+            
+            if (!smsState.number || smsState.number === 'Obter' || smsState.number === 'Erro') {
+                notify('Obtenha um número primeiro!', 'error');
+                return;
+            }
+            
+            if (gifts.some(g => g.code === giftCode)) {
+                notify('Este gift já foi adicionado!', 'warning');
+                return;
+            }
+            
+            const gift = {
+                code: giftCode,
+                number: smsState.number,
+                operator: smsState.operator || '',
+                email: currentData.email,
+                timestamp: new Date().toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                })
+            };
+            
+            gifts.unshift(gift);
+            
+            localStorage.setItem('gifts', JSON.stringify(gifts));
+            updateGiftList();
+            
+            notify(`✓ Gift adicionado! Conta #${gifts.length}`);
+        }
 
         function updateGiftList() {
-    const giftList = document.getElementById('giftList');
-    const giftCount = document.getElementById('giftCount');
-    
-    giftCount.textContent = gifts.length;
-    
-    if (gifts.length === 0) {
-        giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
-        return;
-    }
-    
-    giftList.innerHTML = '';
-    
-    // Mostra apenas os 3 mais recentes
-    const recentGifts = gifts.slice(0, 3); // Apenas 3 mais recentes para exibição
-    
-    recentGifts.forEach((gift, index) => {
-        const item = document.createElement('div');
-        item.className = 'gift-item';
-        item.onclick = () => copySingleGift(gift);
-        
-        // Formata o email para mostrar apenas o +alias
-        const emailParts = gift.email.split('@');
-        const username = emailParts[0];
-        const plusIndex = username.indexOf('+');
-        const aliasPart = plusIndex !== -1 ? username.substring(plusIndex) : '';
-        
-        item.innerHTML = `
-            <div style="font-weight: 600; color: #64748b; margin-bottom: 3px;">
-                ${gift.code}
-            </div>
-            <div class="gift-info">
-                <span title="${gift.number}">${gift.number.substring(0, 8)}...</span>
-                <span title="${gift.email}">${aliasPart || gift.email.split('@')[0].substring(0, 6)}...</span>
-                <span>${gift.timestamp}</span>
-            </div>
-        `;
-        
-        item.title = `Número: ${gift.number}\nEmail: ${gift.email}\nClique para copiar este gift`;
-        giftList.appendChild(item);
-    });
-    
-    // Se tiver mais de 3, mostra indicador
-    if (gifts.length > 3) {
-        const moreItem = document.createElement('div');
-        moreItem.className = 'gift-item';
-        moreItem.style.textAlign = 'center';
-        moreItem.style.color = '#64748b';
-        moreItem.style.fontStyle = 'italic';
-        moreItem.style.fontSize = '0.7rem';
-        moreItem.style.padding = '4px 8px';
-        moreItem.textContent = `... e mais ${gifts.length - 3} gifts (total: ${gifts.length})`;
-        moreItem.onclick = () => showAllGifts();
-        moreItem.title = 'Clique para ver detalhes';
-        giftList.appendChild(moreItem);
-    }
-}
+            const giftList = document.getElementById('giftList');
+            const giftCount = document.getElementById('giftCount');
+            
+            giftCount.textContent = gifts.length;
+            
+            if (gifts.length === 0) {
+                giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
+                return;
+            }
+            
+            giftList.innerHTML = '';
+            
+            const recentGifts = gifts.slice(0, 3);
+            
+            recentGifts.forEach((gift, index) => {
+                const item = document.createElement('div');
+                item.className = 'gift-item';
+                item.onclick = () => copySingleGift(gift);
+                
+                const emailParts = gift.email.split('@');
+                const username = emailParts[0];
+                const plusIndex = username.indexOf('+');
+                const aliasPart = plusIndex !== -1 ? username.substring(plusIndex) : '';
+                
+                item.innerHTML = `
+                    <div style="font-weight: 600; color: #64748b; margin-bottom: 3px;">
+                        ${gift.code}
+                    </div>
+                    <div class="gift-info">
+                        <span title="${gift.number} ${gift.operator}">${gift.number.substring(0, 8)}...</span>
+                        <span title="${gift.email}">${aliasPart || gift.email.split('@')[0].substring(0, 6)}...</span>
+                        <span>${gift.timestamp}</span>
+                    </div>
+                `;
+                
+                item.title = `Número: ${gift.number} ${gift.operator}\nEmail: ${gift.email}\nClique para copiar este gift`;
+                giftList.appendChild(item);
+            });
+            
+            if (gifts.length > 3) {
+                const moreItem = document.createElement('div');
+                moreItem.className = 'gift-item';
+                moreItem.style.textAlign = 'center';
+                moreItem.style.color = '#64748b';
+                moreItem.style.fontStyle = 'italic';
+                moreItem.style.fontSize = '0.7rem';
+                moreItem.style.padding = '4px 8px';
+                moreItem.textContent = `... e mais ${gifts.length - 3} gifts (total: ${gifts.length})`;
+                moreItem.onclick = () => showAllGifts();
+                moreItem.title = 'Clique para ver detalhes';
+                giftList.appendChild(moreItem);
+            }
+        }
 
-// Função opcional para mostrar todos os gifts em um modal ou alerta
-function showAllGifts() {
-    if (gifts.length === 0) return;
-    
-    let message = `=== TODOS OS GIFTS (${gifts.length}) ===\n\n`;
-    
-    gifts.forEach((gift, index) => {
-        message += `Gift #${index + 1}:\n`;
-        message += `Código: ${gift.code}\n`;
-        message += `Número: ${gift.number}\n`;
-        message += `Email: ${gift.email}\n`;
-        message += `Horário: ${gift.timestamp}\n`;
-        message += `\n`;
-    });
-    
-    // Mostra em um alert ou modal
-    alert(message);
-    
-    // Ou copia todos automaticamente
-    // copyAllGifts();
-}
+        function showAllGifts() {
+            if (gifts.length === 0) return;
+            
+            let message = `=== TODOS OS GIFTS (${gifts.length}) ===\n\n`;
+            
+            gifts.forEach((gift, index) => {
+                message += `Gift #${index + 1}:\n`;
+                message += `Código: ${gift.code}\n`;
+                message += `Número: ${gift.number} ${gift.operator}\n`;
+                message += `Email: ${gift.email}\n`;
+                message += `Horário: ${gift.timestamp}\n\n`;
+            });
+            
+            alert(message);
+        }
 
         function copySingleGift(gift) {
             const text = `${gift.code}`;
@@ -1302,68 +1246,63 @@ function showAllGifts() {
         }
 
         function copyAllGifts() {
-    if (gifts.length === 0) {
-        notify('Nenhum gift para copiar', 'warning');
-        return;
-    }
-    
-    let text = `=== Lista de GIFTS e CONTAS ===\n\n`;
-    
-    gifts.forEach((gift, index) => {
-        // Formato limpo, sem rótulos
-        text += `${gift.code}\n`;
-        text += `${gift.number}\n`;
-        text += `${gift.email}\n`;
-        text += `${gift.timestamp}\n`;
-        
-        // Adiciona linha em branco entre contas (exceto após a última)
-        if (index < gifts.length - 1) {
-            text += '\n';
+            if (gifts.length === 0) {
+                notify('Nenhum gift para copiar', 'warning');
+                return;
+            }
+            
+            let text = `=== Lista de GIFTS e CONTAS ===\n\n`;
+            
+            gifts.forEach((gift, index) => {
+                text += `${gift.code}\n`;
+                text += `${gift.number}\n`;
+                text += `${gift.email}\n`;
+                text += `${gift.timestamp}\n`;
+                
+                if (index < gifts.length - 1) {
+                    text += '\n';
+                }
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                notify(`✓ ${gifts.length} gifts copiados!`);
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify(`✓ ${gifts.length} gifts copiados!`);
+            });
         }
-    });
-    
-    navigator.clipboard.writeText(text).then(() => {
-        notify(`✓ ${gifts.length} gifts copiados!`);
-    }).catch(() => {
-        const el = document.createElement('textarea');
-        el.value = text;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        notify(`✓ ${gifts.length} gifts copiados!`);
-    });
-}
-        function clearAllGifts() {
-    if (gifts.length === 0) {
-        notify('Nenhum gift para limpar', 'warning');
-        return;
-    }
-    
-    // Limpa diretamente sem confirmação
-    const count = gifts.length;
-    gifts = [];
-    localStorage.setItem('gifts', JSON.stringify(gifts));
-    updateGiftList();
-    notify(`✓ ${count} gifts removidos`);
-}
         
-        // ================= FUNÇÃO PARA RESETAR SMS STATS =================
-function resetSMSStats() {
-    // Reseta os valores
-    smsState.attempts = 0;
-    smsState.successes = 0;
-    
-    // Atualiza UI
-    document.getElementById('attempts').textContent = '0';
-    document.getElementById('successes').textContent = '0';
-    
-    // Salva
-    localStorage.setItem('sms_attempts', '0');
-    localStorage.setItem('sms_successes', '0');
-    
-    notify('✓ Contadores resetados');
-}
+        function clearAllGifts() {
+            if (gifts.length === 0) {
+                notify('Nenhum gift para limpar', 'warning');
+                return;
+            }
+            
+            const count = gifts.length;
+            gifts = [];
+            localStorage.setItem('gifts', JSON.stringify(gifts));
+            updateGiftList();
+            notify(`✓ ${count} gifts removidos`);
+        }
+        
+        // Função para resetar stats do SMS
+        function resetSMSStats() {
+            smsState.attempts = 0;
+            smsState.successes = 0;
+            
+            document.getElementById('attempts').textContent = '0';
+            document.getElementById('successes').textContent = '0';
+            
+            localStorage.setItem('sms_attempts', '0');
+            localStorage.setItem('sms_successes', '0');
+            
+            notify('✓ Contadores resetados');
+        }
 
         // ================= INITIALIZATION =================
         function init() {
