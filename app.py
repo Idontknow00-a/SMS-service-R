@@ -15,7 +15,6 @@ API_KEY = os.environ.get('API_KEY_SMS', '')
 COUNTRY_CODE = 73  # Brasil
 SERVICE = 'mm'
 TIMEOUT_DURATION = 120  # segundos
-OPERATORS = ['ARQIA']  # Operadoras permitidas
 
 # Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
 failed_attempts = {}
@@ -26,7 +25,6 @@ COOLDOWN_MINUTES = 30
 number_timeouts = {}
 active_numbers = {}
 successful_numbers = set()
-operator_info = {}  # Armazena info da operadora para cada número
 
 # Configurar logging
 logging.basicConfig(
@@ -52,7 +50,7 @@ def check_failure_rate():
 
 
 def get_available_operators():
-    """Obtém a lista de operadoras disponíveis para o Brasil"""
+    """Obtém a lista de operadoras disponíveis para o Brasil (apenas informativo)"""
     try:
         url = f"{BASE_URL}?api_key={API_KEY}&action=getOperators&country={COUNTRY_CODE}"
         response = requests.get(url, timeout=10)
@@ -62,7 +60,7 @@ def get_available_operators():
             if data.get('status') == 'success':
                 country_operators = data.get('countryOperators', {})
                 operators = country_operators.get(str(COUNTRY_CODE), [])
-                logger.info(f"Operadoras disponíveis: {operators}")
+                logger.info(f"Operadoras disponíveis no Brasil: {operators}")
                 return operators
         return []
     except Exception as e:
@@ -70,120 +68,133 @@ def get_available_operators():
         return []
 
 
-def filter_operators(available_operators):
-    """Filtra apenas operadoras TIM e ARQIA"""
-    filtered = [op for op in available_operators if op.lower() in OPERATORS]
-    logger.info(f"Operadoras filtradas (TIM/ARQIA): {filtered}")
-    return filtered
+def identify_operator(number_id):
+    """Tenta identificar a operadora de um número já obtido"""
+    try:
+        # Método 1: Tenta verificar no status da ativação
+        url = f"{BASE_URL}?api_key={API_KEY}&action=getStatus&id={number_id}"
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.text.strip()
+            # Algumas APIs retornam info da operadora no status
+            if 'operator=' in data.lower():
+                op_match = data.lower().split('operator=')[1].split('&')[0]
+                return op_match.upper()
+        
+        # Método 2: Consulta a lista de operadoras disponíveis
+        available_operators = get_available_operators()
+        
+        if available_operators:
+            # Se só tem uma operadora disponível, é essa
+            if len(available_operators) == 1:
+                return available_operators[0].upper()
+            
+            # Se tem TIM e/ou ARQIA, prioriza essas
+            tim_arqia = [op for op in available_operators if op.lower() in ['tim', 'arqia']]
+            if len(tim_arqia) == 1:
+                return tim_arqia[0].upper()
+            elif len(tim_arqia) > 1:
+                return 'TIM/ARQIA'
+            
+            # Retorna a primeira disponível
+            return available_operators[0].upper()
+        
+        # Método 3: Verifica nos números ativos se já temos info
+        if number_id in active_numbers:
+            stored_op = active_numbers[number_id].get('operator', '')
+            if stored_op and stored_op != 'Desconhecida':
+                return stored_op
+        
+        return 'Desconhecida'
+        
+    except Exception as e:
+        logger.error(f"Erro ao identificar operadora: {e}")
+        return 'Desconhecida'
 
 
 def get_service_price():
     """Obtém o preço do serviço usando a API correta"""
     try:
-        # Usando a API conforme documentação
         url = f"{BASE_URL}?api_key={API_KEY}&action=getPrices&service={SERVICE}&country={COUNTRY_CODE}"
         response = requests.get(url, timeout=10)
         
         if response.status_code == 200:
             data = response.json()
             
-            # Processa resposta conforme documentação
             if isinstance(data, dict) and str(COUNTRY_CODE) in data:
                 country_data = data[str(COUNTRY_CODE)]
                 if isinstance(country_data, dict) and SERVICE in country_data:
                     service_info = country_data[SERVICE]
                     if isinstance(service_info, dict) and 'cost' in service_info:
                         price = float(service_info['cost'])
-                        # Formata em reais
-                        formatted_price = f"${price:.4f}"
+                        formatted_price = f"R$ {price:.4f}"
                         logger.info(f"💰 Preço do serviço {SERVICE}: {formatted_price}")
                         return formatted_price
             
-            # Fallback: tenta formato alternativo
             elif isinstance(data, list):
                 for item in data:
                     if isinstance(item, dict) and SERVICE in item:
                         service_info = item[SERVICE]
                         if isinstance(service_info, dict) and 'cost' in service_info:
                             price = float(service_info['cost'])
-                            formatted_price = f"${price:.4f}"
+                            formatted_price = f"R$ {price:.4f}"
                             return formatted_price
             
             logger.warning(f"Formato de preço não reconhecido: {data}")
     except Exception as e:
         logger.error(f"Erro ao obter preço: {e}")
     
-    return "$0.00"
+    return "R$ 0.0000"
 
 
 def get_number():
-    """Obtém um número com filtro por operadora e preço real"""
+    """Obtém um número SEM filtro por operadora, mas identifica qual é"""
     try:
         # Verifica se está em período de muitas falhas
         if check_failure_rate():
             logger.warning("⚠️ Período de espera para evitar bloqueio")
-            return 'RATE_LIMIT', "$0.00"
+            return 'RATE_LIMIT', "R$ 0.0000", ''
         
         # Obtém preço real do serviço
         price = get_service_price()
         
-        # Primeiro, obtém as operadoras disponíveis
-        available_operators = get_available_operators()
+        # Obtém número sem especificar operadora
+        url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={COUNTRY_CODE}"
+        response = requests.get(url, timeout=10)
         
-        if not available_operators:
-            logger.warning("Não foi possível obter a lista de operadoras")
-            return 'NO_NUMBERS', price
-        
-        # Filtra apenas TIM e ARQIA
-        filtered_operators = filter_operators(available_operators)
-        
-        if not filtered_operators:
-            logger.warning("Nenhuma operadora TIM ou ARQIA disponível")
-            return 'NO_NUMBERS', price
-        
-        # Tenta obter número para cada operadora filtrada
-        for operator in filtered_operators:
-            url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={COUNTRY_CODE}&operator={operator}"
-            response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.text.strip()
             
-            if response.status_code == 200:
-                data = response.text.strip()
+            if data.startswith('ACCESS_NUMBER'):
+                parts = data.split(':')
+                number_id = parts[1].strip() if len(parts) > 1 else ''
                 
-                if data.startswith('ACCESS_NUMBER'):
-                    # Armazena info da operadora
-                    parts = data.split(':')
-                    number_id = parts[1].strip() if len(parts) > 1 else ''
-                    operator_info[number_id] = operator.upper()
-                    
-                    logger.info(f"✓ Número obtido com sucesso (Operadora: {operator.upper()})")
-                    return data, price
-                    
-                elif 'NO_NUMBERS' in data:
-                    logger.info(f"✗ Sem números para operadora {operator}")
-                    continue
-                elif 'NO_BALANCE' in data:
-                    logger.error("✗ Saldo insuficiente!")
-                    return 'NO_BALANCE', price
-                elif 'BAD_KEY' in data:
-                    logger.error("✗ API Key inválida!")
-                    return 'BAD_KEY', price
-                else:
-                    logger.warning(f"Resposta inesperada para {operator}: {data}")
-                    continue
+                # Identifica a operadora do número obtido
+                operator = identify_operator(number_id)
+                
+                logger.info(f"✓ Número obtido com sucesso (Operadora: {operator})")
+                return data, price, operator
+                
+            elif 'NO_NUMBERS' in data:
+                logger.info("✗ Sem números disponíveis")
+                return 'NO_NUMBERS', price, ''
+            elif 'NO_BALANCE' in data:
+                logger.error("✗ Saldo insuficiente!")
+                return 'NO_BALANCE', price, ''
+            elif 'BAD_KEY' in data:
+                logger.error("✗ API Key inválida!")
+                return 'BAD_KEY', price, ''
+            else:
+                logger.warning(f"Resposta inesperada: {data}")
+                return data, price, ''
         
-        # Se chegou aqui, nenhuma operadora tinha números
-        logger.info("✗ Nenhum número disponível para TIM e ARQIA")
-        return 'NO_NUMBERS', price
+        logger.info("✗ Falha ao obter número")
+        return 'NO_NUMBER', price, ''
         
     except Exception as e:
         logger.error(f"Erro ao obter número: {e}")
-        return 'NO_NUMBER', "$0.00"
-
-
-# REMOVIDA função de cancelamento automático para evitar bloqueios
-# def cancel_number_automatically(number_id):
-#     """Cancela número após timeout"""
-#     ... REMOVIDA ...
+        return 'NO_NUMBER', "R$ 0.0000", ''
 
 
 def setup_timeout(number_id):
@@ -194,8 +205,6 @@ def setup_timeout(number_id):
                 del number_timeouts[number_id]
             if number_id in active_numbers:
                 del active_numbers[number_id]
-            if number_id in operator_info:
-                del operator_info[number_id]
             logger.info(f"⏰ Limpeza de memória para {number_id} (sem cancelar API)")
         except Exception as e:
             logger.error(f"Erro na limpeza: {e}")
@@ -215,37 +224,34 @@ def index():
 
 @app.route('/get_number', methods=['GET'])
 def get_number_route():
-    """Obtém novo número com filtro por operadora (TIM/ARQIA)"""
+    """Obtém novo número (qualquer operadora)"""
     try:
-        data, price = get_number()
+        data, price, operator = get_number()
         
         if data.startswith('ACCESS_NUMBER'):
             parts = data.split(':', 2)
             number_id = parts[1].strip()
             phone_number = parts[2].strip().replace('55', '', 1)
             
-            # Obtém a operadora
-            op = operator_info.get(number_id, '')
-            
             setup_timeout(number_id)
             active_numbers[number_id] = {
                 'phone_number': phone_number,
-                'operator': op,
+                'operator': operator,
                 'price': price,
                 'status': 'waiting',
                 'created_at': time.time(),
                 'received_codes': []
             }
             
-            logger.info(f"✅ Número {phone_number} ({op}) obtido (ID: {number_id})")
+            logger.info(f"✅ Número {phone_number} ({operator}) obtido (ID: {number_id})")
             return jsonify({
                 'success': True,
                 'response': data,
                 'number_id': number_id,
                 'phone_number': phone_number,
-                'operator': op,
+                'operator': operator,
                 'price': price,
-                'message': f'Número {op} obtido com sucesso'
+                'message': f'Número obtido com sucesso ({operator})'
             })
         else:
             # Registra falha
@@ -253,7 +259,7 @@ def get_number_route():
             
             msg_map = {
                 'NO_BALANCE': 'Saldo insuficiente!',
-                'NO_NUMBERS': 'Sem números TIM/ARQIA disponíveis',
+                'NO_NUMBERS': 'Sem números disponíveis',
                 'NO_NUMBER': 'Falha ao obter número',
                 'BAD_KEY': 'API Key inválida',
                 'RATE_LIMIT': 'Aguarde - Muitas tentativas recentes'
@@ -273,7 +279,7 @@ def get_price(number_id):
     """Retorna o preço atualizado de um número específico"""
     try:
         if number_id in active_numbers:
-            price = active_numbers[number_id].get('price', '$0.00')
+            price = active_numbers[number_id].get('price', 'R$ 0.0000')
             operator = active_numbers[number_id].get('operator', '')
             return jsonify({
                 'success': True,
@@ -368,7 +374,6 @@ def get_status(number_id):
             })
             # Apenas remove da memória, NÃO cancela na API
             active_numbers.pop(number_id, None)
-            operator_info.pop(number_id, None)
 
         else:
             result.update({
@@ -383,12 +388,6 @@ def get_status(number_id):
         return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
 
 
-# REMOVIDA rota de cancelamento para evitar bloqueios
-# @app.route('/cancel_number/<number_id>', methods=['GET'])
-# def cancel_number(number_id):
-#     ... REMOVIDA ...
-
-
 @app.route('/stats', methods=['GET'])
 def get_stats():
     return jsonify({
@@ -396,15 +395,15 @@ def get_stats():
         'successful_numbers': len(successful_numbers),
         'active_numbers': len(active_numbers),
         'total_codes': sum(len(num.get('received_codes', [])) for num in active_numbers.values()),
-        'allowed_operators': OPERATORS,
-        'current_price': get_service_price()
+        'current_price': get_service_price(),
+        'available_operators': get_available_operators()
     })
 
 
 if __name__ == '__main__':
     logger.info("🚀 Servidor SMS iniciado (HeroSMS)")
     logger.info("📞 Números brasileiros (73) - Serviço: mm")
-    logger.info("📱 Operadoras: TIM e ARQIA")
+    logger.info("📱 Qualquer operadora disponível")
     logger.info("⏰ Timeout: 120s (sem cancelamento automático)")
     logger.info("🛡️ Proteção contra bloqueio ativada")
     print("\n" + "="*50)
