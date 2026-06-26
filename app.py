@@ -15,7 +15,7 @@ API_KEY = os.environ.get('API_KEY_SMS', '')
 COUNTRY_CODE = 73  # Brasil
 SERVICE = 'mm'
 TIMEOUT_DURATION = 120  # segundos
-OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
+OPERATORS = ['Any operator']  # Operadoras permitidas
 
 # Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
 failed_attempts = {}
