@@ -648,6 +648,16 @@
                 });
             }
         }
+        
+        function extractCode(text) {
+    if (!text) return text;
+    // Se contém ":", pega só o que vem depois
+    if (text.includes(':')) {
+        const parts = text.split(':');
+        return parts[parts.length - 1].trim();
+    }
+    return text.trim();
+}
 
         async function copy(text, type) {
             try {
@@ -685,35 +695,60 @@
 
         // Função para verificar código automaticamente
         async function autoCheckCode() {
-            if (!smsState.id || smsState.loading) return;
+    if (!smsState.id || smsState.loading) return;
+    
+    try {
+        const response = await fetch(`/get_status/${smsState.id}`);
+        const data = await response.json();
+        
+        if (data.success && data.has_code && data.code) {
+            const cleanCode = extractCode(data.code);
             
-            try {
-                const response = await fetch(`/get_status/${smsState.id}`);
-                const data = await response.json();
+            smsState.code = cleanCode;
+            smsState.successes++;
+            smsState.hasReceivedCode = true;
+            smsState.firstStatusCheck = true;
+            
+            document.getElementById('codeValue').textContent = cleanCode;
+            document.getElementById('codeBox').classList.add('active');
+            document.getElementById('codeBox').classList.remove('empty');
+            document.getElementById('codeStatus').textContent = 'Recebido ✓';
+            document.querySelector('#codeBox .dot').classList.add('received');
+            document.getElementById('successes').textContent = smsState.successes;
+            
+            saveSmsState();
+            
+            await copy(cleanCode, 'code');
+            notify(`Código recebido: ${cleanCode}`, 'info', false);
+            
+        } else if (data.message) {
+            // >>>>>>>> NOVO: tenta extrair código mesmo sem has_code <<<<<<<<<
+            const possibleCode = extractCode(data.message);
+            const isNumeric = /^\d+$/.test(possibleCode);
+            
+            if (isNumeric && possibleCode.length >= 3 && possibleCode !== smsState.code) {
+                smsState.code = possibleCode;
+                smsState.successes++;
+                smsState.hasReceivedCode = true;
+                smsState.firstStatusCheck = true;
                 
-                if (data.success && data.has_code && data.code) {
-                    // Código recebido automaticamente!
-                    smsState.code = data.code;
-                    smsState.successes++;
-                    smsState.hasReceivedCode = true;
-                    smsState.firstStatusCheck = true;
-                    
-                    document.getElementById('codeValue').textContent = smsState.code;
-                    document.getElementById('codeBox').classList.add('active');
-                    document.getElementById('codeBox').classList.remove('empty');
-                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                    document.querySelector('#codeBox .dot').classList.add('received');
-                    document.getElementById('successes').textContent = smsState.successes;
-                    
-                    saveSmsState();
-                    
-                    await copy(smsState.code, 'code');
-                    notify(`Código recebido: ${smsState.code}`, 'info', false);
-                }
-            } catch (error) {
-                // Silencia erros
+                document.getElementById('codeValue').textContent = possibleCode;
+                document.getElementById('codeBox').classList.add('active');
+                document.getElementById('codeBox').classList.remove('empty');
+                document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                document.querySelector('#codeBox .dot').classList.add('received');
+                document.getElementById('successes').textContent = smsState.successes;
+                
+                saveSmsState();
+                
+                await copy(possibleCode, 'code');
+                notify(`Código recebido: ${possibleCode}`, 'info', false);
             }
         }
+    } catch (error) {
+        // Silencia erros
+    }
+}
 
         function startAutoCodeCheck() {
             if (smsState.autoCheckInterval) {
@@ -801,90 +836,137 @@
         }
 
         async function getCode() {
-            if (!smsState.id || smsState.loading) {
-                if (!smsState.id) notify('Obtenha um número primeiro', 'error');
-                return;
-            }
-            
-            smsState.loading = true;
-            document.getElementById('codeValue').textContent = '...';
-            document.getElementById('codeStatus').textContent = 'Verificando';
-            document.getElementById('codeBox').classList.remove('empty');
-            
-            try {
-                const res = await fetch(`/get_status/${smsState.id}`);
-                const data = await res.json();
+    if (!smsState.id || smsState.loading) {
+        if (!smsState.id) notify('Obtenha um número primeiro', 'error');
+        return;
+    }
+    
+    smsState.loading = true;
+    document.getElementById('codeValue').textContent = '...';
+    document.getElementById('codeStatus').textContent = 'Verificando';
+    document.getElementById('codeBox').classList.remove('empty');
+    
+    try {
+        const res = await fetch(`/get_status/${smsState.id}`);
+        const data = await res.json();
+        
+        if (data.success) {
+            if (data.has_code && data.code) {
+                // Extrai só o código limpo
+                const cleanCode = extractCode(data.code);
                 
-                if (data.success) {
-                    if (data.has_code && data.code) {
-                        // Código recebido manualmente
-                        smsState.code = data.code;
-                        smsState.successes++;
-                        smsState.hasReceivedCode = true;
-                        smsState.firstStatusCheck = true;
-                        
-                        document.getElementById('codeValue').textContent = smsState.code;
-                        document.getElementById('codeBox').classList.add('active');
-                        document.getElementById('codeBox').classList.remove('empty');
-                        document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                        document.querySelector('#codeBox .dot').classList.add('received');
-                        document.getElementById('successes').textContent = smsState.successes;
-                        
-                        saveSmsState();
-                        
-                        await copy(smsState.code, 'code');
-                        notify(`Código: ${smsState.code}`, 'info', false);
-                        
-                    } else if (data.status === 'waiting_code') {
-                        // Verifica se JÁ TEM CÓDIGO SALVO
-                        if (smsState.code && smsState.hasReceivedCode) {
-                            document.getElementById('codeValue').textContent = smsState.code;
-                            document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                            
-                            await copy(smsState.code, 'code');
-                            notify(`Código atual: ${smsState.code}`, 'info', false);
-                            
-                            smsState.firstStatusCheck = true;
-                            
-                        } else {
-                            // Ainda aguardando - NÃO CANCELA AUTOMATICAMENTE
-                            document.getElementById('codeValue').textContent = 'Aguardando...';
-                            document.getElementById('codeStatus').textContent = 'Aguardando SMS...';
-                            notify('Aguardando SMS...', 'info');
-                        }
-                        
-                    } else if (data.status === 'cancelled') {
-                        document.getElementById('codeStatus').textContent = 'Expirado';
-                        document.getElementById('codeValue').textContent = 'Expirado';
-                        document.getElementById('numberBox').classList.remove('active');
-                        document.getElementById('numberBox').classList.add('cancelled');
-                        notify('Número expirado', 'warning');
-                        
-                        // Limpa estado
-                        smsState.id = '';
-                        smsState.code = '';
-                        stopAutoCodeCheck();
-                        saveSmsState();
-                        
-                    } else {
-                        document.getElementById('codeStatus').textContent = data.message || 'Status';
-                        document.getElementById('codeValue').textContent = smsState.code || '...';
-                        notify(data.message || 'Status', 'info');
-                    }
+                smsState.code = cleanCode;
+                smsState.successes++;
+                smsState.hasReceivedCode = true;
+                smsState.firstStatusCheck = true;
+                
+                document.getElementById('codeValue').textContent = cleanCode;
+                document.getElementById('codeBox').classList.add('active');
+                document.getElementById('codeBox').classList.remove('empty');
+                document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                document.querySelector('#codeBox .dot').classList.add('received');
+                document.getElementById('successes').textContent = smsState.successes;
+                
+                saveSmsState();
+                
+                await copy(cleanCode, 'code');
+                notify(`Código: ${cleanCode}`, 'info', false);
+                
+            } else if (data.status === 'waiting_code') {
+                // Verifica se JÁ TEM CÓDIGO SALVO
+                if (smsState.code && smsState.hasReceivedCode) {
+                    document.getElementById('codeValue').textContent = smsState.code;
+                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                    
+                    await copy(smsState.code, 'code');
+                    notify(`Código atual: ${smsState.code}`, 'info', false);
+                    
+                    smsState.firstStatusCheck = true;
+                    
                 } else {
-                    notify(data.message || 'Erro ao verificar', 'error');
-                    document.getElementById('codeStatus').textContent = 'Erro';
-                    document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+                    document.getElementById('codeValue').textContent = 'Aguardando...';
+                    document.getElementById('codeStatus').textContent = 'Aguardando SMS...';
+                    notify('Aguardando SMS...', 'info');
                 }
-            } catch (error) {
-                notify('Erro de conexão', 'error');
+                
+            } else if (data.status === 'cancelled') {
+                document.getElementById('codeStatus').textContent = 'Expirado';
+                document.getElementById('codeValue').textContent = 'Expirado';
+                document.getElementById('numberBox').classList.remove('active');
+                document.getElementById('numberBox').classList.add('cancelled');
+                notify('Número expirado', 'warning');
+                
+                smsState.id = '';
+                smsState.code = '';
+                stopAutoCodeCheck();
+                saveSmsState();
+                
+            } else {
+                // >>>>>>>> CORREÇÃO: extrai código da mensagem <<<<<<<<<
+                const possibleCode = extractCode(data.message || '');
+                const isNumeric = /^\d+$/.test(possibleCode);
+                
+                if (isNumeric && possibleCode.length >= 3) {
+                    // A mensagem contém um código válido!
+                    smsState.code = possibleCode;
+                    smsState.successes++;
+                    smsState.hasReceivedCode = true;
+                    smsState.firstStatusCheck = true;
+                    
+                    document.getElementById('codeValue').textContent = possibleCode;
+                    document.getElementById('codeBox').classList.add('active');
+                    document.getElementById('codeBox').classList.remove('empty');
+                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                    document.querySelector('#codeBox .dot').classList.add('received');
+                    document.getElementById('successes').textContent = smsState.successes;
+                    
+                    saveSmsState();
+                    
+                    await copy(possibleCode, 'code');
+                    notify(`Código: ${possibleCode}`, 'info', false);
+                } else {
+                    document.getElementById('codeStatus').textContent = data.message || 'Status';
+                    document.getElementById('codeValue').textContent = smsState.code || '...';
+                    notify(data.message || 'Status', 'info');
+                }
+            }
+        } else {
+            // >>>>>>>> CORREÇÃO: mesmo em erro, tenta extrair código <<<<<<<<<
+            const possibleCode = extractCode(data.message || '');
+            const isNumeric = /^\d+$/.test(possibleCode);
+            
+            if (isNumeric && possibleCode.length >= 3) {
+                smsState.code = possibleCode;
+                smsState.successes++;
+                smsState.hasReceivedCode = true;
+                smsState.firstStatusCheck = true;
+                
+                document.getElementById('codeValue').textContent = possibleCode;
+                document.getElementById('codeBox').classList.add('active');
+                document.getElementById('codeBox').classList.remove('empty');
+                document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                document.querySelector('#codeBox .dot').classList.add('received');
+                document.getElementById('successes').textContent = smsState.successes;
+                
+                saveSmsState();
+                
+                await copy(possibleCode, 'code');
+                notify(`Código: ${possibleCode}`, 'info', false);
+            } else {
+                notify(data.message || 'Erro ao verificar', 'error');
                 document.getElementById('codeStatus').textContent = 'Erro';
                 document.getElementById('codeValue').textContent = smsState.code || 'Erro';
-            } finally {
-                smsState.loading = false;
-                saveSmsState();
             }
         }
+    } catch (error) {
+        notify('Erro de conexão', 'error');
+        document.getElementById('codeStatus').textContent = 'Erro';
+        document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+    } finally {
+        smsState.loading = false;
+        saveSmsState();
+    }
+}
 
         // ================= DATA GENERATOR FUNCTIONS =================
         const maleNames = ["Abelardo", "Adriano", "Agnaldo", "Alan", "Alberto", "Aldo", "Alex", "Alexandre", "Alfredo", "Alvaro",
