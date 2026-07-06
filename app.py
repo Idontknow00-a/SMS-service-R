@@ -16,8 +16,6 @@ COUNTRY_CODE = 73  # Brasil
 SERVICE = 'mm'
 TIMEOUT_DURATION = 120  # segundos
 OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
-// ================= CONFIGURAÇÃO =================
-const GMAIL_API_URL = 'http://10.0.0.126:3001';  // 👈 Ajuste conforme necessário
 
 # Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
 failed_attempts = {}
