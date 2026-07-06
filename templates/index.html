@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS Service + Gmail + Lista</title>
+    <title>SMS Service + Lista</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -253,108 +253,6 @@
             transform: scale(0.95);
         }
         
-        .gmail-section {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-        
-        .gmail-section .gmail-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .gmail-section .gmail-label {
-            font-size: 0.7rem;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-        }
-        
-        .gmail-code-box {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .gmail-code-box.has-code {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        
-        .gmail-code-text {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #1e293b;
-            font-family: monospace;
-            flex: 1;
-        }
-        
-        .gmail-code-text.empty {
-            color: #94a3b8;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .gmail-code-text.error {
-            color: #ef4444;
-            font-size: 0.8rem;
-        }
-        
-        .gmail-copy-btn {
-            padding: 6px 12px;
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        
-        .gmail-copy-btn:hover {
-            background: #059669;
-        }
-        
-        .gmail-fetch-btn {
-            width: 100%;
-            padding: 8px;
-            background: #64748b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .gmail-fetch-btn:hover {
-            background: #475569;
-        }
-        
-        .gmail-fetch-btn:active {
-            transform: scale(0.98);
-        }
-        
-        .gmail-fetch-btn:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-        }
-        
         .gift-section {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -559,7 +457,7 @@
             </div>
         </div>
         
-        <!-- Lista de Números + Gmail Section -->
+        <!-- Lista de Números -->
         <div class="section numberlist-section">
             <!-- Linha: Copiar | Número Atual | OBTER -->
             <div class="action-row">
@@ -568,20 +466,6 @@
                     Clique em OBTER
                 </div>
                 <button class="action-btn get-number" onclick="getNextNumberFromList()">OBTER</button>
-            </div>
-            
-            <!-- Gmail Section -->
-            <div class="gmail-section">
-                <div class="gmail-header">
-                    <div class="gmail-label">📧 Código Gmail</div>
-                </div>
-                <div class="gmail-code-box" id="gmailCodeBox">
-                    <span class="gmail-code-text empty" id="gmailCodeText">Nenhum código</span>
-                    <button class="gmail-copy-btn" onclick="copyGmailCode()">Copiar</button>
-                </div>
-                <button class="gmail-fetch-btn" id="gmailFetchBtn" onclick="fetchGmailCode()">
-                    🔄 Buscar Código no Gmail
-                </button>
             </div>
             
             <!-- Gift Section -->
@@ -612,9 +496,6 @@
     <div class="notification" id="notification"></div>
 
     <script>
-        // ================= CONFIGURAÇÃO =================
-        const GMAIL_API_URL = 'http://10.0.0.126:3001';  // Servidor Gmail local
-        
         // ================= SMS FUNCTIONS =================
         let smsState = {
             id: localStorage.getItem('sms_id') || '',
@@ -636,10 +517,6 @@
         
         // ================= GIFTS =================
         let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
-        
-        // ================= GMAIL =================
-        let lastGmailCode = localStorage.getItem('lastGmailCode') || null;
-        let gmailLoading = false;
 
         // ================= INIT =================
         function loadSmsState() {
@@ -667,12 +544,6 @@
             if (smsState.id) startAutoCodeCheck();
             
             updateNumberListDisplay();
-            
-            if (lastGmailCode && lastGmailCode !== 'códno') {
-                document.getElementById('gmailCodeText').textContent = lastGmailCode;
-                document.getElementById('gmailCodeText').classList.remove('empty');
-                document.getElementById('gmailCodeBox').classList.add('has-code');
-            }
         }
 
         function saveSmsState() {
@@ -990,91 +861,6 @@
                 document.execCommand('copy');
                 document.body.removeChild(el);
                 notify('Número SMS copiado!');
-            });
-        }
-
-        // ================= GMAIL =================
-        async function fetchGmailCode() {
-            if (gmailLoading) return;
-            
-            gmailLoading = true;
-            const btn = document.getElementById('gmailFetchBtn');
-            const codeText = document.getElementById('gmailCodeText');
-            const codeBox = document.getElementById('gmailCodeBox');
-            
-            btn.disabled = true;
-            btn.textContent = '⏳ Buscando...';
-            codeText.textContent = 'Buscando...';
-            codeText.className = 'gmail-code-text';
-            
-            try {
-                // 👇 CORRIGIDO: URL do servidor Gmail local
-                const res = await fetch(`${GMAIL_API_URL}/fetchCode`);
-                
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-                
-                const data = await res.json();
-                console.log('Gmail response:', data);
-                
-                const code = data.code;
-                
-                if (code && code !== 'Código não encontrado' && code !== 'Erro ao buscar e-mails' && code !== 'códno') {
-                    if (code !== lastGmailCode) {
-                        codeText.textContent = code;
-                        codeText.className = 'gmail-code-text';
-                        codeBox.classList.add('has-code');
-                        localStorage.setItem('lastGmailCode', code);
-                        lastGmailCode = code;
-                        notify(`✅ Código Gmail: ${code}`);
-                        copyGmailCode();
-                    } else {
-                        codeText.textContent = code;
-                        codeText.className = 'gmail-code-text';
-                        codeBox.classList.add('has-code');
-                        notify('Mesmo código anterior');
-                    }
-                } else {
-                    codeText.textContent = 'Não encontrado';
-                    codeText.className = 'gmail-code-text empty';
-                    codeBox.classList.remove('has-code');
-                    localStorage.setItem('lastGmailCode', 'códno');
-                    lastGmailCode = 'códno';
-                    notify('Nenhum código novo no Gmail', 'warning');
-                }
-            } catch (error) {
-                console.error('Gmail error:', error);
-                codeText.textContent = 'Erro';
-                codeText.className = 'gmail-code-text error';
-                codeBox.classList.remove('has-code');
-                notify('Erro ao conectar no servidor Gmail local', 'error');
-            } finally {
-                gmailLoading = false;
-                btn.disabled = false;
-                btn.textContent = '🔄 Buscar Código no Gmail';
-            }
-        }
-
-        function copyGmailCode() {
-            const codeText = document.getElementById('gmailCodeText');
-            const code = codeText.textContent;
-            
-            if (!code || code === 'Nenhum código' || code === 'Não encontrado' || code === 'Buscando...' || code === 'Erro') {
-                notify('Nenhum código para copiar', 'warning');
-                return;
-            }
-            
-            navigator.clipboard.writeText(code).then(() => {
-                notify('Código Gmail copiado!');
-            }).catch(() => {
-                const el = document.createElement('textarea');
-                el.value = code;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                notify('Código Gmail copiado!');
             });
         }
 
