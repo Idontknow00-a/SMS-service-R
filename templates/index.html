@@ -1012,7 +1012,7 @@ async function fetchGmailCode() {
     
     try {
         // 👇 CORREÇÃO: URL absoluta para o servidor Express (Gmail)
-        const res = await fetch('http://10.0.0.126:3001/fetchCode');
+        const res = await fetch(`${GMAIL_API_URL}/fetchCode`);
         
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
