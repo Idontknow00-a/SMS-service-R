@@ -29,7 +29,6 @@
             overflow: hidden; 
         }
         
-        /* SMS Section */
         .sms-section .boxes { 
             display: flex; 
             height: 85px;
@@ -168,7 +167,6 @@
             animation: none; 
         }
         
-        /* Number List Section */
         .numberlist-section {
             padding: 15px;
         }
@@ -255,7 +253,6 @@
             transform: scale(0.95);
         }
         
-        /* Gmail Section */
         .gmail-section {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -358,7 +355,6 @@
             cursor: not-allowed;
         }
         
-        /* Gift Section */
         .gift-section {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -441,7 +437,6 @@
             font-size: 0.9rem;
         }
         
-        /* Settings Section */
         .settings-section {
             background: #f8fafc;
             border-radius: 8px;
@@ -617,6 +612,9 @@
     <div class="notification" id="notification"></div>
 
     <script>
+        // ================= CONFIGURAÇÃO =================
+        const GMAIL_API_URL = 'http://10.0.0.126:3001';  // Servidor Gmail local
+        
         // ================= SMS FUNCTIONS =================
         let smsState = {
             id: localStorage.getItem('sms_id') || '',
@@ -670,7 +668,6 @@
             
             updateNumberListDisplay();
             
-            // Restaura código Gmail
             if (lastGmailCode && lastGmailCode !== 'códno') {
                 document.getElementById('gmailCodeText').textContent = lastGmailCode;
                 document.getElementById('gmailCodeText').classList.remove('empty');
@@ -997,68 +994,67 @@
         }
 
         // ================= GMAIL =================
-async function fetchGmailCode() {
-    if (gmailLoading) return;
-    
-    gmailLoading = true;
-    const btn = document.getElementById('gmailFetchBtn');
-    const codeText = document.getElementById('gmailCodeText');
-    const codeBox = document.getElementById('gmailCodeBox');
-    
-    btn.disabled = true;
-    btn.textContent = '⏳ Buscando...';
-    codeText.textContent = 'Buscando...';
-    codeText.className = 'gmail-code-text';
-    
-    try {
-        // 👇 CORREÇÃO: URL absoluta para o servidor Express (Gmail)
-        const res = await fetch(`${GMAIL_API_URL}/fetchCode`);
-        
-        if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        
-        const data = await res.json();
-        console.log('Resposta do Gmail:', data);  // Debug
-        
-        const code = data.code;
-        
-        if (code && code !== 'Código não encontrado' && code !== 'Erro ao buscar e-mails' && code !== 'códno') {
-            if (code !== lastGmailCode) {
-                codeText.textContent = code;
-                codeText.className = 'gmail-code-text';
-                codeBox.classList.add('has-code');
-                localStorage.setItem('lastGmailCode', code);
-                lastGmailCode = code;
-                notify(`✅ Código Gmail: ${code}`);
-                // Copia automaticamente
-                copyGmailCode();
-            } else {
-                codeText.textContent = code;
-                codeText.className = 'gmail-code-text';
-                codeBox.classList.add('has-code');
-                notify('Mesmo código anterior');
+        async function fetchGmailCode() {
+            if (gmailLoading) return;
+            
+            gmailLoading = true;
+            const btn = document.getElementById('gmailFetchBtn');
+            const codeText = document.getElementById('gmailCodeText');
+            const codeBox = document.getElementById('gmailCodeBox');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Buscando...';
+            codeText.textContent = 'Buscando...';
+            codeText.className = 'gmail-code-text';
+            
+            try {
+                // 👇 CORRIGIDO: URL do servidor Gmail local
+                const res = await fetch(`${GMAIL_API_URL}/fetchCode`);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                
+                const data = await res.json();
+                console.log('Gmail response:', data);
+                
+                const code = data.code;
+                
+                if (code && code !== 'Código não encontrado' && code !== 'Erro ao buscar e-mails' && code !== 'códno') {
+                    if (code !== lastGmailCode) {
+                        codeText.textContent = code;
+                        codeText.className = 'gmail-code-text';
+                        codeBox.classList.add('has-code');
+                        localStorage.setItem('lastGmailCode', code);
+                        lastGmailCode = code;
+                        notify(`✅ Código Gmail: ${code}`);
+                        copyGmailCode();
+                    } else {
+                        codeText.textContent = code;
+                        codeText.className = 'gmail-code-text';
+                        codeBox.classList.add('has-code');
+                        notify('Mesmo código anterior');
+                    }
+                } else {
+                    codeText.textContent = 'Não encontrado';
+                    codeText.className = 'gmail-code-text empty';
+                    codeBox.classList.remove('has-code');
+                    localStorage.setItem('lastGmailCode', 'códno');
+                    lastGmailCode = 'códno';
+                    notify('Nenhum código novo no Gmail', 'warning');
+                }
+            } catch (error) {
+                console.error('Gmail error:', error);
+                codeText.textContent = 'Erro';
+                codeText.className = 'gmail-code-text error';
+                codeBox.classList.remove('has-code');
+                notify('Erro ao conectar no servidor Gmail local', 'error');
+            } finally {
+                gmailLoading = false;
+                btn.disabled = false;
+                btn.textContent = '🔄 Buscar Código no Gmail';
             }
-        } else {
-            codeText.textContent = 'Não encontrado';
-            codeText.className = 'gmail-code-text empty';
-            codeBox.classList.remove('has-code');
-            localStorage.setItem('lastGmailCode', 'códno');
-            lastGmailCode = 'códno';
-            notify('Nenhum código novo no Gmail', 'warning');
         }
-    } catch (error) {
-        console.error('Erro ao buscar Gmail:', error);  // Debug
-        codeText.textContent = 'Erro';
-        codeText.className = 'gmail-code-text error';
-        codeBox.classList.remove('has-code');
-        notify('Erro ao conectar ao servidor Gmail', 'error');
-    } finally {
-        gmailLoading = false;
-        btn.disabled = false;
-        btn.textContent = '🔄 Buscar Código no Gmail';
-    }
-}
 
         function copyGmailCode() {
             const codeText = document.getElementById('gmailCodeText');
@@ -1244,11 +1240,9 @@ async function fetchGmailCode() {
 
         // ================= EVENT LISTENERS =================
         document.addEventListener('DOMContentLoaded', function() {
-            // Load saved state
             loadSmsState();
             updateGiftList();
             
-            // Gift input events
             const giftInput = document.getElementById('giftInput');
             if (giftInput) {
                 giftInput.addEventListener('paste', function(e) {
@@ -1259,7 +1253,6 @@ async function fetchGmailCode() {
                 });
             }
             
-            // Auto-save number list on input
             const numberListInput = document.getElementById('numberListInput');
             if (numberListInput) {
                 numberListInput.addEventListener('input', function() {
