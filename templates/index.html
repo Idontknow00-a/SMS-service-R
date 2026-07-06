@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS Service + Gerador de Dados</title>
+    <title>SMS Service + Lista de Números</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -168,8 +168,8 @@
             animation: none; 
         }
         
-        /* Data Generator Section */
-        .data-section {
+        /* Number List Section */
+        .numberlist-section {
             padding: 15px;
         }
         
@@ -179,7 +179,7 @@
             margin-bottom: 12px;
         }
         
-        .action-btn, .gender-btn {
+        .action-btn {
             flex: 1;
             padding: 6px 2px;
             border: none;
@@ -189,11 +189,10 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
-        }
-        
-        .gender-btn {
-            padding: 6px 2px;
-            font-size: 0.9rem;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .action-btn.copy-sms { 
@@ -206,88 +205,106 @@
             padding: 0;
             border-radius: 6px;
             font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         
         .action-btn.copy-sms:hover {
             background: #e2e8f0;
         }
         
-        .action-btn:not(.copy-sms), .gender-btn {
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .action-btn.generate { 
+        .action-btn.get-number { 
             background: #64748b; 
             color: white; 
         }
         
-        .action-btn.generate:hover {
+        .action-btn.get-number:hover {
             background: #475569;
         }
         
-        .gender-btn.male { 
-            background: #e0f2fe; 
-            color: #0369a1; 
-        }
-        
-        .gender-btn.male.active { 
-            background: #0369a1; 
-            color: white; 
-        }
-        
-        .gender-btn.male:hover:not(.active) {
-            background: #bae6fd;
-        }
-        
-        .gender-btn.female { 
-            background: #fce7f3; 
-            color: #db2777; 
-        }
-        
-        .gender-btn.female.active { 
-            background: #db2777; 
-            color: white; 
-        }
-        
-        .gender-btn.female:hover:not(.active) {
-            background: #fbcfe8;
-        }
-        
-        .data-field {
-            margin-bottom: 8px;
+        .number-list-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-size: 0.85rem;
+            font-family: monospace;
+            resize: vertical;
+            margin-bottom: 10px;
             background: #f8fafc;
         }
         
-        .data-field:hover {
-            border-color: #e2e8f0;
-            background: #f1f5f9;
-        }
-        
-        .data-input {
-            flex: 1;
-            padding: 10px 12px;
-            border: none;
-            font-size: 0.9rem;
-            background: transparent;
-            color: #64748b;
-            cursor: pointer;
-        }
-        
-        .data-input:focus {
+        .number-list-textarea:focus {
             outline: none;
-            background: #ffffffaa;
+            border-color: #64748b;
+            background: white;
+        }
+        
+        .current-number-field {
+            padding: 12px;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            background: #f0fdf4;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .current-number-field:hover {
+            background: #d1fae5;
+            transform: scale(1.02);
+        }
+        
+        .current-number-field .number-label {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .current-number-field .number-display {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-family: monospace;
+        }
+        
+        .current-number-field .number-empty {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        
+        .filter-section {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        .filter-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #64748b;
         }
         
         /* Gift Section */
@@ -388,30 +405,6 @@
             margin-bottom: 10px;
         }
         
-        .settings-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        
-        .settings-input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-        
-        .settings-btn {
-            padding: 8px 12px;
-            background: #64748b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-        
         .reset-btn {
             width: 100%;
             padding: 10px;
@@ -504,36 +497,36 @@
                     </div>
                 </div>
             </div>
-        <!-- Data Generator Section -->  
-        <div class="section data-section">  
-            <div class="action-buttons">  
-                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>  
-                <button class="gender-btn male active" onclick="setGender('male')" id="maleBtn">MAS</button>  
-                <button class="gender-btn female" onclick="setGender('female')" id="femaleBtn">FEM</button>  
-                <button class="action-btn generate" onclick="generateData()">GERAR</button>  
+        </div>
+        
+        <!-- Number List Section -->
+        <div class="section numberlist-section">
+            <div class="action-buttons">
+                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>
+                <button class="action-btn get-number" onclick="getNextNumberFromList()">OBTER</button>
             </div>
             
-            <div class="data-field" onclick="copyDataField('firstName')">
-                <input type="text" class="data-input" id="firstName" readonly placeholder="Nome">
+            <textarea class="number-list-textarea" id="numberListInput" 
+                      placeholder="Cole sua lista de números aqui (um por linha)"></textarea>
+            
+            <div class="current-number-field" id="currentNumberField" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
+                <div class="number-label">Número Atual da Lista</div>
+                <div class="number-empty" id="currentNumberDisplay">Clique em OBTER</div>
             </div>
             
-            <div class="data-field" onclick="copyDataField('lastName')">
-                <input type="text" class="data-input" id="lastName" readonly placeholder="Sobrenome">
+            <!-- Filtro por Remetente -->
+            <div class="filter-section">
+                <div class="filter-label">🔍 Filtrar por Remetente (opcional)</div>
+                <input type="text" class="filter-input" id="senderFilter" 
+                       placeholder="Ex: noreply@empresa.com ou Código de verificação">
+                <div style="font-size: 0.7rem; color: #64748b; margin-top: 6px;">
+                    O código só será aceito se o remetente conter este texto
+                </div>
             </div>
-            
-            <div class="data-field" onclick="copyDataField('cpf')">
-                <input type="text" class="data-input" id="cpf" readonly placeholder="CPF">
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('email')">
-                <input type="text" class="data-input" id="email" readonly placeholder="Email">
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('birthdate')">
-                <input type="text" class="data-input" id="birthdate" readonly placeholder="Data Nascimento">
-            </div>
-            
-            <!-- Gift Section -->
+        </div>
+        
+        <!-- Gift Section -->
+        <div class="section numberlist-section">
             <div class="gift-section">
                 <input type="text" class="gift-input" id="giftInput" 
                        placeholder="Cole o código do gift aqui (auto-salva)"
@@ -552,16 +545,7 @@
             <!-- Settings Section -->
             <div class="settings-section">
                 <h3>Configurações</h3>
-                <div class="settings-row">
-                    <input type="number" class="settings-input" id="aliasNumber" placeholder="Número do alias">
-                    <button class="settings-btn" onclick="setAliasNumber()">Definir</button>
-                </div>
-                <div class="settings-row">
-                    <input type="email" class="settings-input" id="baseEmail" placeholder="seuemail@gmail.com">
-                    <button class="settings-btn" onclick="setBaseEmail()">Definir</button>
-                </div>
-                <button class="reset-btn" onclick="resetAlias()">Resetar Alias</button>
-                <button class="reset-btn" onclick="resetSMSStats()" style="margin-top: 8px; background: #64748b;">Resetar Tentativas BOT-SMS</button>
+                <button class="reset-btn" onclick="resetSMSStats()">Resetar Tentativas BOT-SMS</button>
             </div>
         </div>
     </div>
@@ -585,9 +569,13 @@
             autoCheckInterval: null
         };
 
+        // ================= NUMBER LIST FUNCTIONS =================
+        let numberList = JSON.parse(localStorage.getItem('numberList') || '[]');
+        let currentListIndex = parseInt(localStorage.getItem('currentListIndex') || '0');
+        let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
+
         function loadSmsState() {
             if (smsState.number) {
-                // Mostra número com operadora
                 const displayNumber = smsState.operator ? 
                     `${smsState.number} (${smsState.operator})` : 
                     smsState.number;
@@ -615,6 +603,9 @@
             if (smsState.id) {
                 startAutoCodeCheck();
             }
+            
+            // Load number list
+            updateNumberListDisplay();
         }
 
         function saveSmsState() {
@@ -629,39 +620,15 @@
             localStorage.setItem('sms_hasReceivedCode', smsState.hasReceivedCode.toString());
         }
 
-        function notify(msg, type = 'info', copyToClipboard = true) {
+        function notify(msg, type = 'info') {
             const notif = document.getElementById('notification');
             notif.textContent = msg;
             notif.className = `notification ${type} show`;
             setTimeout(() => notif.classList.remove('show'), 1800);
-            
-            // >>>>>>>> NOVO: Copiar automaticamente a mensagem <<<<<<<<<
-            if (copyToClipboard && msg && msg.trim()) {
-                navigator.clipboard.writeText(msg).catch(() => {
-                    // Fallback para navegadores antigos
-                    const el = document.createElement('textarea');
-                    el.value = msg;
-                    document.body.appendChild(el);
-                    el.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(el);
-                });
-            }
         }
-        
-        function extractCode(text) {
-    if (!text) return text;
-    // Se contém ":", pega só o que vem depois
-    if (text.includes(':')) {
-        const parts = text.split(':');
-        return parts[parts.length - 1].trim();
-    }
-    return text.trim();
-}
 
         async function copy(text, type) {
             try {
-                // Remove informações de preço e operadora para copiar apenas o número
                 let cleanText = text;
                 if (type === 'number') {
                     cleanText = text.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').replace(/R\$\s*[\d.,]+\s*/, '').trim();
@@ -675,7 +642,7 @@
                     setTimeout(() => indicator.classList.remove('show'), 800);
                 }
                 
-                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`, 'info', false);
+                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`);
                 return true;
             } catch {
                 const el = document.createElement('textarea');
@@ -688,73 +655,70 @@
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`, 'info', false);
+                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`);
                 return true;
             }
         }
 
-        // Função para verificar código automaticamente
-        async function autoCheckCode() {
-    if (!smsState.id || smsState.loading) return;
-    
-    try {
-        const response = await fetch(`/get_status/${smsState.id}`);
-        const data = await response.json();
-        
-        if (data.success && data.has_code && data.code) {
-            const cleanCode = extractCode(data.code);
-            
-            smsState.code = cleanCode;
-            smsState.successes++;
-            smsState.hasReceivedCode = true;
-            smsState.firstStatusCheck = true;
-            
-            document.getElementById('codeValue').textContent = cleanCode;
-            document.getElementById('codeBox').classList.add('active');
-            document.getElementById('codeBox').classList.remove('empty');
-            document.getElementById('codeStatus').textContent = 'Recebido ✓';
-            document.querySelector('#codeBox .dot').classList.add('received');
-            document.getElementById('successes').textContent = smsState.successes;
-            
-            saveSmsState();
-            
-            await copy(cleanCode, 'code');
-            notify(`Código recebido: ${cleanCode}`, 'info', false);
-            
-        } else if (data.message) {
-            // >>>>>>>> NOVO: tenta extrair código mesmo sem has_code <<<<<<<<<
-            const possibleCode = extractCode(data.message);
-            const isNumeric = /^\d+$/.test(possibleCode);
-            
-            if (isNumeric && possibleCode.length >= 3 && possibleCode !== smsState.code) {
-                smsState.code = possibleCode;
-                smsState.successes++;
-                smsState.hasReceivedCode = true;
-                smsState.firstStatusCheck = true;
-                
-                document.getElementById('codeValue').textContent = possibleCode;
-                document.getElementById('codeBox').classList.add('active');
-                document.getElementById('codeBox').classList.remove('empty');
-                document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                document.querySelector('#codeBox .dot').classList.add('received');
-                document.getElementById('successes').textContent = smsState.successes;
-                
-                saveSmsState();
-                
-                await copy(possibleCode, 'code');
-                notify(`Código recebido: ${possibleCode}`, 'info', false);
+        async function copyErrorToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
             }
         }
-    } catch (error) {
-        // Silencia erros
-    }
-}
+
+        async function autoCheckCode() {
+            if (!smsState.id || smsState.loading) return;
+            
+            try {
+                const response = await fetch(`/get_status/${smsState.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.has_code && data.code) {
+                    // Verifica filtro de remetente
+                    const senderFilter = document.getElementById('senderFilter').value.trim().toLowerCase();
+                    
+                    if (senderFilter && data.sender) {
+                        // Se tem filtro e a API retornou o remetente
+                        if (!data.sender.toLowerCase().includes(senderFilter)) {
+                            // Remetente não corresponde, continua aguardando
+                            return;
+                        }
+                    }
+                    
+                    // Se não tem filtro OU o remetente corresponde
+                    smsState.code = data.code;
+                    smsState.successes++;
+                    smsState.hasReceivedCode = true;
+                    smsState.firstStatusCheck = true;
+                    
+                    document.getElementById('codeValue').textContent = smsState.code;
+                    document.getElementById('codeBox').classList.add('active');
+                    document.getElementById('codeBox').classList.remove('empty');
+                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                    document.querySelector('#codeBox .dot').classList.add('received');
+                    document.getElementById('successes').textContent = smsState.successes;
+                    
+                    saveSmsState();
+                    
+                    await copy(smsState.code, 'code');
+                    notify(`Código recebido: ${smsState.code}`, 'info');
+                }
+            } catch (error) {
+                // Silencia erros
+            }
+        }
 
         function startAutoCodeCheck() {
             if (smsState.autoCheckInterval) {
                 clearInterval(smsState.autoCheckInterval);
             }
-            // Verifica a cada 3 segundos
             smsState.autoCheckInterval = setInterval(autoCheckCode, 3000);
         }
 
@@ -780,8 +744,6 @@
             document.getElementById('numberPrice').textContent = '';
             
             try {
-                // REMOVIDO cancelamento de número anterior para evitar bloqueios
-                
                 const res = await fetch('/get_number');
                 const data = await res.json();
                 
@@ -792,7 +754,6 @@
                     smsState.price = data.price;
                     smsState.code = '';
                     
-                    // Mostra número com operadora
                     const displayNumber = data.operator ? 
                         `${data.phone_number} (${data.operator})` : 
                         data.phone_number;
@@ -810,14 +771,14 @@
                     document.querySelector('#codeBox .dot').classList.remove('received', 'cancelled');
                     
                     saveSmsState();
-                    
-                    // Inicia verificação automática
                     startAutoCodeCheck();
                     
                     await copy(smsState.number, 'number');
-                    notify(`Número ${data.operator || ''}: ${smsState.number} (${data.price})`, 'info', false);
+                    notify(`Número ${data.operator || ''}: ${smsState.number} (${data.price})`);
                 } else {
-                    notify(data.message || 'Sem números disponíveis', 'error');
+                    const errorMsg = data.message || 'Sem números disponíveis';
+                    notify(errorMsg, 'error');
+                    copyErrorToClipboard(errorMsg);
                     document.getElementById('numberValue').textContent = 'Erro';
                     document.getElementById('numberStatus').textContent = 'Erro';
                     document.getElementById('numberBox').classList.remove('active');
@@ -825,7 +786,9 @@
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                notify('Erro de conexão', 'error');
+                const errorMsg = 'Erro de conexão';
+                notify(errorMsg, 'error');
+                copyErrorToClipboard(errorMsg);
                 document.getElementById('numberValue').textContent = 'Erro';
                 document.getElementById('numberStatus').textContent = 'Erro';
                 document.getElementById('numberBox').classList.remove('active');
@@ -836,336 +799,187 @@
         }
 
         async function getCode() {
-    if (!smsState.id || smsState.loading) {
-        if (!smsState.id) notify('Obtenha um número primeiro', 'error');
-        return;
-    }
-    
-    smsState.loading = true;
-    document.getElementById('codeValue').textContent = '...';
-    document.getElementById('codeStatus').textContent = 'Verificando';
-    document.getElementById('codeBox').classList.remove('empty');
-    
-    try {
-        const res = await fetch(`/get_status/${smsState.id}`);
-        const data = await res.json();
-        
-        if (data.success) {
-            if (data.has_code && data.code) {
-                // Extrai só o código limpo
-                const cleanCode = extractCode(data.code);
-                
-                smsState.code = cleanCode;
-                smsState.successes++;
-                smsState.hasReceivedCode = true;
-                smsState.firstStatusCheck = true;
-                
-                document.getElementById('codeValue').textContent = cleanCode;
-                document.getElementById('codeBox').classList.add('active');
-                document.getElementById('codeBox').classList.remove('empty');
-                document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                document.querySelector('#codeBox .dot').classList.add('received');
-                document.getElementById('successes').textContent = smsState.successes;
-                
-                saveSmsState();
-                
-                await copy(cleanCode, 'code');
-                notify(`Código: ${cleanCode}`, 'info', false);
-                
-            } else if (data.status === 'waiting_code') {
-                // Verifica se JÁ TEM CÓDIGO SALVO
-                if (smsState.code && smsState.hasReceivedCode) {
-                    document.getElementById('codeValue').textContent = smsState.code;
-                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                    
-                    await copy(smsState.code, 'code');
-                    notify(`Código atual: ${smsState.code}`, 'info', false);
-                    
-                    smsState.firstStatusCheck = true;
-                    
-                } else {
-                    document.getElementById('codeValue').textContent = 'Aguardando...';
-                    document.getElementById('codeStatus').textContent = 'Aguardando SMS...';
-                    notify('Aguardando SMS...', 'info');
+            if (!smsState.id || smsState.loading) {
+                if (!smsState.id) {
+                    const errorMsg = 'Obtenha um número primeiro';
+                    notify(errorMsg, 'error');
+                    copyErrorToClipboard(errorMsg);
                 }
-                
-            } else if (data.status === 'cancelled') {
-                document.getElementById('codeStatus').textContent = 'Expirado';
-                document.getElementById('codeValue').textContent = 'Expirado';
-                document.getElementById('numberBox').classList.remove('active');
-                document.getElementById('numberBox').classList.add('cancelled');
-                notify('Número expirado', 'warning');
-                
-                smsState.id = '';
-                smsState.code = '';
-                stopAutoCodeCheck();
-                saveSmsState();
-                
-            } else {
-                // >>>>>>>> CORREÇÃO: extrai código da mensagem <<<<<<<<<
-                const possibleCode = extractCode(data.message || '');
-                const isNumeric = /^\d+$/.test(possibleCode);
-                
-                if (isNumeric && possibleCode.length >= 3) {
-                    // A mensagem contém um código válido!
-                    smsState.code = possibleCode;
-                    smsState.successes++;
-                    smsState.hasReceivedCode = true;
-                    smsState.firstStatusCheck = true;
-                    
-                    document.getElementById('codeValue').textContent = possibleCode;
-                    document.getElementById('codeBox').classList.add('active');
-                    document.getElementById('codeBox').classList.remove('empty');
-                    document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                    document.querySelector('#codeBox .dot').classList.add('received');
-                    document.getElementById('successes').textContent = smsState.successes;
-                    
-                    saveSmsState();
-                    
-                    await copy(possibleCode, 'code');
-                    notify(`Código: ${possibleCode}`, 'info', false);
-                } else {
-                    document.getElementById('codeStatus').textContent = data.message || 'Status';
-                    document.getElementById('codeValue').textContent = smsState.code || '...';
-                    notify(data.message || 'Status', 'info');
-                }
-            }
-        } else {
-            // >>>>>>>> CORREÇÃO: mesmo em erro, tenta extrair código <<<<<<<<<
-            const possibleCode = extractCode(data.message || '');
-            const isNumeric = /^\d+$/.test(possibleCode);
-            
-            if (isNumeric && possibleCode.length >= 3) {
-                smsState.code = possibleCode;
-                smsState.successes++;
-                smsState.hasReceivedCode = true;
-                smsState.firstStatusCheck = true;
-                
-                document.getElementById('codeValue').textContent = possibleCode;
-                document.getElementById('codeBox').classList.add('active');
-                document.getElementById('codeBox').classList.remove('empty');
-                document.getElementById('codeStatus').textContent = 'Recebido ✓';
-                document.querySelector('#codeBox .dot').classList.add('received');
-                document.getElementById('successes').textContent = smsState.successes;
-                
-                saveSmsState();
-                
-                await copy(possibleCode, 'code');
-                notify(`Código: ${possibleCode}`, 'info', false);
-            } else {
-                notify(data.message || 'Erro ao verificar', 'error');
-                document.getElementById('codeStatus').textContent = 'Erro';
-                document.getElementById('codeValue').textContent = smsState.code || 'Erro';
-            }
-        }
-    } catch (error) {
-        notify('Erro de conexão', 'error');
-        document.getElementById('codeStatus').textContent = 'Erro';
-        document.getElementById('codeValue').textContent = smsState.code || 'Erro';
-    } finally {
-        smsState.loading = false;
-        saveSmsState();
-    }
-}
-
-        // ================= DATA GENERATOR FUNCTIONS =================
-        const maleNames = ["Abelardo", "Adriano", "Agnaldo", "Alan", "Alberto", "Aldo", "Alex", "Alexandre", "Alfredo", "Alvaro",
-            "Anderson", "Andre", "Antonio", "Ariel", "Augusto", "Aureliano", "Bruno", "Caio", "Cassio",
-            "Cesar", "Cristiano", "Daniel", "Davi", "Diego", "Douglas", "Eduardo", "Elias", "Emilio", "Enzo",
-            "Felipe", "Fernando", "Francisco", "Gabriel", "Gustavo", "Henrique", "Hugo", "Igor", "Ivo", "Jackson",
-            "Jair", "James", "Jander", "Joao", "Jorge", "Jose", "Juan", "Julio", "Junior", "Kaio", "Leonardo",
-            "Leandro", "Luis", "Luciano", "Lucas", "Marcelo", "Marcos", "Mario", "Martin", "Matheus", "Mauricio",
-            "Miguel", "Moises", "Nicolas", "Nilton", "Nivaldo", "Otavio", "Paulo", "Pedro", "Rafael", "Renato", "Ricardo",
-            "Roberto", "Rogerio", "Romulo", "Ronaldo", "Rodrigo", "Samuel", "Sergio", "Silvio", "Thales", "Tiago",
-            "Tobias", "Tomas", "Vagner", "Vitor", "Vinicius", "Wagner", "Wallace", "Washington", "Willian", "Wilson",
-            "Walter", "Ademir", "Adolfo", "Agostinho", "Ailton", "Alcides", "Alfredo", "Altair", "Amadeu", "Americo",
-            "Anselmo", "Antonino", "Arnaldo", "Artur", "Aurelio", "Bento", "Benjamim", "Benicio", "Bernard",
-            "Brendon", "Caetano", "Carlos", "Carmelo", "Cassio", "Celso", "Claudinei", "Claudemir", "Claudio",
-            "Cleo", "Cristiano", "Damiao", "Danilo", "Dario", "Edgard", "Edilson", "Edson", "Efraim", "Eike",
-            "Eliseu", "Emiliano", "Enrico", "Epitacio", "Erico", "Eugenio", "Evaldo", "Evandro", "Everaldo", "Fabiano",
-            "Fabricio", "Fabio", "Feliciano", "Filomeno", "Flavio", "Florencio", "Frederico", "Geraldo", "Gideon",
-            "Gilberto", "Giordano", "Giovani", "Gregorio", "Heitor", "Icaro", "Ilson", "Ismael", "Israel", "Italo",
-            "Jaime", "Joaquim", "Jose Maria", "Josuel", "Joviano", "Luan", "Luiz Felipe", "Marcio", "Marco", "Nelio",
-            "Nestor", "Nilson", "Norberto", "Nuno", "Osmar", "Paulo", "Plinio", "Rubens", "Ruy", "Salomao",
-            "Samir", "Sandro", "Severino", "Sidnei", "Silvano", "Silvio", "Tadeu", "Tarcisio", "Teodoro", "Thiago", "Tomas",
-            "Ulysses", "Urbano", "Valdir", "Valter", "Vicente", "Vladmir", "Waldemar", "Wilmar", "Wladimir"];
-            
-        const femaleNames = ["Abigail", "Adelaide", "Adelia", "Adriana", "Agatha", "Agnes", "Aida", "Aileen", "Aira", "Alana", "Alice", "Aline", "Alzira", "Amalia", "Amanda", "Amelia", "Ana", "Analia", "Andrea", "Andressa", "Angela", "Angelica", "Anita", "Antonia", "Aparecida", "Ariana", "Ariane", "Arlete", "Arya", "Aurora", "Barbara", "Beatriz", "Benedita", "Berenice", "Bernadete", "Bianca", "Bruna", "Brunilda", "Caetana", "Camila", "Carina", "Carla", "Carmem", "Carmo", "Carolina", "Cassia", "Catarina", "Cecilia", "Celina", "Celia", "Clara", "Clarice", "Clarinda", "Claudia", "Clementina", "Cleonice", "Clotilde", "Conceicao", "Constancia", "Cristina", "Dafne", "Dalva", "Daniela", "Daphne", "Dara", "Debora", "Deise", "Denise", "Diana", "Dilma", "Diolinda", "Diva", "Dora", "Doroteia", "Eduarda", "Elaine", "Eliana", "Elisabete", "Elisabeth", "Elisa", "Elisete", "Elizangela", "Elsa", "Elza", "Emanuela", "Emilia", "Emily", "Eneida", "Ercilia", "Erica", "Ermelinda", "Ester", "Esther", "Eunice", "Eva", "Evelyn", "Fabiana", "Fabiola", "Fatima", "Felicia", "Fernanda", "Filomena", "Flavia", "Francisca", "Gabriela", "Gabrielle", "Geralda", "Gertrudes", "Giovanna", "Giselle", "Gloria", "Graca", "Graciela", "Graziella", "Guadalupe", "Helena", "Heloisa", "Henriqueta", "Hilda", "Idalina", "Idalia", "Idalina", "Ieda", "Ileana", "Ilma", "Ilona", "Ines", "Iolanda", "Ione", "Irene", "Iris", "Isabel", "Isabela", "Isis", "Ivana", "Ivone", "Jacinta", "Janaina", "Janete", "Janice", "Jasmin", "Jeane", "Jocasta", "Joceline", "Joana", "Jordana", "Josefa", "Josefina", "Jovita", "Judite", "Julia", "Juliana", "Julieta", "Jurema", "Justina", "Karla", "Karoline", "Katharina", "Katia", "Katrina", "Kelly", "Kim", "Lais", "Lara", "Laura", "Laurinda", "Leandra", "Leila", "Lena", "Leonor", "Leticia", "Lia", "Liana", "Lilian", "Liliana", "Linda", "Lineia", "Livia", "Loren", "Lorena", "Luana", "Lucia", "Luciana", "Luciene", "Lucrecia", "Ludmila", "Luisa", "Luzia", "Madalena", "Magda", "Magnolia", "Maia", "Maira", "Manuela", "Mara", "Marcela", "Marcia", "Marcilia", "Margarida", "Maria", "Mariana", "Marilda", "Marina", "Marisa", "Marlene", "Marta", "Matilde", "Maura", "Mavi", "Maxima", "Mayara", "Maysa", "Melania", "Melinda", "Melissa", "Mercedes", "Milena", "Miriam", "Mirian", "Mirela", "Miriam", "Monica", "Nadia", "Nair", "Nancy", "Nara", "Natividade", "Natalia", "Natasha", "Nazare", "Nela", "Nelia", "Nely", "Nereida", "Neyde", "Neuza", "Nidia", "Nila", "Nilza", "Nina", "Ninfa", "Nisia", "Noemia", "Noemi", "Norma", "Nubia", "Odalicia", "Odete", "Ofelia", "Olga", "Olimpia", "Otilia", "Palmira", "Patricia", "Paula", "Paulina", "Pauline", "Penelope", "Perpetua", "Piedade", "Pilar", "Priscila", "Querina", "Quintina", "Rafaela", "Raquel", "Rebeca", "Regina", "Renata", "Rita", "Roberta", "Rosa", "Rosalina", "Rosana", "Rosangela", "Rosario", "Rosilene", "Rosimeire", "Rubia", "Rute", "Sabrina", "Samanta", "Sandra", "Sara", "Sasha", "Selena", "Selma", "Severina", "Sheila", "Sibila", "Sibila", "Silvana", "Silvia", "Simone", "Sofia", "Solange", "Sonia", "Soraya", "Suellen", "Sulamita", "Suzana", "Tania", "Tassia", "Tatiana", "Telma", "Teresa", "Tereza", "Thereza", "Tiana", "Tina", "Tirza", "Tomasia", "Valeria", "Valesca", "Valquiria", "Vanessa", "Vanda", "Verena", "Veridiana", "Veronica", "Victoria", "Vilma", "Violeta", "Virginia", "Vitoria", "Vivian", "Viviane", "Wanda", "Xenia", "Yara", "Yasmin", "Yeda", "Yolanda", "Yone", "Yvone", "Zaira", "Zelia", "Zenaide", "Zenilda", "Zilda"];
-            
-        const lastNames = ["Abreu", "Albuquerque", "Almeida", "Andrade", "Araujo", "Barbosa", "Barros", "Borges", "Brandao", "Brazil",
-            "Campos", "Carvalho", "Castro", "Chaves", "Clemente", "Costa", "Cruz", "Dias", "Duarte", "Faria",
-            "Fernandes", "Ferreira", "Freitas", "Gama", "Garcia", "Goncalves", "Gomes", "Goncalves", "Guimaraes",
-            "Henrique", "Lima", "Lopes", "Lourenco", "Macedo", "Machado", "Martins", "Melo", "Mesquita", "Miranda",
-            "Moraes", "Moreira", "Mota", "Neto", "Oliveira", "Pereira", "Pinto", "Rezende", "Ribeiro", "Rodrigues",
-            "Romero", "Rosa", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
-            "Vargas", "Vieira", "Vila", "Vieira", "Araujo", "Alves", "Bezerra", "Campos", "Cardoso", "Castro",
-            "Cruz", "Dantas", "Falcao", "Ferreira", "Freitas", "Goncalves", "Gomes", "Guimaraes", "Lima", "Lopes",
-            "Melo", "Mendes", "Moraes", "Moreira", "Mota", "Oliveira", "Pacheco", "Pereira", "Pinto", "Reis",
-            "Ribeiro", "Rodrigues", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
-            "Vargas", "Vieira", "Vila", "Viana", "Antunes", "Araujo", "Albuquerque", "Almeida", "Barbosa", "Barros",
-            "Brandao", "Brazil", "Campos", "Carvalho", "Castro", "Chaves", "Clemente", "Costa", "Cruz", "Dias",
-            "Duarte", "Faria", "Fernandes", "Ferreira", "Freitas", "Gama", "Garcia", "Goncalves", "Gomes", "Guimaraes",
-            "Henrique", "Lima", "Lopes", "Lourenco", "Macedo", "Machado", "Martins", "Melo", "Mesquita", "Miranda",
-            "Moraes", "Moreira", "Mota", "Neto", "Oliveira", "Pereira", "Pinto", "Rezende", "Ribeiro", "Rodrigues",
-            "Romero", "Rosa", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
-            "Vargas", "Vieira", "Vila", "Vieira", "Araujo", "Alves", "Bezerra", "Campos", "Cardoso", "Castro",
-            "Cruz", "Dantas", "Falcao", "Ferreira", "Freitas", "Goncalves", "Gomes", "Guimaraes", "Lima", "Lopes",
-            "Melo", "Mendes", "Moraes", "Moreira", "Mota", "Oliveira", "Pacheco", "Pereira", "Pinto", "Reis",
-            "Ribeiro", "Rodrigues", "Santos", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente",
-            "Vargas", "Vieira", "Vila", "Viana", "Antunes", "Barros", "Carvalho", "Castro", "Cavalcante", "Chaves",
-            "Costa", "Cruz", "Dias", "Duarte", "Ferreira", "Freitas", "Gomes", "Goncalves", "Guimaraes", "Lima",
-            "Lopes", "Machado", "Mendes", "Melo", "Moraes", "Moreira", "Neto", "Oliveira", "Pereira", "Pinto",
-            "Reis", "Ribeiro", "Rodrigues", "Silva", "Silveira", "Siqueira", "Souza", "Teixeira", "Torres", "Valente"];
-        
-        let currentGender = localStorage.getItem('currentGender') || 'male';
-        let currentData = JSON.parse(localStorage.getItem('currentData')) || null;
-        let gifts = JSON.parse(localStorage.getItem('gifts')) || [];
-
-        function setGender(gender) {
-            currentGender = gender;
-            localStorage.setItem('currentGender', gender);
-            document.getElementById('maleBtn').classList.toggle('active', gender === 'male');
-            document.getElementById('femaleBtn').classList.toggle('active', gender === 'female');
-        }
-        
-        function generateCPF() {
-            let cpf = '';
-            for (let i = 0; i < 9; i++) cpf += Math.floor(Math.random() * 10);
-            
-            let sum = 0;
-            for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
-            let digit1 = 11 - (sum % 11);
-            if (digit1 > 9) digit1 = 0;
-            cpf += digit1;
-            
-            sum = 0;
-            for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
-            let digit2 = 11 - (sum % 11);
-            if (digit2 > 9) digit2 = 0;
-            cpf += digit2;
-            
-            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1$2$3$4');
-        }
-        
-        function generateBirthdate() {
-            const date = new Date(1950 + Math.floor(Math.random() * 53), Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28));
-            const day = ('0' + date.getDate()).slice(-2);
-            const month = ('0' + (date.getMonth() + 1)).slice(-2);
-            const year = date.getFullYear();
-            return day + month + year;
-        }
-        
-        function generateEmail(isNewGeneration = true) {
-            let alias = parseInt(localStorage.getItem('aliasNumber')) || 1;
-            const base = localStorage.getItem('baseEmail') || "teste@gmail.com";
-            
-            if (isNewGeneration) {
-                const email = base.split('@')[0] + '+' + alias + '@' + base.split('@')[1];
-                localStorage.setItem('aliasNumber', alias + 1);
-                return email;
-            } else {
-                return base.split('@')[0] + '+' + alias + '@' + base.split('@')[1];
-            }
-        }
-        
-        function generateData() {
-            const firstNames = currentGender === 'male' ? maleNames : femaleNames;
-            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-            
-            const newData = {
-                firstName: firstName,
-                lastName: lastName,
-                cpf: generateCPF(),
-                email: generateEmail(true),
-                birthdate: generateBirthdate()
-            };
-            
-            currentData = newData;
-            localStorage.setItem('currentData', JSON.stringify(newData));
-            
-            document.getElementById('firstName').value = newData.firstName;
-            document.getElementById('lastName').value = newData.lastName;
-            document.getElementById('cpf').value = newData.cpf;
-            document.getElementById('email').value = newData.email;
-            document.getElementById('birthdate').value = newData.birthdate;
-            
-            // Atualiza o número do alias no campo
-            const alias = parseInt(localStorage.getItem('aliasNumber')) || 1;
-            document.getElementById('aliasNumber').value = alias;
-            
-            notify('Sucesso!');
-        }
-
-        function generateDataOnLoad() {
-            const firstNames = currentGender === 'male' ? maleNames : femaleNames;
-            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-            
-            const newData = {
-                firstName: firstName,
-                lastName: lastName,
-                cpf: generateCPF(),
-                email: generateEmail(false),
-                birthdate: generateBirthdate()
-            };
-            
-            currentData = newData;
-            localStorage.setItem('currentData', JSON.stringify(newData));
-            
-            document.getElementById('firstName').value = newData.firstName;
-            document.getElementById('lastName').value = newData.lastName;
-            document.getElementById('cpf').value = newData.cpf;
-            document.getElementById('email').value = newData.email;
-            document.getElementById('birthdate').value = newData.birthdate;
-        }
-
-        function loadSavedData() {
-            if (currentData) {
-                document.getElementById('firstName').value = currentData.firstName;
-                document.getElementById('lastName').value = currentData.lastName;
-                document.getElementById('cpf').value = currentData.cpf;
-                document.getElementById('email').value = currentData.email;
-                document.getElementById('birthdate').value = currentData.birthdate;
-            } else {
-                generateDataOnLoad();
-            }
-        }
-        
-        function copyDataField(fieldId) {
-            const field = document.getElementById(fieldId);
-            const text = field.value;
-            
-            if (!text || text === '-' || text === 'Clique em Gerar') {
-                notify('Nenhum dado para copiar', 'warning');
                 return;
             }
             
-            navigator.clipboard.writeText(text).then(() => {
-                notify('Copiado!', 'info', false);
+            smsState.loading = true;
+            document.getElementById('codeValue').textContent = '...';
+            document.getElementById('codeStatus').textContent = 'Verificando';
+            document.getElementById('codeBox').classList.remove('empty');
+            
+            try {
+                const res = await fetch(`/get_status/${smsState.id}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    if (data.has_code && data.code) {
+                        // Verifica filtro de remetente
+                        const senderFilter = document.getElementById('senderFilter').value.trim().toLowerCase();
+                        
+                        if (senderFilter && data.sender) {
+                            if (!data.sender.toLowerCase().includes(senderFilter)) {
+                                const waitingMsg = 'Aguardando remetente correto...';
+                                document.getElementById('codeValue').textContent = waitingMsg;
+                                document.getElementById('codeStatus').textContent = waitingMsg;
+                                notify(waitingMsg, 'info');
+                                copyErrorToClipboard(waitingMsg);
+                                smsState.loading = false;
+                                saveSmsState();
+                                return;
+                            }
+                        }
+                        
+                        smsState.code = data.code;
+                        smsState.successes++;
+                        smsState.hasReceivedCode = true;
+                        smsState.firstStatusCheck = true;
+                        
+                        document.getElementById('codeValue').textContent = smsState.code;
+                        document.getElementById('codeBox').classList.add('active');
+                        document.getElementById('codeBox').classList.remove('empty');
+                        document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                        document.querySelector('#codeBox .dot').classList.add('received');
+                        document.getElementById('successes').textContent = smsState.successes;
+                        
+                        saveSmsState();
+                        await copy(smsState.code, 'code');
+                        notify(`Código: ${smsState.code}`, 'info');
+                    } else if (data.status === 'waiting_code') {
+                        if (smsState.code && smsState.hasReceivedCode) {
+                            document.getElementById('codeValue').textContent = smsState.code;
+                            document.getElementById('codeStatus').textContent = 'Recebido ✓';
+                            await copy(smsState.code, 'code');
+                            notify(`Código atual: ${smsState.code}`, 'info');
+                            smsState.firstStatusCheck = true;
+                        } else {
+                            const waitingMsg = 'Aguardando SMS...';
+                            document.getElementById('codeValue').textContent = waitingMsg;
+                            document.getElementById('codeStatus').textContent = waitingMsg;
+                            notify(waitingMsg, 'info');
+                            copyErrorToClipboard(waitingMsg);
+                        }
+                    } else if (data.status === 'cancelled') {
+                        const errorMsg = 'Número expirado';
+                        notify(errorMsg, 'warning');
+                        copyErrorToClipboard(errorMsg);
+                        document.getElementById('codeStatus').textContent = 'Expirado';
+                        document.getElementById('codeValue').textContent = 'Expirado';
+                        document.getElementById('numberBox').classList.remove('active');
+                        document.getElementById('numberBox').classList.add('cancelled');
+                        
+                        smsState.id = '';
+                        smsState.code = '';
+                        stopAutoCodeCheck();
+                        saveSmsState();
+                    } else {
+                        document.getElementById('codeStatus').textContent = data.message || 'Status';
+                        document.getElementById('codeValue').textContent = smsState.code || '...';
+                        notify(data.message || 'Status', 'info');
+                    }
+                } else {
+                    const errorMsg = data.message || 'Erro ao verificar';
+                    notify(errorMsg, 'error');
+                    copyErrorToClipboard(errorMsg);
+                    document.getElementById('codeStatus').textContent = 'Erro';
+                    document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+                }
+            } catch (error) {
+                const errorMsg = 'Erro de conexão';
+                notify(errorMsg, 'error');
+                copyErrorToClipboard(errorMsg);
+                document.getElementById('codeStatus').textContent = 'Erro';
+                document.getElementById('codeValue').textContent = smsState.code || 'Erro';
+            } finally {
+                smsState.loading = false;
+                saveSmsState();
+            }
+        }
+
+        // ================= NUMBER LIST FUNCTIONS =================
+        function updateNumberListDisplay() {
+            const textarea = document.getElementById('numberListInput');
+            textarea.value = numberList.join('\n');
+            
+            if (numberList.length > 0 && currentListIndex < numberList.length) {
+                document.getElementById('currentNumberDisplay').textContent = numberList[currentListIndex];
+                document.getElementById('currentNumberDisplay').classList.remove('number-empty');
+            } else if (numberList.length > 0 && currentListIndex >= numberList.length) {
+                document.getElementById('currentNumberDisplay').textContent = 'Lista finalizada';
+                document.getElementById('currentNumberDisplay').classList.add('number-empty');
+            }
+        }
+
+        function getNextNumberFromList() {
+            // Atualiza a lista do textarea
+            const textarea = document.getElementById('numberListInput');
+            const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            numberList = lines;
+            localStorage.setItem('numberList', JSON.stringify(numberList));
+            
+            if (numberList.length === 0) {
+                notify('Cole uma lista de números primeiro', 'error');
+                return;
+            }
+            
+            if (currentListIndex >= numberList.length) {
+                currentListIndex = 0;
+                notify('Lista reiniciada', 'info');
+            }
+            
+            const nextNumber = numberList[currentListIndex];
+            currentListIndex++;
+            localStorage.setItem('currentListIndex', currentListIndex.toString());
+            
+            document.getElementById('currentNumberDisplay').textContent = nextNumber;
+            document.getElementById('currentNumberDisplay').classList.remove('number-empty');
+            
+            copyCurrentNumberFromList();
+            
+            if (currentListIndex < numberList.length) {
+                notify(`Número ${currentListIndex}/${numberList.length}: ${nextNumber}`);
+            } else {
+                notify(`Último número: ${nextNumber} (lista finalizada)`);
+            }
+        }
+
+        function copyCurrentNumberFromList() {
+            const display = document.getElementById('currentNumberDisplay');
+            const number = display.textContent;
+            
+            if (!number || number === 'Clique em OBTER' || number === 'Lista finalizada') {
+                notify('Obtenha um número primeiro', 'warning');
+                return;
+            }
+            
+            navigator.clipboard.writeText(number).then(() => {
+                notify('Número copiado!');
             }).catch(() => {
                 const el = document.createElement('textarea');
-                el.value = text;
+                el.value = number;
                 document.body.appendChild(el);
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                notify('Copiado!', 'info', false);
+                notify('Número copiado!');
             });
         }
-        
-        // Função para copiar número do SMS (apenas números, sem operadora)
+
         function copyCurrentSMSNumber() {
             if (!smsState.number || smsState.number === 'Obter' || smsState.number === '...' || smsState.number === 'Erro') {
                 notify('Nenhum número SMS disponível', 'error');
                 return;
             }
             
-            // Remove informações de operadora e preço
             const cleanNumber = smsState.number.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').trim();
             
             navigator.clipboard.writeText(cleanNumber).then(() => {
-                notify(`Núm copiado`, 'info', false);
+                notify(`Núm copiado`);
             }).catch(() => {
                 const el = document.createElement('textarea');
                 el.value = cleanNumber;
@@ -1173,192 +987,121 @@
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                notify(`Núm copiado`, 'info', false);
+                notify(`Núm copiado`);
             });
-        }
-        
-        function setAliasNumber() {
-            const number = document.getElementById('aliasNumber').value;
-            if (number) {
-                localStorage.setItem('aliasNumber', number);
-                notify('Número definido: ' + number);
-            }
-        }
-        
-        function setBaseEmail() {
-            const email = document.getElementById('baseEmail').value;
-            if (email && email.includes('@')) {
-                localStorage.setItem('baseEmail', email);
-                notify('Email base definido');
-            }
-        }
-        
-        function resetAlias() {
-            localStorage.removeItem('aliasNumber');
-            notify('Alias resetado');
         }
 
         // ================= GIFT FUNCTIONS =================
-function handleGiftInput(event) {
-    const giftInput = document.getElementById('giftInput');
-    const giftCode = giftInput.value.trim();
-    
-    // Verifica apenas se tem conteúdo mínimo (reduzido para 3 caracteres)
-    if (giftCode.length < 3) return;
-    
-    // Verifica se o texto colado parece um código (mais flexível)
-    // Aceita: letras, números, hífens, underscores, e códigos como "ABCD-1234"
-    const looksLikeCode = /^[A-Za-z0-9\-_]+$/.test(giftCode) || 
-                         giftCode.includes('-') || 
-                         giftCode.includes('_') ||
-                         giftCode.length >= 6; // Qualquer coisa com 6+ caracteres
-    
-    if (!looksLikeCode) return;
-    
-    // Limpa timer anterior e configura novo
-    clearTimeout(giftInput.timer);
-    giftInput.timer = setTimeout(() => {
-        // Verifica se não é o mesmo código que já está sendo processado
-        if (giftCode && giftCode.length >= 3) {
-            addGiftToCollection(giftCode);
-            giftInput.value = ''; // Limpa o campo
-        }
-    }, 500); // Reduzido para 500ms para resposta mais rápida
-}
-
-function addGiftToCollection(giftCode) {
-    // Verificações mais flexíveis
-    if (!currentData || !currentData.email) {
-        notify('Gere dados primeiro!', 'warning');
-        return false;
-    }
-    
-    if (!smsState.number || smsState.number === 'Obter' || smsState.number === '...' || smsState.number === 'Erro') {
-        notify('Obtenha um número primeiro!', 'warning');
-        return false;
-    }
-    
-    // Verifica se já existe este gift (case insensitive)
-    if (gifts.some(g => g.code.toLowerCase() === giftCode.toLowerCase())) {
-        notify('Este gift já foi adicionado!', 'warning');
-        return false;
-    }
-    
-    const gift = {
-        code: giftCode,
-        number: smsState.number,
-        operator: smsState.operator || '',
-        email: currentData.email,
-        timestamp: new Date().toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit'
-        })
-    };
-    
-    gifts.unshift(gift);
-    
-    // Salva no localStorage
-    localStorage.setItem('gifts', JSON.stringify(gifts));
-    
-    // Atualiza a lista visual
-    updateGiftList();
-    
-    notify(`✓ Gift adicionado! Total: ${gifts.length}`);
-    console.log('Gift adicionado:', gift); // Debug
-    
-    return true;
-}
-
-// Adicione também um evento de paste (colar) como backup
-document.addEventListener('DOMContentLoaded', function() {
-    const giftInput = document.getElementById('giftInput');
-    if (giftInput) {
-        // Evento de colar (CTRL+V)
-        giftInput.addEventListener('paste', function(e) {
-            // Pequeno delay para pegar o valor colado
-            setTimeout(() => {
-                const value = giftInput.value.trim();
-                if (value.length >= 3) {
-                    handleGiftInput({ target: giftInput });
+        function handleGiftInput(event) {
+            const giftInput = document.getElementById('giftInput');
+            const giftCode = giftInput.value.trim();
+            
+            if (giftCode.length < 3) return;
+            
+            const looksLikeCode = /^[A-Za-z0-9\-_]+$/.test(giftCode) || 
+                                 giftCode.includes('-') || 
+                                 giftCode.includes('_') ||
+                                 giftCode.length >= 6;
+            
+            if (!looksLikeCode) return;
+            
+            clearTimeout(giftInput.timer);
+            giftInput.timer = setTimeout(() => {
+                if (giftCode && giftCode.length >= 3) {
+                    addGiftToCollection(giftCode);
+                    giftInput.value = '';
                 }
-            }, 100);
-        });
-        
-        // Evento de blur (quando sai do campo) como backup
-        giftInput.addEventListener('blur', function() {
-            const value = giftInput.value.trim();
-            if (value.length >= 3 && !gifts.some(g => g.code === value)) {
-                handleGiftInput({ target: giftInput });
+            }, 500);
+        }
+
+        function addGiftToCollection(giftCode) {
+            // Agora usa o número da lista (currentNumberDisplay) em vez do gerador
+            const display = document.getElementById('currentNumberDisplay');
+            const currentNumber = display.textContent;
+            
+            if (!currentNumber || currentNumber === 'Clique em OBTER' || currentNumber === 'Lista finalizada') {
+                notify('Obtenha um número da lista primeiro!', 'warning');
+                return false;
             }
-        });
-    }
-});
+            
+            if (gifts.some(g => g.code.toLowerCase() === giftCode.toLowerCase())) {
+                notify('Este gift já foi adicionado!', 'warning');
+                return false;
+            }
+            
+            const gift = {
+                code: giftCode,
+                number: currentNumber,
+                timestamp: new Date().toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                })
+            };
+            
+            gifts.unshift(gift);
+            localStorage.setItem('gifts', JSON.stringify(gifts));
+            updateGiftList();
+            
+            notify(`✓ Gift adicionado! Total: ${gifts.length}`);
+            return true;
+        }
 
         function updateGiftList() {
-    const giftList = document.getElementById('giftList');
-    const giftCount = document.getElementById('giftCount');
-    
-    if (!giftList || !giftCount) {
-        console.error('Elementos da lista de gifts não encontrados');
-        return;
-    }
-    
-    giftCount.textContent = gifts.length;
-    
-    if (gifts.length === 0) {
-        giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
-        return;
-    }
-    
-    giftList.innerHTML = '';
-    
-    // Mostra até 5 gifts recentes (aumentado de 3 para 5)
-    const recentGifts = gifts.slice(0, 5);
-    
-    recentGifts.forEach((gift) => {
-        const item = document.createElement('div');
-        item.className = 'gift-item';
-        item.onclick = () => copySingleGift(gift);
-        item.style.cursor = 'pointer';
-        
-        // Mostra informações resumidas
-        const shortCode = gift.code.length > 15 ? gift.code.substring(0, 15) + '...' : gift.code;
-        const shortNumber = gift.number.length > 10 ? gift.number.substring(0, 10) + '...' : gift.number;
-        
-        item.innerHTML = `
-            <div style="font-weight: 600; color: #1e293b; margin-bottom: 3px; font-size: 0.85rem;">
-                ${shortCode}
-            </div>
-            <div class="gift-info" style="font-size: 0.7rem;">
-                <span title="${gift.number} ${gift.operator}">📱 ${shortNumber}</span>
-                <span title="${gift.email}">📧 ${gift.email.split('@')[0].substring(0, 8)}...</span>
-                <span>🕐 ${gift.timestamp}</span>
-            </div>
-        `;
-        
-        item.title = `Clique para copiar: ${gift.code}\nNúmero: ${gift.number} ${gift.operator}\nEmail: ${gift.email}`;
-        giftList.appendChild(item);
-    });
-    
-    // Se tiver mais gifts, mostra indicador
-    if (gifts.length > 5) {
-        const moreItem = document.createElement('div');
-        moreItem.className = 'gift-item';
-        moreItem.style.textAlign = 'center';
-        moreItem.style.color = '#64748b';
-        moreItem.style.fontStyle = 'italic';
-        moreItem.style.fontSize = '0.75rem';
-        moreItem.style.padding = '8px';
-        moreItem.style.background = '#f1f5f9';
-        moreItem.style.cursor = 'pointer';
-        moreItem.textContent = `📋 Ver todos os ${gifts.length} gifts`;
-        moreItem.onclick = () => showAllGifts();
-        giftList.appendChild(moreItem);
-    }
-    
-    console.log(`Lista de gifts atualizada: ${gifts.length} items`); // Debug
-}
+            const giftList = document.getElementById('giftList');
+            const giftCount = document.getElementById('giftCount');
+            
+            if (!giftList || !giftCount) return;
+            
+            giftCount.textContent = gifts.length;
+            
+            if (gifts.length === 0) {
+                giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
+                return;
+            }
+            
+            giftList.innerHTML = '';
+            
+            const recentGifts = gifts.slice(0, 5);
+            
+            recentGifts.forEach((gift) => {
+                const item = document.createElement('div');
+                item.className = 'gift-item';
+                item.onclick = () => copySingleGift(gift);
+                item.style.cursor = 'pointer';
+                
+                const shortCode = gift.code.length > 15 ? gift.code.substring(0, 15) + '...' : gift.code;
+                const shortNumber = gift.number.length > 10 ? gift.number.substring(0, 10) + '...' : gift.number;
+                
+                item.innerHTML = `
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 3px; font-size: 0.85rem;">
+                        ${shortCode}
+                    </div>
+                    <div class="gift-info" style="font-size: 0.7rem;">
+                        <span title="${gift.number}">📱 ${shortNumber}</span>
+                        <span>🕐 ${gift.timestamp}</span>
+                    </div>
+                `;
+                
+                item.title = `Clique para copiar: ${gift.code}\nNúmero: ${gift.number}`;
+                giftList.appendChild(item);
+            });
+            
+            if (gifts.length > 5) {
+                const moreItem = document.createElement('div');
+                moreItem.className = 'gift-item';
+                moreItem.style.textAlign = 'center';
+                moreItem.style.color = '#64748b';
+                moreItem.style.fontStyle = 'italic';
+                moreItem.style.fontSize = '0.75rem';
+                moreItem.style.padding = '8px';
+                moreItem.style.background = '#f1f5f9';
+                moreItem.style.cursor = 'pointer';
+                moreItem.textContent = `📋 Ver todos os ${gifts.length} gifts`;
+                moreItem.onclick = () => showAllGifts();
+                giftList.appendChild(moreItem);
+            }
+        }
 
         function showAllGifts() {
             if (gifts.length === 0) return;
@@ -1368,8 +1111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             gifts.forEach((gift, index) => {
                 message += `Gift #${index + 1}:\n`;
                 message += `Código: ${gift.code}\n`;
-                message += `Número: ${gift.number} ${gift.operator}\n`;
-                message += `Email: ${gift.email}\n`;
+                message += `Número: ${gift.number}\n`;
                 message += `Horário: ${gift.timestamp}\n\n`;
             });
             
@@ -1380,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const text = `${gift.code}`;
             
             navigator.clipboard.writeText(text).then(() => {
-                notify('Gift copiado!', 'info', false);
+                notify('Gift copiado!');
             }).catch(() => {
                 const el = document.createElement('textarea');
                 el.value = text;
@@ -1388,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                notify('Gift copiado!', 'info', false);
+                notify('Gift copiado!');
             });
         }
 
@@ -1398,12 +1140,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            let text = `=== Lista de GIFTS e CONTAS ===\n\n`;
+            let text = `=== Lista de GIFTS ===\n\n`;
             
             gifts.forEach((gift, index) => {
                 text += `${gift.code}\n`;
                 text += `${gift.number}\n`;
-                text += `${gift.email}\n`;
                 text += `${gift.timestamp}\n`;
                 
                 if (index < gifts.length - 1) {
@@ -1412,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             navigator.clipboard.writeText(text).then(() => {
-                notify(`✓ ${gifts.length} gifts copiados!`, 'info', false);
+                notify(`✓ ${gifts.length} gifts copiados!`);
             }).catch(() => {
                 const el = document.createElement('textarea');
                 el.value = text;
@@ -1420,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                notify(`✓ ${gifts.length} gifts copiados!`, 'info', false);
+                notify(`✓ ${gifts.length} gifts copiados!`);
             });
         }
         
@@ -1437,7 +1178,6 @@ document.addEventListener('DOMContentLoaded', function() {
             notify(`✓ ${count} gifts removidos`);
         }
         
-        // Função para resetar stats do SMS
         function resetSMSStats() {
             smsState.attempts = 0;
             smsState.successes = 0;
@@ -1451,65 +1191,32 @@ document.addEventListener('DOMContentLoaded', function() {
             notify('✓ Contadores resetados');
         }
 
-        // ================= INITIALIZATION =================
-function init() {
-    // SMS
-    loadSmsState();
-    
-    // Data Generator
-    setGender(currentGender);
-    loadSavedData();
-    
-    const savedAlias = localStorage.getItem('aliasNumber');
-    const savedBaseEmail = localStorage.getItem('baseEmail');
-    
-    if (savedAlias) {
-        document.getElementById('aliasNumber').value = savedAlias;
-    }
-    if (savedBaseEmail) {
-        document.getElementById('baseEmail').value = savedBaseEmail;
-    }
-    
-    // Gifts
-    updateGiftList();
-    
-    // Configurar eventos do gift input
-    const giftInput = document.getElementById('giftInput');
-    if (giftInput) {
-        // Remove eventos antigos para não duplicar
-        giftInput.removeEventListener('paste', handlePaste);
-        giftInput.removeEventListener('blur', handleBlur);
-        
-        // Adiciona novos eventos
-        giftInput.addEventListener('paste', handlePaste);
-        giftInput.addEventListener('blur', handleBlur);
-        
-        console.log('Eventos do gift input configurados');
-    }
-}
-
-// Funções separadas para os eventos
-function handlePaste(e) {
-    setTimeout(() => {
-        const giftInput = document.getElementById('giftInput');
-        const value = giftInput.value.trim();
-        console.log('Paste detectado:', value); // Debug
-        if (value.length >= 3) {
-            handleGiftInput({ target: giftInput });
-        }
-    }, 100);
-}
-
-function handleBlur() {
-    const giftInput = document.getElementById('giftInput');
-    const value = giftInput.value.trim();
-    console.log('Blur detectado:', value); // Debug
-    if (value.length >= 3) {
-        handleGiftInput({ target: giftInput });
-    }
-}
-
-document.addEventListener('DOMContentLoaded', init);
+        // Event listeners para o gift input
+        document.addEventListener('DOMContentLoaded', function() {
+            const giftInput = document.getElementById('giftInput');
+            if (giftInput) {
+                giftInput.addEventListener('paste', function(e) {
+                    setTimeout(() => {
+                        const value = giftInput.value.trim();
+                        if (value.length >= 3) {
+                            handleGiftInput({ target: giftInput });
+                        }
+                    }, 100);
+                });
+                
+                giftInput.addEventListener('blur', function() {
+                    const value = giftInput.value.trim();
+                    if (value.length >= 3) {
+                        handleGiftInput({ target: giftInput });
+                    }
+                });
+            }
+            
+            // Inicialização
+            loadSmsState();
+            updateGiftList();
+            updateNumberListDisplay();
+        });
     </script>
 </body>
 </html>
