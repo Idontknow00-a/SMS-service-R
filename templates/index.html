@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS Service + Lista de Números</title>
+    <title>SMS Service + Gmail + Lista</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -173,138 +173,189 @@
             padding: 15px;
         }
         
-        .action-buttons {
+        .action-row {
             display: flex;
-            gap: 6px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
         }
         
         .action-btn {
-            flex: 1;
-            padding: 6px 2px;
+            padding: 8px 12px;
             border: none;
-            border-radius: 6px;
-            font-size: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            text-align: center;
-            height: 32px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
+            white-space: nowrap;
         }
         
         .action-btn.copy-sms { 
             background: #f1f5f9; 
             color: #64748b; 
-            flex: 0 0 auto;
-            width: 32px;
-            min-width: 32px;
-            height: 32px;
+            width: 36px;
+            min-width: 36px;
             padding: 0;
-            border-radius: 6px;
             font-size: 1.2rem;
+            flex-shrink: 0;
         }
         
         .action-btn.copy-sms:hover {
             background: #e2e8f0;
         }
         
+        .current-number-display {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .current-number-display:hover {
+            background: #d1fae5;
+            transform: scale(1.02);
+        }
+        
+        .current-number-display.empty {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.8rem;
+            border-color: #e2e8f0;
+            background: #f8fafc;
+        }
+        
         .action-btn.get-number { 
             background: #64748b; 
-            color: white; 
+            color: white;
+            flex-shrink: 0;
         }
         
         .action-btn.get-number:hover {
             background: #475569;
         }
         
-        .number-list-textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 10px;
+        .action-btn.get-number:active {
+            transform: scale(0.95);
+        }
+        
+        /* Gmail Section */
+        .gmail-section {
+            background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 0.85rem;
-            font-family: monospace;
-            resize: vertical;
+            padding: 12px;
             margin-bottom: 10px;
-            background: #f8fafc;
         }
         
-        .number-list-textarea:focus {
-            outline: none;
-            border-color: #64748b;
-            background: white;
+        .gmail-section .gmail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
         
-        .current-number-field {
-            padding: 12px;
-            border: 2px solid #10b981;
-            border-radius: 8px;
-            background: #f0fdf4;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        
-        .current-number-field:hover {
-            background: #d1fae5;
-            transform: scale(1.02);
-        }
-        
-        .current-number-field .number-label {
-            font-size: 0.65rem;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-        
-        .current-number-field .number-display {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #1e293b;
-            font-family: monospace;
-        }
-        
-        .current-number-field .number-empty {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-        
-        .filter-section {
-            margin-top: 12px;
-            padding: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-        }
-        
-        .filter-label {
+        .gmail-section .gmail-label {
             font-size: 0.7rem;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             font-weight: 600;
-            margin-bottom: 6px;
         }
         
-        .filter-input {
+        .gmail-code-box {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .gmail-code-box.has-code {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .gmail-code-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-family: monospace;
+            flex: 1;
+        }
+        
+        .gmail-code-text.empty {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .gmail-code-text.error {
+            color: #ef4444;
+            font-size: 0.8rem;
+        }
+        
+        .gmail-copy-btn {
+            padding: 6px 12px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .gmail-copy-btn:hover {
+            background: #059669;
+        }
+        
+        .gmail-fetch-btn {
             width: 100%;
             padding: 8px;
-            border: 1px solid #e2e8f0;
+            background: #64748b;
+            color: white;
+            border: none;
             border-radius: 6px;
-            font-size: 0.85rem;
-            background: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
         }
         
-        .filter-input:focus {
-            outline: none;
-            border-color: #64748b;
+        .gmail-fetch-btn:hover {
+            background: #475569;
+        }
+        
+        .gmail-fetch-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .gmail-fetch-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
         }
         
         /* Gift Section */
@@ -313,7 +364,7 @@
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             padding: 12px;
-            margin: 10px 0;
+            margin-bottom: 10px;
         }
         
         .gift-input {
@@ -405,6 +456,34 @@
             margin-bottom: 10px;
         }
         
+        .settings-section label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .number-list-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: monospace;
+            resize: vertical;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .number-list-textarea:focus {
+            outline: none;
+            border-color: #64748b;
+        }
+        
         .reset-btn {
             width: 100%;
             padding: 10px;
@@ -451,20 +530,6 @@
             0%, 100% { opacity: 1; } 
             50% { opacity: 0.5; } 
         }
-        
-        @media (max-width: 350px) {
-            .sms-section .boxes { 
-                height: 90px; 
-            }
-            
-            .sms-section .box { 
-                padding: 10px; 
-            }
-            
-            .sms-section .value { 
-                font-size: 1.1rem; 
-            }
-        }
     </style>
 </head>
 <body>
@@ -472,10 +537,10 @@
         <!-- SMS Section -->
         <div class="section sms-section">
             <div class="boxes">
-                <div class="box" id="numberBox" onclick="getNumber()" title="Clique para obter número">
+                <div class="box" id="numberBox" onclick="getNumber()" title="Clique para obter número SMS">
                     <div class="copy-indicator" id="numberCopy">✓</div>
                     <div class="box-header">
-                        <div class="label">Número</div>
+                        <div class="label">Número SMS</div>
                         <div class="price" id="numberPrice"></div>
                     </div>
                     <div class="value empty" id="numberValue">Obter</div>
@@ -486,9 +551,9 @@
                     </div>
                 </div>
                 
-                <div class="box" id="codeBox" onclick="getCode()" title="Clique para receber código">
+                <div class="box" id="codeBox" onclick="getCode()" title="Clique para verificar código SMS">
                     <div class="copy-indicator" id="codeCopy">✓</div>
-                    <div class="label">Código</div>
+                    <div class="label">Código SMS</div>
                     <div class="value empty" id="codeValue">Receber</div>
                     <div class="counter" id="successes">0</div>
                     <div class="status">
@@ -499,53 +564,51 @@
             </div>
         </div>
         
-        <!-- Number List Section -->
+        <!-- Lista de Números + Gmail Section -->
         <div class="section numberlist-section">
-            <div class="action-buttons">
-                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>
+            <!-- Linha: Copiar | Número Atual | OBTER -->
+            <div class="action-row">
+                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número SMS">📋</button>
+                <div class="current-number-display empty" id="currentNumberDisplay" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
+                    Clique em OBTER
+                </div>
                 <button class="action-btn get-number" onclick="getNextNumberFromList()">OBTER</button>
             </div>
             
-            <textarea class="number-list-textarea" id="numberListInput" 
-                      placeholder="Cole sua lista de números aqui (um por linha)"></textarea>
-            
-            <div class="current-number-field" id="currentNumberField" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
-                <div class="number-label">Número Atual da Lista</div>
-                <div class="number-empty" id="currentNumberDisplay">Clique em OBTER</div>
-            </div>
-            
-            <!-- Filtro por Remetente -->
-            <div class="filter-section">
-                <div class="filter-label">🔍 Filtrar por Remetente (opcional)</div>
-                <input type="text" class="filter-input" id="senderFilter" 
-                       placeholder="Ex: noreply@empresa.com ou Código de verificação">
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 6px;">
-                    O código só será aceito se o remetente conter este texto
+            <!-- Gmail Section -->
+            <div class="gmail-section">
+                <div class="gmail-header">
+                    <div class="gmail-label">📧 Código Gmail</div>
                 </div>
+                <div class="gmail-code-box" id="gmailCodeBox">
+                    <span class="gmail-code-text empty" id="gmailCodeText">Nenhum código</span>
+                    <button class="gmail-copy-btn" onclick="copyGmailCode()">Copiar</button>
+                </div>
+                <button class="gmail-fetch-btn" id="gmailFetchBtn" onclick="fetchGmailCode()">
+                    🔄 Buscar Código no Gmail
+                </button>
             </div>
-        </div>
-        
-        <!-- Gift Section -->
-        <div class="section numberlist-section">
+            
+            <!-- Gift Section -->
             <div class="gift-section">
                 <input type="text" class="gift-input" id="giftInput" 
                        placeholder="Cole o código do gift aqui (auto-salva)"
                        oninput="handleGiftInput(event)">
-                <div class="gift-list" id="giftList">
-                    <!-- Gift items will appear here -->
-                </div>
-                
+                <div class="gift-list" id="giftList"></div>
                 <div class="gift-footer">
-                    <button class="gift-footer-btn" onclick="clearAllGifts()" title="Limpar todos os gifts">🗑️</button>
+                    <button class="gift-footer-btn" onclick="clearAllGifts()" title="Limpar todos">🗑️</button>
                     <div class="gift-count" id="giftCount">0</div>
-                    <button class="gift-footer-btn" onclick="copyAllGifts()" title="Copiar todos os gifts">📋</button>
+                    <button class="gift-footer-btn" onclick="copyAllGifts()" title="Copiar todos">📋</button>
                 </div>
             </div>
             
             <!-- Settings Section -->
             <div class="settings-section">
-                <h3>Configurações</h3>
-                <button class="reset-btn" onclick="resetSMSStats()">Resetar Tentativas BOT-SMS</button>
+                <h3>⚙️ Configurações</h3>
+                <label>Lista de Números (um por linha)</label>
+                <textarea class="number-list-textarea" id="numberListInput" 
+                          placeholder="Cole sua lista de números aqui...&#10;11999999999&#10;11888888888&#10;11777777777"></textarea>
+                <button class="reset-btn" onclick="resetSMSStats()">Resetar Tentativas</button>
             </div>
         </div>
     </div>
@@ -569,17 +632,22 @@
             autoCheckInterval: null
         };
 
-        // ================= NUMBER LIST FUNCTIONS =================
+        // ================= NUMBER LIST =================
         let numberList = JSON.parse(localStorage.getItem('numberList') || '[]');
         let currentListIndex = parseInt(localStorage.getItem('currentListIndex') || '0');
+        
+        // ================= GIFTS =================
         let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
+        
+        // ================= GMAIL =================
+        let lastGmailCode = localStorage.getItem('lastGmailCode') || null;
+        let gmailLoading = false;
 
+        // ================= INIT =================
         function loadSmsState() {
             if (smsState.number) {
                 const displayNumber = smsState.operator ? 
-                    `${smsState.number} (${smsState.operator})` : 
-                    smsState.number;
-                
+                    `${smsState.number} (${smsState.operator})` : smsState.number;
                 document.getElementById('numberValue').textContent = displayNumber;
                 document.getElementById('numberBox').classList.remove('empty');
                 document.getElementById('numberPrice').textContent = smsState.price || '';
@@ -598,14 +666,16 @@
             document.getElementById('attempts').textContent = smsState.attempts;
             document.getElementById('successes').textContent = smsState.successes;
             
-            smsState.hasReceivedCode = localStorage.getItem('sms_hasReceivedCode') === 'true' || false;
+            if (smsState.id) startAutoCodeCheck();
             
-            if (smsState.id) {
-                startAutoCodeCheck();
-            }
-            
-            // Load number list
             updateNumberListDisplay();
+            
+            // Restaura código Gmail
+            if (lastGmailCode && lastGmailCode !== 'códno') {
+                document.getElementById('gmailCodeText').textContent = lastGmailCode;
+                document.getElementById('gmailCodeText').classList.remove('empty');
+                document.getElementById('gmailCodeBox').classList.add('has-code');
+            }
         }
 
         function saveSmsState() {
@@ -631,38 +701,16 @@
             try {
                 let cleanText = text;
                 if (type === 'number') {
-                    cleanText = text.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').replace(/R\$\s*[\d.,]+\s*/, '').trim();
+                    cleanText = text.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').trim();
                 }
-                
                 await navigator.clipboard.writeText(cleanText);
-                
                 const indicator = document.getElementById(type + 'Copy');
                 if (indicator) {
                     indicator.classList.add('show');
                     setTimeout(() => indicator.classList.remove('show'), 800);
                 }
-                
                 notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`);
                 return true;
-            } catch {
-                const el = document.createElement('textarea');
-                let cleanText = text;
-                if (type === 'number') {
-                    cleanText = text.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').replace(/R\$\s*[\d.,]+\s*/, '').trim();
-                }
-                el.value = cleanText;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                notify(`${type === 'number' ? 'Número' : 'Código'} copiado!`);
-                return true;
-            }
-        }
-
-        async function copyErrorToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
             } catch {
                 const el = document.createElement('textarea');
                 el.value = text;
@@ -670,29 +718,22 @@
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
+                notify('Copiado!');
+                return true;
             }
         }
 
+        async function copyErrorToClipboard(text) {
+            try { await navigator.clipboard.writeText(text); } catch {}
+        }
+
+        // ================= SMS API =================
         async function autoCheckCode() {
             if (!smsState.id || smsState.loading) return;
-            
             try {
                 const response = await fetch(`/get_status/${smsState.id}`);
                 const data = await response.json();
-                
                 if (data.success && data.has_code && data.code) {
-                    // Verifica filtro de remetente
-                    const senderFilter = document.getElementById('senderFilter').value.trim().toLowerCase();
-                    
-                    if (senderFilter && data.sender) {
-                        // Se tem filtro e a API retornou o remetente
-                        if (!data.sender.toLowerCase().includes(senderFilter)) {
-                            // Remetente não corresponde, continua aguardando
-                            return;
-                        }
-                    }
-                    
-                    // Se não tem filtro OU o remetente corresponde
                     smsState.code = data.code;
                     smsState.successes++;
                     smsState.hasReceivedCode = true;
@@ -706,19 +747,14 @@
                     document.getElementById('successes').textContent = smsState.successes;
                     
                     saveSmsState();
-                    
                     await copy(smsState.code, 'code');
-                    notify(`Código recebido: ${smsState.code}`, 'info');
+                    notify(`Código: ${smsState.code}`, 'info');
                 }
-            } catch (error) {
-                // Silencia erros
-            }
+            } catch (error) {}
         }
 
         function startAutoCodeCheck() {
-            if (smsState.autoCheckInterval) {
-                clearInterval(smsState.autoCheckInterval);
-            }
+            if (smsState.autoCheckInterval) clearInterval(smsState.autoCheckInterval);
             smsState.autoCheckInterval = setInterval(autoCheckCode, 3000);
         }
 
@@ -731,7 +767,6 @@
 
         async function getNumber() {
             if (smsState.loading) return;
-            
             smsState.loading = true;
             smsState.attempts++;
             smsState.firstStatusCheck = false;
@@ -754,9 +789,7 @@
                     smsState.price = data.price;
                     smsState.code = '';
                     
-                    const displayNumber = data.operator ? 
-                        `${data.phone_number} (${data.operator})` : 
-                        data.phone_number;
+                    const displayNumber = data.operator ? `${data.phone_number} (${data.operator})` : data.phone_number;
                     
                     document.getElementById('numberValue').textContent = displayNumber;
                     document.getElementById('numberPrice').textContent = data.price;
@@ -772,7 +805,6 @@
                     
                     saveSmsState();
                     startAutoCodeCheck();
-                    
                     await copy(smsState.number, 'number');
                     notify(`Número ${data.operator || ''}: ${smsState.number} (${data.price})`);
                 } else {
@@ -785,7 +817,6 @@
                     saveSmsState();
                 }
             } catch (error) {
-                console.error('Erro:', error);
                 const errorMsg = 'Erro de conexão';
                 notify(errorMsg, 'error');
                 copyErrorToClipboard(errorMsg);
@@ -819,22 +850,6 @@
                 
                 if (data.success) {
                     if (data.has_code && data.code) {
-                        // Verifica filtro de remetente
-                        const senderFilter = document.getElementById('senderFilter').value.trim().toLowerCase();
-                        
-                        if (senderFilter && data.sender) {
-                            if (!data.sender.toLowerCase().includes(senderFilter)) {
-                                const waitingMsg = 'Aguardando remetente correto...';
-                                document.getElementById('codeValue').textContent = waitingMsg;
-                                document.getElementById('codeStatus').textContent = waitingMsg;
-                                notify(waitingMsg, 'info');
-                                copyErrorToClipboard(waitingMsg);
-                                smsState.loading = false;
-                                saveSmsState();
-                                return;
-                            }
-                        }
-                        
                         smsState.code = data.code;
                         smsState.successes++;
                         smsState.hasReceivedCode = true;
@@ -856,7 +871,6 @@
                             document.getElementById('codeStatus').textContent = 'Recebido ✓';
                             await copy(smsState.code, 'code');
                             notify(`Código atual: ${smsState.code}`, 'info');
-                            smsState.firstStatusCheck = true;
                         } else {
                             const waitingMsg = 'Aguardando SMS...';
                             document.getElementById('codeValue').textContent = waitingMsg;
@@ -872,7 +886,6 @@
                         document.getElementById('codeValue').textContent = 'Expirado';
                         document.getElementById('numberBox').classList.remove('active');
                         document.getElementById('numberBox').classList.add('cancelled');
-                        
                         smsState.id = '';
                         smsState.code = '';
                         stopAutoCodeCheck();
@@ -880,7 +893,6 @@
                     } else {
                         document.getElementById('codeStatus').textContent = data.message || 'Status';
                         document.getElementById('codeValue').textContent = smsState.code || '...';
-                        notify(data.message || 'Status', 'info');
                     }
                 } else {
                     const errorMsg = data.message || 'Erro ao verificar';
@@ -901,29 +913,28 @@
             }
         }
 
-        // ================= NUMBER LIST FUNCTIONS =================
+        // ================= NUMBER LIST =================
         function updateNumberListDisplay() {
             const textarea = document.getElementById('numberListInput');
             textarea.value = numberList.join('\n');
             
             if (numberList.length > 0 && currentListIndex < numberList.length) {
                 document.getElementById('currentNumberDisplay').textContent = numberList[currentListIndex];
-                document.getElementById('currentNumberDisplay').classList.remove('number-empty');
+                document.getElementById('currentNumberDisplay').classList.remove('empty');
             } else if (numberList.length > 0 && currentListIndex >= numberList.length) {
                 document.getElementById('currentNumberDisplay').textContent = 'Lista finalizada';
-                document.getElementById('currentNumberDisplay').classList.add('number-empty');
+                document.getElementById('currentNumberDisplay').classList.add('empty');
             }
         }
 
         function getNextNumberFromList() {
-            // Atualiza a lista do textarea
             const textarea = document.getElementById('numberListInput');
             const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             numberList = lines;
             localStorage.setItem('numberList', JSON.stringify(numberList));
             
             if (numberList.length === 0) {
-                notify('Cole uma lista de números primeiro', 'error');
+                notify('Cole uma lista de números em Configurações', 'error');
                 return;
             }
             
@@ -937,15 +948,12 @@
             localStorage.setItem('currentListIndex', currentListIndex.toString());
             
             document.getElementById('currentNumberDisplay').textContent = nextNumber;
-            document.getElementById('currentNumberDisplay').classList.remove('number-empty');
+            document.getElementById('currentNumberDisplay').classList.remove('empty');
             
             copyCurrentNumberFromList();
             
-            if (currentListIndex < numberList.length) {
-                notify(`Número ${currentListIndex}/${numberList.length}: ${nextNumber}`);
-            } else {
-                notify(`Último número: ${nextNumber} (lista finalizada)`);
-            }
+            const remaining = numberList.length - currentListIndex;
+            notify(`Número ${currentListIndex}/${numberList.length}${remaining > 0 ? ` (${remaining} restantes)` : ' (último!)'}`);
         }
 
         function copyCurrentNumberFromList() {
@@ -953,7 +961,6 @@
             const number = display.textContent;
             
             if (!number || number === 'Clique em OBTER' || number === 'Lista finalizada') {
-                notify('Obtenha um número primeiro', 'warning');
                 return;
             }
             
@@ -975,11 +982,9 @@
                 notify('Nenhum número SMS disponível', 'error');
                 return;
             }
-            
             const cleanNumber = smsState.number.replace(/\s*\(TIM|ARQIA\)\s*/gi, '').trim();
-            
             navigator.clipboard.writeText(cleanNumber).then(() => {
-                notify(`Núm copiado`);
+                notify('Número SMS copiado!');
             }).catch(() => {
                 const el = document.createElement('textarea');
                 el.value = cleanNumber;
@@ -987,23 +992,92 @@
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                notify(`Núm copiado`);
+                notify('Número SMS copiado!');
             });
         }
 
-        // ================= GIFT FUNCTIONS =================
+        // ================= GMAIL =================
+        async function fetchGmailCode() {
+            if (gmailLoading) return;
+            
+            gmailLoading = true;
+            const btn = document.getElementById('gmailFetchBtn');
+            const codeText = document.getElementById('gmailCodeText');
+            const codeBox = document.getElementById('gmailCodeBox');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Buscando...';
+            codeText.textContent = 'Buscando...';
+            codeText.className = 'gmail-code-text';
+            
+            try {
+                const res = await fetch('/fetchCode');
+                const data = await res.json();
+                const code = data.code;
+                
+                if (code && code !== 'Código não encontrado' && code !== 'Erro ao buscar e-mails' && code !== 'códno') {
+                    if (code !== lastGmailCode) {
+                        codeText.textContent = code;
+                        codeText.className = 'gmail-code-text';
+                        codeBox.classList.add('has-code');
+                        localStorage.setItem('lastGmailCode', code);
+                        lastGmailCode = code;
+                        notify(`✅ Código Gmail: ${code}`);
+                        // Copia automaticamente
+                        copyGmailCode();
+                    } else {
+                        codeText.textContent = code;
+                        codeText.className = 'gmail-code-text';
+                        codeBox.classList.add('has-code');
+                        notify('Mesmo código anterior');
+                    }
+                } else {
+                    codeText.textContent = 'Não encontrado';
+                    codeText.className = 'gmail-code-text empty';
+                    codeBox.classList.remove('has-code');
+                    localStorage.setItem('lastGmailCode', 'códno');
+                    lastGmailCode = 'códno';
+                    notify('Nenhum código novo no Gmail', 'warning');
+                }
+            } catch (error) {
+                codeText.textContent = 'Erro';
+                codeText.className = 'gmail-code-text error';
+                codeBox.classList.remove('has-code');
+                notify('Erro ao buscar Gmail', 'error');
+            } finally {
+                gmailLoading = false;
+                btn.disabled = false;
+                btn.textContent = '🔄 Buscar Código no Gmail';
+            }
+        }
+
+        function copyGmailCode() {
+            const codeText = document.getElementById('gmailCodeText');
+            const code = codeText.textContent;
+            
+            if (!code || code === 'Nenhum código' || code === 'Não encontrado' || code === 'Buscando...' || code === 'Erro') {
+                notify('Nenhum código para copiar', 'warning');
+                return;
+            }
+            
+            navigator.clipboard.writeText(code).then(() => {
+                notify('Código Gmail copiado!');
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = code;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify('Código Gmail copiado!');
+            });
+        }
+
+        // ================= GIFTS =================
         function handleGiftInput(event) {
             const giftInput = document.getElementById('giftInput');
             const giftCode = giftInput.value.trim();
-            
             if (giftCode.length < 3) return;
-            
-            const looksLikeCode = /^[A-Za-z0-9\-_]+$/.test(giftCode) || 
-                                 giftCode.includes('-') || 
-                                 giftCode.includes('_') ||
-                                 giftCode.length >= 6;
-            
-            if (!looksLikeCode) return;
             
             clearTimeout(giftInput.timer);
             giftInput.timer = setTimeout(() => {
@@ -1015,7 +1089,6 @@
         }
 
         function addGiftToCollection(giftCode) {
-            // Agora usa o número da lista (currentNumberDisplay) em vez do gerador
             const display = document.getElementById('currentNumberDisplay');
             const currentNumber = display.textContent;
             
@@ -1032,17 +1105,12 @@
             const gift = {
                 code: giftCode,
                 number: currentNumber,
-                timestamp: new Date().toLocaleTimeString('pt-BR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit'
-                })
+                timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
             };
             
             gifts.unshift(gift);
             localStorage.setItem('gifts', JSON.stringify(gifts));
             updateGiftList();
-            
             notify(`✓ Gift adicionado! Total: ${gifts.length}`);
             return true;
         }
@@ -1050,18 +1118,16 @@
         function updateGiftList() {
             const giftList = document.getElementById('giftList');
             const giftCount = document.getElementById('giftCount');
-            
             if (!giftList || !giftCount) return;
             
             giftCount.textContent = gifts.length;
             
             if (gifts.length === 0) {
-                giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift adicionado ainda</div>';
+                giftList.innerHTML = '<div class="gift-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum gift</div>';
                 return;
             }
             
             giftList.innerHTML = '';
-            
             const recentGifts = gifts.slice(0, 5);
             
             recentGifts.forEach((gift) => {
@@ -1074,15 +1140,12 @@
                 const shortNumber = gift.number.length > 10 ? gift.number.substring(0, 10) + '...' : gift.number;
                 
                 item.innerHTML = `
-                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 3px; font-size: 0.85rem;">
-                        ${shortCode}
-                    </div>
+                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 3px; font-size: 0.85rem;">${shortCode}</div>
                     <div class="gift-info" style="font-size: 0.7rem;">
                         <span title="${gift.number}">📱 ${shortNumber}</span>
                         <span>🕐 ${gift.timestamp}</span>
                     </div>
                 `;
-                
                 item.title = `Clique para copiar: ${gift.code}\nNúmero: ${gift.number}`;
                 giftList.appendChild(item);
             });
@@ -1105,27 +1168,19 @@
 
         function showAllGifts() {
             if (gifts.length === 0) return;
-            
             let message = `=== TODOS OS GIFTS (${gifts.length}) ===\n\n`;
-            
             gifts.forEach((gift, index) => {
-                message += `Gift #${index + 1}:\n`;
-                message += `Código: ${gift.code}\n`;
-                message += `Número: ${gift.number}\n`;
-                message += `Horário: ${gift.timestamp}\n\n`;
+                message += `#${index + 1}: ${gift.code} | ${gift.number} | ${gift.timestamp}\n`;
             });
-            
             alert(message);
         }
 
         function copySingleGift(gift) {
-            const text = `${gift.code}`;
-            
-            navigator.clipboard.writeText(text).then(() => {
+            navigator.clipboard.writeText(gift.code).then(() => {
                 notify('Gift copiado!');
             }).catch(() => {
                 const el = document.createElement('textarea');
-                el.value = text;
+                el.value = gift.code;
                 document.body.appendChild(el);
                 el.select();
                 document.execCommand('copy');
@@ -1139,19 +1194,10 @@
                 notify('Nenhum gift para copiar', 'warning');
                 return;
             }
-            
-            let text = `=== Lista de GIFTS ===\n\n`;
-            
+            let text = `=== GIFTS ===\n\n`;
             gifts.forEach((gift, index) => {
-                text += `${gift.code}\n`;
-                text += `${gift.number}\n`;
-                text += `${gift.timestamp}\n`;
-                
-                if (index < gifts.length - 1) {
-                    text += '\n';
-                }
+                text += `${gift.code}\n${gift.number}\n${gift.timestamp}\n\n`;
             });
-            
             navigator.clipboard.writeText(text).then(() => {
                 notify(`✓ ${gifts.length} gifts copiados!`);
             }).catch(() => {
@@ -1164,58 +1210,55 @@
                 notify(`✓ ${gifts.length} gifts copiados!`);
             });
         }
-        
+
         function clearAllGifts() {
             if (gifts.length === 0) {
                 notify('Nenhum gift para limpar', 'warning');
                 return;
             }
-            
             const count = gifts.length;
             gifts = [];
             localStorage.setItem('gifts', JSON.stringify(gifts));
             updateGiftList();
             notify(`✓ ${count} gifts removidos`);
         }
-        
+
         function resetSMSStats() {
             smsState.attempts = 0;
             smsState.successes = 0;
-            
             document.getElementById('attempts').textContent = '0';
             document.getElementById('successes').textContent = '0';
-            
             localStorage.setItem('sms_attempts', '0');
             localStorage.setItem('sms_successes', '0');
-            
             notify('✓ Contadores resetados');
         }
 
-        // Event listeners para o gift input
+        // ================= EVENT LISTENERS =================
         document.addEventListener('DOMContentLoaded', function() {
+            // Load saved state
+            loadSmsState();
+            updateGiftList();
+            
+            // Gift input events
             const giftInput = document.getElementById('giftInput');
             if (giftInput) {
                 giftInput.addEventListener('paste', function(e) {
                     setTimeout(() => {
                         const value = giftInput.value.trim();
-                        if (value.length >= 3) {
-                            handleGiftInput({ target: giftInput });
-                        }
+                        if (value.length >= 3) handleGiftInput({ target: giftInput });
                     }, 100);
-                });
-                
-                giftInput.addEventListener('blur', function() {
-                    const value = giftInput.value.trim();
-                    if (value.length >= 3) {
-                        handleGiftInput({ target: giftInput });
-                    }
                 });
             }
             
-            // Inicialização
-            loadSmsState();
-            updateGiftList();
-            updateNumberListDisplay();
+            // Auto-save number list on input
+            const numberListInput = document.getElementById('numberListInput');
+            if (numberListInput) {
+                numberListInput.addEventListener('input', function() {
+                    const lines = this.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    numberList = lines;
+                    localStorage.setItem('numberList', JSON.stringify(numberList));
+                });
+            }
         });
     </script>
 </body>
