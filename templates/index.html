@@ -210,7 +210,7 @@
         }
         
         .current-number-display {
-            flex: 1;
+            flex: 3;
             padding: 8px 12px;
             background: #f0fdf4;
             border: 2px solid #10b981;
@@ -1011,7 +1011,7 @@
             codeText.className = 'gmail-code-text';
             
             try {
-                const res = await fetch('/fetchCode');
+                const res = await fetch('http://10.0.0.126:3001/fetchCode');
                 const data = await res.json();
                 const code = data.code;
                 
