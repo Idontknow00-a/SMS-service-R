@@ -24,7 +24,7 @@ OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
 EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS', '')
 EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
 EMAIL_SENDER_FILTRO = 'no-reply@crmbonus.com'
-EMAIL_CODE_PATTERN = re.compile(r'c[oó]digo[\s\S]{0,400}?(\d{4})\b', re.IGNORECASE)
+EMAIL_CODE_PATTERN = re.compile(r'(?:c[oó]digo|code|código)[\s\S]{0,200}?(\d{4,6})\b', re.IGNORECASE)
 ultimo_codigo_email = None  # guarda o último código entregue, pra nunca repetir
 
 # Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
@@ -215,21 +215,42 @@ def _extrair_texto_email(msg):
     if msg.is_multipart():
         for part in msg.walk():
             content_type = part.get_content_type()
-            if content_type == 'text/plain' and corpo_plain is None:
-                corpo_plain = part.get_payload(decode=True).decode(errors='ignore')
-            elif content_type == 'text/html' and corpo_html is None:
-                corpo_html = part.get_payload(decode=True).decode(errors='ignore')
+            try:
+                payload = part.get_payload(decode=True)
+                if payload:
+                    if content_type == 'text/plain' and corpo_plain is None:
+                        corpo_plain = payload.decode('utf-8', errors='ignore')
+                    elif content_type == 'text/html' and corpo_html is None:
+                        corpo_html = payload.decode('utf-8', errors='ignore')
+            except:
+                continue
     else:
-        payload = msg.get_payload(decode=True)
-        if payload:
-            texto = payload.decode(errors='ignore')
-            if msg.get_content_type() == 'text/html':
-                corpo_html = texto
-            else:
-                corpo_plain = texto
+        try:
+            payload = msg.get_payload(decode=True)
+            if payload:
+                texto = payload.decode('utf-8', errors='ignore')
+                if msg.get_content_type() == 'text/html':
+                    corpo_html = texto
+                else:
+                    corpo_plain = texto
+        except:
+            pass
 
+    # Prioriza texto plano, depois HTML limpo
     bruto = corpo_plain or corpo_html or ''
-    return _limpar_html(bruto)
+    
+    # Se for HTML, limpa melhor
+    if corpo_html and not corpo_plain:
+        # Remove todas as tags HTML
+        bruto = re.sub(r'<style[\s\S]*?</style>', ' ', bruto, flags=re.IGNORECASE)
+        bruto = re.sub(r'<script[\s\S]*?</script>', ' ', bruto, flags=re.IGNORECASE)
+        bruto = re.sub(r'<[^>]+>', ' ', bruto)
+        bruto = bruto.replace('&nbsp;', ' ').replace('&amp;', '&')
+        # Remove múltiplos espaços
+        bruto = re.sub(r'\s+', ' ', bruto).strip()
+    
+    logger.info(f'📧 Texto extraído do email (primeiros 500 chars): {bruto[:500]}')
+    return bruto
 
 
 def buscar_codigo_email():
@@ -244,6 +265,7 @@ def buscar_codigo_email():
         imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
         imap.select('INBOX')
 
+        # Busca emails do remetente específico
         status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
         if status != 'OK' or not dados[0]:
             imap.logout()
@@ -251,7 +273,7 @@ def buscar_codigo_email():
             return {'success': False, 'message': 'Nenhum email encontrado desse remetente.'}
 
         ids = dados[0].split()
-        ultimo_id = ids[-1]
+        ultimo_id = ids[-1]  # Pega o mais recente
 
         status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
         imap.logout()
@@ -261,14 +283,37 @@ def buscar_codigo_email():
 
         msg = email_lib.message_from_bytes(msg_dados[0][1])
         texto = _extrair_texto_email(msg)
+        
+        logger.info(f'📧 Processando email de: {msg.get("From", "Desconhecido")}')
+        logger.info(f'📧 Assunto: {msg.get("Subject", "Sem assunto")}')
 
+        # Tenta encontrar o código com o padrão principal
         match = EMAIL_CODE_PATTERN.search(texto)
+        
+        # Se não encontrar, tenta um padrão mais simples (apenas números de 4-6 dígitos isolados)
         if not match:
-            logger.warning('✗ Padrão do código não encontrado no email')
-            return {'success': False, 'message': 'Padrão do código não encontrado no email.'}
+            logger.info('🔍 Tentando padrão alternativo para encontrar código...')
+            # Procura por números de 4-6 dígitos que aparecem sozinhos em uma linha
+            alternative_pattern = re.compile(r'(?:^|\n|\s)(\d{4,6})(?:\s|$|\n)', re.MULTILINE)
+            matches = alternative_pattern.findall(texto)
+            
+            if matches:
+                # Pega o último número encontrado (geralmente o código)
+                novo_codigo = matches[-1]
+                logger.info(f'✅ Código encontrado com padrão alternativo: {novo_codigo}')
+            else:
+                preview = texto.strip()[:500]
+                logger.warning('✗ Nenhum código encontrado no email. Preview: %s', preview)
+                return {
+                    'success': False,
+                    'message': 'Padrão do código não encontrado no email.',
+                    'debug_preview': preview
+                }
+        else:
+            novo_codigo = match.group(1)
+            logger.info(f'✅ Código encontrado com padrão principal: {novo_codigo}')
 
-        novo_codigo = match.group(1)
-
+        # Verifica se é o mesmo código que já foi entregue
         if ultimo_codigo_email is not None and ultimo_codigo_email == novo_codigo:
             logger.info('ℹ️ Código %s repetido, ainda não chegou um novo', novo_codigo)
             return {'success': False, 'message': 'Código repetido: ainda não chegou um email novo.'}
