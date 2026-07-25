@@ -467,6 +467,67 @@
                 </div>
                 <button class="action-btn get-number" onclick="getNextNumberFromList()">OBTER</button>
             </div>
+
+            <div class="action-row" style="margin-top: 6px;">
+    <div class="current-number-display empty" id="emailCodeDisplay"
+         onclick="copyEmailCode()" title="Clique para copiar">
+        Cód. e-mail
+    </div>
+    <button class="action-btn get-number" onclick="getEmailCode()">Obter</button>
+</div>
+
+<script>
+    async function getEmailCode() {
+        const display = document.getElementById('emailCodeDisplay');
+        display.textContent = '...';
+        display.classList.remove('empty');
+        display.style.borderColor = '';
+        display.style.background = '';
+
+        try {
+            const res = await fetch('/get_email_code');
+            const data = await res.json();
+
+            if (data.success) {
+                display.textContent = data.code;
+                display.classList.remove('empty');
+                await copy(data.code, 'emailCode');
+            } else {
+                const msg = data.message || 'Erro desconhecido';
+                display.textContent = msg;
+                display.classList.add('empty');
+                display.style.borderColor = '#ef4444';
+                display.style.background = '#fef2f2';
+                copyErrorToClipboard(msg);
+            }
+        } catch (err) {
+            const msg = 'Erro de conexão';
+            display.textContent = msg;
+            display.classList.add('empty');
+            display.style.borderColor = '#ef4444';
+            display.style.background = '#fef2f2';
+            copyErrorToClipboard(msg);
+        }
+    }
+
+    function copyEmailCode() {
+        const display = document.getElementById('emailCodeDisplay');
+        const texto = display.textContent;
+        if (!texto || texto === 'Cód. e-mail' || texto === '...') return;
+
+        navigator.clipboard.writeText(texto).then(() => {
+            notify('Copiado!');
+        }).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = texto;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            notify('Copiado!');
+        });
+    }
+</script>
             
             <!-- Gift Section -->
             <div class="gift-section">
