@@ -1,3 +1,6 @@
+import re
+import imaplib
+import email as email_lib   # renomeado pra não colidir com a variável "email" se você usar em algum lugar
 from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 import requests
@@ -16,6 +19,10 @@ COUNTRY_CODE = 73  # Brasil
 SERVICE = 'mm'
 TIMEOUT_DURATION = 120  # segundos
 OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
+EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS', '')
+EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
+EMAIL_SENDER_FILTRO = 'no-reply@crmbonus.com'
+EMAIL_CODE_PATTERN = re.compile(r'c[oó]digo[\s\S]{0,400}?(\d{4})\b', re.IGNORECASE)
 
 # Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
 failed_attempts = {}
@@ -27,6 +34,9 @@ number_timeouts = {}
 active_numbers = {}
 successful_numbers = set()
 operator_info = {}  # Armazena info da operadora para cada número
+
+# Guarda o último código já entregue, pra nunca repetir (equivalente ao successful_numbers/active_numbers)
+ultimo_codigo_email = None
 
 # Configurar logging
 logging.basicConfig(
@@ -184,7 +194,87 @@ def get_number():
 # def cancel_number_automatically(number_id):
 #     """Cancela número após timeout"""
 #     ... REMOVIDA ...
+def _limpar_html(texto):
+    texto = re.sub(r'<style[\s\S]*?</style>', ' ', texto, flags=re.IGNORECASE)
+    texto = re.sub(r'<script[\s\S]*?</script>', ' ', texto, flags=re.IGNORECASE)
+    texto = re.sub(r'<[^>]+>', ' ', texto)
+    texto = texto.replace('&nbsp;', ' ').replace('&amp;', '&')
+    return texto
 
+
+def _extrair_texto_email(msg):
+    """Pega a parte text/plain se existir, senão text/html, e limpa tags."""
+    corpo_plain, corpo_html = None, None
+
+    if msg.is_multipart():
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            if content_type == 'text/plain' and corpo_plain is None:
+                corpo_plain = part.get_payload(decode=True).decode(errors='ignore')
+            elif content_type == 'text/html' and corpo_html is None:
+                corpo_html = part.get_payload(decode=True).decode(errors='ignore')
+    else:
+        payload = msg.get_payload(decode=True)
+        if payload:
+            texto = payload.decode(errors='ignore')
+            if msg.get_content_type() == 'text/html':
+                corpo_html = texto
+            else:
+                corpo_plain = texto
+
+    bruto = corpo_plain or corpo_html or ''
+    return _limpar_html(bruto)
+
+
+def buscar_codigo_email():
+    """Busca o código de verificação mais recente vindo de EMAIL_SENDER_FILTRO via IMAP."""
+    global ultimo_codigo_email
+
+    if not EMAIL_ADDRESS or not EMAIL_APP_PASSWORD:
+        return {'success': False, 'message': 'EMAIL_ADDRESS/EMAIL_APP_PASSWORD não configurados no Render.'}
+
+    try:
+        imap = imaplib.IMAP4_SSL('imap.gmail.com')
+        imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
+        imap.select('INBOX')
+
+        status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
+        if status != 'OK' or not dados[0]:
+            imap.logout()
+            logger.info('✗ Nenhum email encontrado de %s', EMAIL_SENDER_FILTRO)
+            return {'success': False, 'message': 'Nenhum email encontrado desse remetente.'}
+
+        ids = dados[0].split()
+        ultimo_id = ids[-1]
+
+        status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
+        imap.logout()
+
+        if status != 'OK':
+            return {'success': False, 'message': 'Não foi possível ler o email mais recente.'}
+
+        msg = email_lib.message_from_bytes(msg_dados[0][1])
+        texto = _extrair_texto_email(msg)
+
+        match = EMAIL_CODE_PATTERN.search(texto)
+        if not match:
+            logger.warning('✗ Padrão do código não encontrado no email')
+            return {'success': False, 'message': 'Padrão do código não encontrado no email.'}
+
+        novo_codigo = match.group(1)
+
+        if ultimo_codigo_email is not None and ultimo_codigo_email == novo_codigo:
+            logger.info('ℹ️ Código %s repetido, ainda não chegou um novo', novo_codigo)
+            return {'success': False, 'message': 'Código repetido: ainda não chegou um email novo.'}
+
+        ultimo_codigo_email = novo_codigo
+        logger.info('✅ Código de email extraído: %s', novo_codigo)
+        return {'success': True, 'code': novo_codigo}
+
+    except Exception as e:
+        logger.error('Erro ao buscar código de email: %s', e)
+        return {'success': False, 'message': f'Erro: {str(e)}'}
+        
 
 def setup_timeout(number_id):
     """Configura timeout apenas para limpeza de memória (sem cancelar na API)"""
@@ -388,7 +478,24 @@ def get_status(number_id):
 # def cancel_number(number_id):
 #     ... REMOVIDA ...
 
+@app.route('/get_email_code', methods=['GET'])
+def get_email_code_route():
+    try:
+        resultado = buscar_codigo_email()
+        return jsonify(resultado)
+    except Exception as e:
+        logger.error(f"Erro em /get_email_code: {e}")
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
 
+@app.route('/get_email_code', methods=['GET'])
+def get_email_code_route():
+    try:
+        resultado = buscar_codigo_email()
+        return jsonify(resultado)
+    except Exception as e:
+        logger.error(f"Erro em /get_email_code: {e}")
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+        
 @app.route('/stats', methods=['GET'])
 def get_stats():
     return jsonify({
