@@ -24,10 +24,12 @@
         
         .section {
             background: white; 
+            border-radius: 12px; 
             box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
             overflow: hidden; 
         }
         
+        /* Remove o arredondamento inferior quando colado na seção de baixo */
         .sms-section {
             border-radius: 12px 12px 0 0;
         }
@@ -261,6 +263,7 @@
             transform: scale(0.95);
         }
         
+        /* Contador no botão OBTER */
         .get-number-counter {
             position: absolute;
             top: -8px;
@@ -482,6 +485,7 @@
         
         <!-- Lista de Números -->
         <div class="section numberlist-section">
+            <!-- Linha: Copiar | Número Atual | OBTER -->
             <div class="action-row">
                 <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número SMS">📋</button>
                 <div class="current-number-display empty" id="currentNumberDisplay" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
@@ -493,6 +497,7 @@
                 </button>
             </div>
 
+            <!-- Linha: Código do email (CRM Bonus) -->
             <div class="action-row" style="margin-top: -2px;">
                 <div class="current-number-display empty" id="emailCodeDisplay"
                      onclick="copyEmailCode()" title="Clique para copiar">
@@ -501,6 +506,7 @@
                 <button class="action-btn get-number" onclick="getEmailCode()">COD</button>
             </div>
             
+            <!-- Gift Section -->
             <div class="gift-section">
                 <input type="text" class="gift-input" id="giftInput" 
                        placeholder="Cole o código do gift aqui (auto-salva)"
@@ -513,6 +519,7 @@
                 </div>
             </div>
             
+            <!-- Settings Section -->
             <div class="settings-section">
                 <h3>⚙️ Configurações</h3>
                 <label>Lista de Números (um por linha)</label>
@@ -523,6 +530,7 @@
         </div>
     </div>
     
+    <!-- Notification -->
     <div class="notification" id="notification"></div>
 
     <script>
@@ -541,12 +549,12 @@
             autoCheckInterval: null
         };
 
+        // ================= NUMBER LIST =================
         let numberList = JSON.parse(localStorage.getItem('numberList') || '[]');
         let currentListIndex = parseInt(localStorage.getItem('currentListIndex') || '0');
-        let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
         
-        // Cache de códigos de email
-        let emailCodeCache = JSON.parse(localStorage.getItem('emailCodeCache') || '[]');
+        // ================= GIFTS =================
+        let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
 
         // ================= INIT =================
         function loadSmsState() {
@@ -812,160 +820,56 @@
         }
 
         // ================= CÓDIGO VIA EMAIL (CRM Bonus) =================
-        // Adicione esta variável no início do script, junto com as outras:
-let lastDisplayedEmailCode = localStorage.getItem('lastDisplayedEmailCode') || '';
-
-// Substitua a função getEmailCode por esta versão:
-async function getEmailCode() {
-    const display = document.getElementById('emailCodeDisplay');
-    
-    display.textContent = '...';
-    display.classList.remove('empty');
-    display.style.borderColor = '';
-    display.style.background = '';
-
-    try {
-        const res = await fetch('/get_email_code');
-        const data = await res.json();
-
-        if (data.success) {
-            const newCode = data.code;
-            
-            // Verifica se é o mesmo código que já foi mostrado
-            if (lastDisplayedEmailCode === newCode) {
-                display.textContent = 'Já exibido';
-                display.classList.add('empty');
-                display.style.borderColor = '#ef4444';
-                display.style.background = '#fef2f2';
-                notify('❌ Código já foi exibido anteriormente!', 'error');
-                return;
-            }
-            
-            // Verifica no cache local se é repetido
-            if (emailCodeCache.includes(newCode)) {
-                display.textContent = 'Repetido';
-                display.classList.add('empty');
-                display.style.borderColor = '#f59e0b';
-                display.style.background = '#fffbeb';
-                notify('⚠️ Código repetido no cache!', 'warning');
-                return;
-            }
-            
-            // Código NOVO! Atualiza tudo
-            emailCodeCache.unshift(newCode);
-            if (emailCodeCache.length > 50) emailCodeCache.pop();
-            
-            lastDisplayedEmailCode = newCode;
-            
-            // Salva no localStorage
-            localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
-            localStorage.setItem('lastDisplayedEmailCode', lastDisplayedEmailCode);
-            
-            display.textContent = newCode;
+        async function getEmailCode() {
+            const display = document.getElementById('emailCodeDisplay');
+            display.textContent = '...';
             display.classList.remove('empty');
-            display.style.borderColor = '#10b981';
-            display.style.background = '#f0fdf4';
-            
-            await copy(newCode, 'emailCode');
-            notify(`✅ Novo código: ${newCode}`, 'info');
-            
-        } else {
-            const msg = data.message || 'Erro';
-            
-            // Se o servidor retornou "código repetido", mostra erro
-            if (msg.includes('repetido')) {
-                display.textContent = 'Repetido';
-                display.classList.add('empty');
-                display.style.borderColor = '#ef4444';
-                display.style.background = '#fef2f2';
-                notify('❌ Código repetido! Aguarde novo email.', 'error');
-                
-                // Se tem código no retorno, mostra ele mas como erro
-                if (data.code && lastDisplayedEmailCode !== data.code) {
-                    display.textContent = data.code;
-                    display.style.borderColor = '#f59e0b';
-                    display.style.background = '#fffbeb';
-                    await copy(data.code, 'emailCode');
-                    notify('⚠️ Código encontrado mas já foi entregue', 'warning');
-                }
-            } else if (msg.includes('Nenhum código')) {
-                display.textContent = 'Sem código';
-                display.classList.add('empty');
-                display.style.borderColor = '#ef4444';
-                display.style.background = '#fef2f2';
-                notify('❌ Nenhum código encontrado no email', 'error');
-            } else {
-                display.textContent = 'Erro';
-                display.classList.add('empty');
-                display.style.borderColor = '#ef4444';
-                display.style.background = '#fef2f2';
-                notify('❌ ' + msg, 'error');
-            }
-        }
-    } catch (err) {
-        display.textContent = 'Erro';
-        display.classList.add('empty');
-        display.style.borderColor = '#ef4444';
-        display.style.background = '#fef2f2';
-        notify('❌ Erro de conexão', 'error');
-    }
-}
+            display.style.borderColor = '';
+            display.style.background = '';
 
-// Adicione esta função para resetar o último código exibido (útil para testes)
-function resetLastEmailCode() {
-    lastDisplayedEmailCode = '';
-    localStorage.removeItem('lastDisplayedEmailCode');
-    document.getElementById('emailCodeDisplay').textContent = 'Cód. e-mail';
-    document.getElementById('emailCodeDisplay').classList.add('empty');
-    document.getElementById('emailCodeDisplay').style.borderColor = '';
-    document.getElementById('emailCodeDisplay').style.background = '';
-    notify('Cache do último código limpo!');
-}
+            try {
+                const res = await fetch('/get_email_code');
+                const data = await res.json();
 
-// Adicione esta função para verificar automaticamente (opcional)
-function startAutoEmailCheck() {
-    if (window.autoEmailInterval) clearInterval(window.autoEmailInterval);
-    
-    window.autoEmailInterval = setInterval(async () => {
-        try {
-            const res = await fetch('/get_email_code');
-            const data = await res.json();
-            
-            if (data.success && data.code !== lastDisplayedEmailCode) {
-                const display = document.getElementById('emailCodeDisplay');
-                
-                // Só atualiza se for um código novo
-                if (!emailCodeCache.includes(data.code)) {
-                    emailCodeCache.unshift(data.code);
-                    if (emailCodeCache.length > 50) emailCodeCache.pop();
-                    lastDisplayedEmailCode = data.code;
-                    
-                    localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
-                    localStorage.setItem('lastDisplayedEmailCode', lastDisplayedEmailCode);
-                    
+                if (data.success) {
                     display.textContent = data.code;
                     display.classList.remove('empty');
-                    display.style.borderColor = '#10b981';
-                    display.style.background = '#f0fdf4';
-                    
                     await copy(data.code, 'emailCode');
-                    notify(`📧 Novo código: ${data.code}`, 'info');
+                } else {
+                    const msg = data.message || 'Erro desconhecido';
+                    display.textContent = msg;
+                    display.classList.add('empty');
+                    display.style.borderColor = '#ef4444';
+                    display.style.background = '#fef2f2';
+                    copyErrorToClipboard(msg);
                 }
+            } catch (err) {
+                const msg = 'Erro de conexão';
+                display.textContent = msg;
+                display.classList.add('empty');
+                display.style.borderColor = '#ef4444';
+                display.style.background = '#fef2f2';
+                copyErrorToClipboard(msg);
             }
-        } catch (err) {
-            // Silencioso na verificação automática
         }
-    }, 15000); // Verifica a cada 15 segundos
-}
 
-// No DOMContentLoaded, adicione:
+        function copyEmailCode() {
+            const display = document.getElementById('emailCodeDisplay');
+            const texto = display.textContent;
+            if (!texto || texto === 'Cód. e-mail' || texto === '...') return;
 
-    
-    // Inicia verificação automática (comentado por padrão, remova o comentário para ativar)
-    // startAutoEmailCheck();
-    
-    // ... resto do código existente ...
-});
+            navigator.clipboard.writeText(texto).then(() => {
+                notify('Copiado!');
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = texto;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                notify('Copiado!');
+            });
+        }
 
         // ================= NUMBER LIST =================
         function updateRemainingCounter() {
@@ -982,6 +886,7 @@ function startAutoEmailCheck() {
             counter.style.display = 'block';
             counter.textContent = remaining;
             
+            // Atualiza cor baseado na quantidade restante
             if (remaining === 0) {
                 counter.style.background = '#ef4444';
             } else if (remaining <= 3) {
@@ -1238,8 +1143,8 @@ function startAutoEmailCheck() {
 
         // ================= EVENT LISTENERS =================
         document.addEventListener('DOMContentLoaded', function() {
-    loadSmsState();
-    updateGiftList();
+            loadSmsState();
+            updateGiftList();
             
             const giftInput = document.getElementById('giftInput');
             if (giftInput) {
@@ -1261,6 +1166,7 @@ function startAutoEmailCheck() {
                 });
             }
             
+            // Inicializa o contador
             updateRemainingCounter();
         });
     </script>
