@@ -526,8 +526,7 @@
     <div class="notification" id="notification"></div>
 
     <script>
-        // ================= SMS FUNCTIONS =================
-        let smsState = {
+        // ================= SMS FUNCTIONS =================        let smsState = {
             id: localStorage.getItem('sms_id') || '',
             number: localStorage.getItem('sms_number') || '',
             operator: localStorage.getItem('sms_operator') || '',
@@ -547,6 +546,7 @@
         
         // Cache de códigos de email
         let emailCodeCache = JSON.parse(localStorage.getItem('emailCodeCache') || '[]');
+        let lastDisplayedEmailCode = localStorage.getItem('lastDisplayedEmailCode') || '';
 
         // ================= INIT =================
         function loadSmsState() {
@@ -827,22 +827,35 @@
                 if (data.success) {
                     const newCode = data.code;
                     
-                    // Verifica no cache local se é repetido
-                    if (emailCodeCache.includes(newCode)) {
-                        display.textContent = newCode;
-                        display.classList.remove('empty');
-                        display.style.borderColor = '#f59e0b';
-                        display.style.background = '#fffbeb';
-                        notify('Código já recebido!', 'warning');
-                        await copy(newCode, 'emailCode');
+                    // Verifica se é o mesmo código que já foi mostrado
+                    if (lastDisplayedEmailCode === newCode) {
+                        display.textContent = 'Já exibido';
+                        display.classList.add('empty');
+                        display.style.borderColor = '#ef4444';
+                        display.style.background = '#fef2f2';
+                        notify('❌ Código já foi exibido anteriormente!', 'error');
                         return;
                     }
                     
-                    // Código novo! Adiciona ao cache
+                    // Verifica no cache local se é repetido
+                    if (emailCodeCache.includes(newCode)) {
+                        display.textContent = 'Repetido';
+                        display.classList.add('empty');
+                        display.style.borderColor = '#f59e0b';
+                        display.style.background = '#fffbeb';
+                        notify('⚠️ Código repetido no cache!', 'warning');
+                        return;
+                    }
+                    
+                    // Código NOVO! Atualiza tudo
                     emailCodeCache.unshift(newCode);
                     if (emailCodeCache.length > 50) emailCodeCache.pop();
                     
+                    lastDisplayedEmailCode = newCode;
+                    
+                    // Salva no localStorage
                     localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
+                    localStorage.setItem('lastDisplayedEmailCode', lastDisplayedEmailCode);
                     
                     display.textContent = newCode;
                     display.classList.remove('empty');
@@ -855,35 +868,49 @@
                 } else {
                     const msg = data.message || 'Erro';
                     
-                    if (msg.includes('repetido') && emailCodeCache.length > 0) {
-                        display.textContent = emailCodeCache[0];
-                        display.classList.remove('empty');
-                        display.style.borderColor = '#f59e0b';
-                        display.style.background = '#fffbeb';
-                        await copy(emailCodeCache[0], 'emailCode');
-                        notify('Código repetido. Último copiado!', 'warning');
-                    } else {
-                        display.textContent = msg;
+                    // Se o servidor retornou "código repetido", mostra erro
+                    if (msg.includes('repetido')) {
+                        display.textContent = 'Repetido';
                         display.classList.add('empty');
                         display.style.borderColor = '#ef4444';
                         display.style.background = '#fef2f2';
-                        copyErrorToClipboard(msg);
+                        notify('❌ Código repetido! Aguarde novo email.', 'error');
+                        
+                        // Se tem código no retorno, mostra ele mas como erro
+                        if (data.code && lastDisplayedEmailCode !== data.code) {
+                            display.textContent = data.code;
+                            display.style.borderColor = '#f59e0b';
+                            display.style.background = '#fffbeb';
+                            await copy(data.code, 'emailCode');
+                            notify('⚠️ Código encontrado mas já foi entregue', 'warning');
+                        }
+                    } else if (msg.includes('Nenhum código')) {
+                        display.textContent = 'Sem código';
+                        display.classList.add('empty');
+                        display.style.borderColor = '#ef4444';
+                        display.style.background = '#fef2f2';
+                        notify('❌ Nenhum código encontrado no email', 'error');
+                    } else {
+                        display.textContent = 'Erro';
+                        display.classList.add('empty');
+                        display.style.borderColor = '#ef4444';
+                        display.style.background = '#fef2f2';
+                        notify('❌ ' + msg, 'error');
                     }
                 }
             } catch (err) {
-                const msg = 'Erro de conexão';
-                display.textContent = msg;
+                display.textContent = 'Erro';
                 display.classList.add('empty');
                 display.style.borderColor = '#ef4444';
                 display.style.background = '#fef2f2';
-                copyErrorToClipboard(msg);
+                notify('❌ Erro de conexão', 'error');
             }
         }
 
         function copyEmailCode() {
             const display = document.getElementById('emailCodeDisplay');
             const texto = display.textContent;
-            if (!texto || texto === 'Cód. e-mail' || texto === '...') return;
+            if (!texto || texto === 'Cód. e-mail' || texto === '...' || texto === 'Já exibido' || texto === 'Repetido' || texto === 'Sem código' || texto === 'Erro') return;
 
             navigator.clipboard.writeText(texto).then(() => {
                 notify('Copiado!');
@@ -896,6 +923,16 @@
                 document.body.removeChild(el);
                 notify('Copiado!');
             });
+        }
+
+        function resetLastEmailCode() {
+            lastDisplayedEmailCode = '';
+            localStorage.removeItem('lastDisplayedEmailCode');
+            document.getElementById('emailCodeDisplay').textContent = 'Cód. e-mail';
+            document.getElementById('emailCodeDisplay').classList.add('empty');
+            document.getElementById('emailCodeDisplay').style.borderColor = '';
+            document.getElementById('emailCodeDisplay').style.background = '';
+            notify('Cache do último código limpo!');
         }
 
         // ================= NUMBER LIST =================
