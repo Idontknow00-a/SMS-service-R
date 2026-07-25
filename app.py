@@ -110,6 +110,7 @@ def get_service_price():
                         service_info = item[SERVICE]
                         if isinstance(service_info, dict) and 'cost' in service_info:
                             price = float(service_info['cost'])
+                            formatted_price = f"${price:.4f}"
                             return formatted_price
     except Exception as e:
         logger.error(f"Erro ao obter preço: {e}")
@@ -265,7 +266,7 @@ def extrair_todos_codigos(texto):
 
 
 def buscar_codigo_email():
-    """Busca TODOS os códigos do remetente, retorna o mais recente."""
+    """Busca APENAS o código mais recente do último email."""
     global ultimo_codigo_email
 
     if not EMAIL_ADDRESS or not EMAIL_APP_PASSWORD:
@@ -276,54 +277,62 @@ def buscar_codigo_email():
         imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
         imap.select('INBOX')
 
+        # Busca emails do remetente específico
         status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
         if status != 'OK' or not dados[0]:
             imap.logout()
             return {'success': False, 'message': 'Nenhum email encontrado.'}
 
         ids = dados[0].split()
-        ultimos_ids = ids[-5:] if len(ids) > 5 else ids
+        # Pega APENAS o último email (mais recente)
+        ultimo_id = ids[-1]
         
-        codigos_encontrados = []
-        
-        for email_id in reversed(ultimos_ids):
-            try:
-                status, msg_dados = imap.fetch(email_id, '(RFC822)')
-                if status != 'OK':
-                    continue
-                    
-                msg = email_lib.message_from_bytes(msg_dados[0][1])
-                texto = _extrair_texto_email(msg)
-                
-                codigos = extrair_todos_codigos(texto)
-                
-                for codigo in codigos:
-                    if codigo not in codigos_encontrados:
-                        codigos_encontrados.append(codigo)
-            except:
-                continue
-        
+        status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
         imap.logout()
         
-        if not codigos_encontrados:
-            return {'success': False, 'message': 'Nenhum código encontrado.'}
+        if status != 'OK':
+            return {'success': False, 'message': 'Erro ao ler email.'}
+
+        msg = email_lib.message_from_bytes(msg_dados[0][1])
+        texto = _extrair_texto_email(msg)
         
-        novo_codigo = codigos_encontrados[0]
+        logger.info(f'📧 Processando email mais recente')
+        logger.info(f'📧 Preview: {texto[:300]}')
         
+        # Extrai todos os códigos encontrados
+        codigos = extrair_todos_codigos(texto)
+        
+        if not codigos:
+            logger.warning('❌ Nenhum código encontrado no email mais recente')
+            return {
+                'success': False, 
+                'message': 'Nenhum código encontrado.',
+                'debug_preview': texto[:200]
+            }
+        
+        # Pega o primeiro código encontrado (mais relevante)
+        novo_codigo = codigos[0]
+        
+        logger.info(f'📧 Códigos encontrados: {codigos}')
+        logger.info(f'📧 Último código entregue: {ultimo_codigo_email}')
+        logger.info(f'📧 Novo código: {novo_codigo}')
+        
+        # Verifica se é diferente do último entregue
         if ultimo_codigo_email is not None and novo_codigo == ultimo_codigo_email:
-            for codigo in codigos_encontrados[1:]:
-                if codigo != ultimo_codigo_email:
-                    novo_codigo = codigo
-                    break
-            else:
-                return {'success': False, 'message': 'Código repetido.'}
+            logger.info(f'⚠️ Código {novo_codigo} é igual ao último entregue')
+            return {
+                'success': False, 
+                'message': 'Código repetido',
+                'code': novo_codigo
+            }
         
+        # Atualiza o último código entregue
         ultimo_codigo_email = novo_codigo
-        logger.info(f'✅ Código extraído: {novo_codigo}')
+        logger.info(f'✅ Novo código entregue: {novo_codigo}')
+        
         return {
             'success': True, 
-            'code': novo_codigo,
-            'total_encontrados': len(codigos_encontrados)
+            'code': novo_codigo
         }
 
     except Exception as e:
