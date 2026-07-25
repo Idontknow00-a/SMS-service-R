@@ -526,7 +526,8 @@
     <div class="notification" id="notification"></div>
 
     <script>
-        // ================= SMS FUNCTIONS =================        let smsState = {
+        // ================= SMS FUNCTIONS =================
+        let smsState = {
             id: localStorage.getItem('sms_id') || '',
             number: localStorage.getItem('sms_number') || '',
             operator: localStorage.getItem('sms_operator') || '',
@@ -546,7 +547,6 @@
         
         // Cache de códigos de email
         let emailCodeCache = JSON.parse(localStorage.getItem('emailCodeCache') || '[]');
-        let lastDisplayedEmailCode = localStorage.getItem('lastDisplayedEmailCode') || '';
 
         // ================= INIT =================
         function loadSmsState() {
@@ -812,128 +812,160 @@
         }
 
         // ================= CÓDIGO VIA EMAIL (CRM Bonus) =================
-        async function getEmailCode() {
-            const display = document.getElementById('emailCodeDisplay');
+        // Adicione esta variável no início do script, junto com as outras:
+let lastDisplayedEmailCode = localStorage.getItem('lastDisplayedEmailCode') || '';
+
+// Substitua a função getEmailCode por esta versão:
+async function getEmailCode() {
+    const display = document.getElementById('emailCodeDisplay');
+    
+    display.textContent = '...';
+    display.classList.remove('empty');
+    display.style.borderColor = '';
+    display.style.background = '';
+
+    try {
+        const res = await fetch('/get_email_code');
+        const data = await res.json();
+
+        if (data.success) {
+            const newCode = data.code;
             
-            display.textContent = '...';
+            // Verifica se é o mesmo código que já foi mostrado
+            if (lastDisplayedEmailCode === newCode) {
+                display.textContent = 'Já exibido';
+                display.classList.add('empty');
+                display.style.borderColor = '#ef4444';
+                display.style.background = '#fef2f2';
+                notify('❌ Código já foi exibido anteriormente!', 'error');
+                return;
+            }
+            
+            // Verifica no cache local se é repetido
+            if (emailCodeCache.includes(newCode)) {
+                display.textContent = 'Repetido';
+                display.classList.add('empty');
+                display.style.borderColor = '#f59e0b';
+                display.style.background = '#fffbeb';
+                notify('⚠️ Código repetido no cache!', 'warning');
+                return;
+            }
+            
+            // Código NOVO! Atualiza tudo
+            emailCodeCache.unshift(newCode);
+            if (emailCodeCache.length > 50) emailCodeCache.pop();
+            
+            lastDisplayedEmailCode = newCode;
+            
+            // Salva no localStorage
+            localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
+            localStorage.setItem('lastDisplayedEmailCode', lastDisplayedEmailCode);
+            
+            display.textContent = newCode;
             display.classList.remove('empty');
-            display.style.borderColor = '';
-            display.style.background = '';
-
-            try {
-                const res = await fetch('/get_email_code');
-                const data = await res.json();
-
-                if (data.success) {
-                    const newCode = data.code;
-                    
-                    // Verifica se é o mesmo código que já foi mostrado
-                    if (lastDisplayedEmailCode === newCode) {
-                        display.textContent = 'Já exibido';
-                        display.classList.add('empty');
-                        display.style.borderColor = '#ef4444';
-                        display.style.background = '#fef2f2';
-                        notify('❌ Código já foi exibido anteriormente!', 'error');
-                        return;
-                    }
-                    
-                    // Verifica no cache local se é repetido
-                    if (emailCodeCache.includes(newCode)) {
-                        display.textContent = 'Repetido';
-                        display.classList.add('empty');
-                        display.style.borderColor = '#f59e0b';
-                        display.style.background = '#fffbeb';
-                        notify('⚠️ Código repetido no cache!', 'warning');
-                        return;
-                    }
-                    
-                    // Código NOVO! Atualiza tudo
-                    emailCodeCache.unshift(newCode);
-                    if (emailCodeCache.length > 50) emailCodeCache.pop();
-                    
-                    lastDisplayedEmailCode = newCode;
-                    
-                    // Salva no localStorage
-                    localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
-                    localStorage.setItem('lastDisplayedEmailCode', lastDisplayedEmailCode);
-                    
-                    display.textContent = newCode;
-                    display.classList.remove('empty');
-                    display.style.borderColor = '#10b981';
-                    display.style.background = '#f0fdf4';
-                    
-                    await copy(newCode, 'emailCode');
-                    notify(`✅ Novo código: ${newCode}`, 'info');
-                    
-                } else {
-                    const msg = data.message || 'Erro';
-                    
-                    // Se o servidor retornou "código repetido", mostra erro
-                    if (msg.includes('repetido')) {
-                        display.textContent = 'Repetido';
-                        display.classList.add('empty');
-                        display.style.borderColor = '#ef4444';
-                        display.style.background = '#fef2f2';
-                        notify('❌ Código repetido! Aguarde novo email.', 'error');
-                        
-                        // Se tem código no retorno, mostra ele mas como erro
-                        if (data.code && lastDisplayedEmailCode !== data.code) {
-                            display.textContent = data.code;
-                            display.style.borderColor = '#f59e0b';
-                            display.style.background = '#fffbeb';
-                            await copy(data.code, 'emailCode');
-                            notify('⚠️ Código encontrado mas já foi entregue', 'warning');
-                        }
-                    } else if (msg.includes('Nenhum código')) {
-                        display.textContent = 'Sem código';
-                        display.classList.add('empty');
-                        display.style.borderColor = '#ef4444';
-                        display.style.background = '#fef2f2';
-                        notify('❌ Nenhum código encontrado no email', 'error');
-                    } else {
-                        display.textContent = 'Erro';
-                        display.classList.add('empty');
-                        display.style.borderColor = '#ef4444';
-                        display.style.background = '#fef2f2';
-                        notify('❌ ' + msg, 'error');
-                    }
+            display.style.borderColor = '#10b981';
+            display.style.background = '#f0fdf4';
+            
+            await copy(newCode, 'emailCode');
+            notify(`✅ Novo código: ${newCode}`, 'info');
+            
+        } else {
+            const msg = data.message || 'Erro';
+            
+            // Se o servidor retornou "código repetido", mostra erro
+            if (msg.includes('repetido')) {
+                display.textContent = 'Repetido';
+                display.classList.add('empty');
+                display.style.borderColor = '#ef4444';
+                display.style.background = '#fef2f2';
+                notify('❌ Código repetido! Aguarde novo email.', 'error');
+                
+                // Se tem código no retorno, mostra ele mas como erro
+                if (data.code && lastDisplayedEmailCode !== data.code) {
+                    display.textContent = data.code;
+                    display.style.borderColor = '#f59e0b';
+                    display.style.background = '#fffbeb';
+                    await copy(data.code, 'emailCode');
+                    notify('⚠️ Código encontrado mas já foi entregue', 'warning');
                 }
-            } catch (err) {
+            } else if (msg.includes('Nenhum código')) {
+                display.textContent = 'Sem código';
+                display.classList.add('empty');
+                display.style.borderColor = '#ef4444';
+                display.style.background = '#fef2f2';
+                notify('❌ Nenhum código encontrado no email', 'error');
+            } else {
                 display.textContent = 'Erro';
                 display.classList.add('empty');
                 display.style.borderColor = '#ef4444';
                 display.style.background = '#fef2f2';
-                notify('❌ Erro de conexão', 'error');
+                notify('❌ ' + msg, 'error');
             }
         }
+    } catch (err) {
+        display.textContent = 'Erro';
+        display.classList.add('empty');
+        display.style.borderColor = '#ef4444';
+        display.style.background = '#fef2f2';
+        notify('❌ Erro de conexão', 'error');
+    }
+}
 
-        function copyEmailCode() {
-            const display = document.getElementById('emailCodeDisplay');
-            const texto = display.textContent;
-            if (!texto || texto === 'Cód. e-mail' || texto === '...' || texto === 'Já exibido' || texto === 'Repetido' || texto === 'Sem código' || texto === 'Erro') return;
+// Adicione esta função para resetar o último código exibido (útil para testes)
+function resetLastEmailCode() {
+    lastDisplayedEmailCode = '';
+    localStorage.removeItem('lastDisplayedEmailCode');
+    document.getElementById('emailCodeDisplay').textContent = 'Cód. e-mail';
+    document.getElementById('emailCodeDisplay').classList.add('empty');
+    document.getElementById('emailCodeDisplay').style.borderColor = '';
+    document.getElementById('emailCodeDisplay').style.background = '';
+    notify('Cache do último código limpo!');
+}
 
-            navigator.clipboard.writeText(texto).then(() => {
-                notify('Copiado!');
-            }).catch(() => {
-                const el = document.createElement('textarea');
-                el.value = texto;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                notify('Copiado!');
-            });
+// Adicione esta função para verificar automaticamente (opcional)
+function startAutoEmailCheck() {
+    if (window.autoEmailInterval) clearInterval(window.autoEmailInterval);
+    
+    window.autoEmailInterval = setInterval(async () => {
+        try {
+            const res = await fetch('/get_email_code');
+            const data = await res.json();
+            
+            if (data.success && data.code !== lastDisplayedEmailCode) {
+                const display = document.getElementById('emailCodeDisplay');
+                
+                // Só atualiza se for um código novo
+                if (!emailCodeCache.includes(data.code)) {
+                    emailCodeCache.unshift(data.code);
+                    if (emailCodeCache.length > 50) emailCodeCache.pop();
+                    lastDisplayedEmailCode = data.code;
+                    
+                    localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
+                    localStorage.setItem('lastDisplayedEmailCode', lastDisplayedEmailCode);
+                    
+                    display.textContent = data.code;
+                    display.classList.remove('empty');
+                    display.style.borderColor = '#10b981';
+                    display.style.background = '#f0fdf4';
+                    
+                    await copy(data.code, 'emailCode');
+                    notify(`📧 Novo código: ${data.code}`, 'info');
+                }
+            }
+        } catch (err) {
+            // Silencioso na verificação automática
         }
+    }, 15000); // Verifica a cada 15 segundos
+}
 
-        function resetLastEmailCode() {
-            lastDisplayedEmailCode = '';
-            localStorage.removeItem('lastDisplayedEmailCode');
-            document.getElementById('emailCodeDisplay').textContent = 'Cód. e-mail';
-            document.getElementById('emailCodeDisplay').classList.add('empty');
-            document.getElementById('emailCodeDisplay').style.borderColor = '';
-            document.getElementById('emailCodeDisplay').style.background = '';
-            notify('Cache do último código limpo!');
-        }
+// No DOMContentLoaded, adicione:
+
+    
+    // Inicia verificação automática (comentado por padrão, remova o comentário para ativar)
+    // startAutoEmailCheck();
+    
+    // ... resto do código existente ...
+});
 
         // ================= NUMBER LIST =================
         function updateRemainingCounter() {
@@ -1206,8 +1238,8 @@
 
         // ================= EVENT LISTENERS =================
         document.addEventListener('DOMContentLoaded', function() {
-            loadSmsState();
-            updateGiftList();
+    loadSmsState();
+    updateGiftList();
             
             const giftInput = document.getElementById('giftInput');
             if (giftInput) {
