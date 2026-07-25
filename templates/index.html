@@ -29,6 +29,11 @@
             overflow: hidden; 
         }
         
+        /* Remove o arredondamento inferior quando colado na seção de baixo */
+        .sms-section {
+            border-radius: 12px 12px 0 0;
+        }
+        
         .sms-section .boxes { 
             display: flex; 
             height: 85px;
@@ -193,6 +198,7 @@
             align-items: center;
             justify-content: center;
             white-space: nowrap;
+            min-width: 70px;
         }
         
         .action-btn.copy-sms { 
@@ -497,7 +503,7 @@
                      onclick="copyEmailCode()" title="Clique para copiar">
                     Cód. e-mail
                 </div>
-                <button class="action-btn get-number" onclick="getEmailCode()">Obter</button>
+                <button class="action-btn get-number" onclick="getEmailCode()">COD</button>
             </div>
             
             <!-- Gift Section -->
