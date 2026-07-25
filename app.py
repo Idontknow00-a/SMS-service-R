@@ -316,7 +316,7 @@ def buscar_codigo_email():
         # Verifica se é o mesmo código que já foi entregue
         if ultimo_codigo_email is not None and ultimo_codigo_email == novo_codigo:
             logger.info('ℹ️ Código %s repetido, ainda não chegou um novo', novo_codigo)
-            return {'success': False, 'message': 'Código repetido: ainda não chegou um email novo.'}
+            return {'success': False, 'message': 'Código rep'}
 
         ultimo_codigo_email = novo_codigo
         logger.info('✅ Código de email extraído: %s', novo_codigo)
