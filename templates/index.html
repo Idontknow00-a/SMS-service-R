@@ -24,12 +24,10 @@
         
         .section {
             background: white; 
-            border-radius: 12px; 
             box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
             overflow: hidden; 
         }
         
-        /* Remove o arredondamento inferior quando colado na seção de baixo */
         .sms-section {
             border-radius: 12px 12px 0 0;
         }
@@ -263,7 +261,6 @@
             transform: scale(0.95);
         }
         
-        /* Contador no botão OBTER */
         .get-number-counter {
             position: absolute;
             top: -8px;
@@ -485,7 +482,6 @@
         
         <!-- Lista de Números -->
         <div class="section numberlist-section">
-            <!-- Linha: Copiar | Número Atual | OBTER -->
             <div class="action-row">
                 <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número SMS">📋</button>
                 <div class="current-number-display empty" id="currentNumberDisplay" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
@@ -497,7 +493,6 @@
                 </button>
             </div>
 
-            <!-- Linha: Código do email (CRM Bonus) -->
             <div class="action-row" style="margin-top: -2px;">
                 <div class="current-number-display empty" id="emailCodeDisplay"
                      onclick="copyEmailCode()" title="Clique para copiar">
@@ -506,7 +501,6 @@
                 <button class="action-btn get-number" onclick="getEmailCode()">COD</button>
             </div>
             
-            <!-- Gift Section -->
             <div class="gift-section">
                 <input type="text" class="gift-input" id="giftInput" 
                        placeholder="Cole o código do gift aqui (auto-salva)"
@@ -519,7 +513,6 @@
                 </div>
             </div>
             
-            <!-- Settings Section -->
             <div class="settings-section">
                 <h3>⚙️ Configurações</h3>
                 <label>Lista de Números (um por linha)</label>
@@ -530,7 +523,6 @@
         </div>
     </div>
     
-    <!-- Notification -->
     <div class="notification" id="notification"></div>
 
     <script>
@@ -549,12 +541,12 @@
             autoCheckInterval: null
         };
 
-        // ================= NUMBER LIST =================
         let numberList = JSON.parse(localStorage.getItem('numberList') || '[]');
         let currentListIndex = parseInt(localStorage.getItem('currentListIndex') || '0');
-        
-        // ================= GIFTS =================
         let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
+        
+        // Cache de códigos de email
+        let emailCodeCache = JSON.parse(localStorage.getItem('emailCodeCache') || '[]');
 
         // ================= INIT =================
         function loadSmsState() {
@@ -822,6 +814,7 @@
         // ================= CÓDIGO VIA EMAIL (CRM Bonus) =================
         async function getEmailCode() {
             const display = document.getElementById('emailCodeDisplay');
+            
             display.textContent = '...';
             display.classList.remove('empty');
             display.style.borderColor = '';
@@ -832,16 +825,50 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    display.textContent = data.code;
+                    const newCode = data.code;
+                    
+                    // Verifica no cache local se é repetido
+                    if (emailCodeCache.includes(newCode)) {
+                        display.textContent = newCode;
+                        display.classList.remove('empty');
+                        display.style.borderColor = '#f59e0b';
+                        display.style.background = '#fffbeb';
+                        notify('Código já recebido!', 'warning');
+                        await copy(newCode, 'emailCode');
+                        return;
+                    }
+                    
+                    // Código novo! Adiciona ao cache
+                    emailCodeCache.unshift(newCode);
+                    if (emailCodeCache.length > 50) emailCodeCache.pop();
+                    
+                    localStorage.setItem('emailCodeCache', JSON.stringify(emailCodeCache));
+                    
+                    display.textContent = newCode;
                     display.classList.remove('empty');
-                    await copy(data.code, 'emailCode');
+                    display.style.borderColor = '#10b981';
+                    display.style.background = '#f0fdf4';
+                    
+                    await copy(newCode, 'emailCode');
+                    notify(`✅ Novo código: ${newCode}`, 'info');
+                    
                 } else {
-                    const msg = data.message || 'Erro desconhecido';
-                    display.textContent = msg;
-                    display.classList.add('empty');
-                    display.style.borderColor = '#ef4444';
-                    display.style.background = '#fef2f2';
-                    copyErrorToClipboard(msg);
+                    const msg = data.message || 'Erro';
+                    
+                    if (msg.includes('repetido') && emailCodeCache.length > 0) {
+                        display.textContent = emailCodeCache[0];
+                        display.classList.remove('empty');
+                        display.style.borderColor = '#f59e0b';
+                        display.style.background = '#fffbeb';
+                        await copy(emailCodeCache[0], 'emailCode');
+                        notify('Código repetido. Último copiado!', 'warning');
+                    } else {
+                        display.textContent = msg;
+                        display.classList.add('empty');
+                        display.style.borderColor = '#ef4444';
+                        display.style.background = '#fef2f2';
+                        copyErrorToClipboard(msg);
+                    }
                 }
             } catch (err) {
                 const msg = 'Erro de conexão';
@@ -886,7 +913,6 @@
             counter.style.display = 'block';
             counter.textContent = remaining;
             
-            // Atualiza cor baseado na quantidade restante
             if (remaining === 0) {
                 counter.style.background = '#ef4444';
             } else if (remaining <= 3) {
@@ -1166,7 +1192,6 @@
                 });
             }
             
-            // Inicializa o contador
             updateRemainingCounter();
         });
     </script>
