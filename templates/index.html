@@ -169,6 +169,7 @@
         
         .numberlist-section {
             padding: 15px;
+            margin-top: -12px;
         }
         
         .action-row {
@@ -243,6 +244,7 @@
             background: #64748b; 
             color: white;
             flex-shrink: 0;
+            position: relative;
         }
         
         .action-btn.get-number:hover {
@@ -251,6 +253,40 @@
         
         .action-btn.get-number:active {
             transform: scale(0.95);
+        }
+        
+        /* Contador no botão OBTER */
+        .get-number-counter {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Barra de progresso */
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: -6px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 2px;
+            transition: width 0.3s ease;
         }
         
         .gift-section {
@@ -465,7 +501,15 @@
                 <div class="current-number-display empty" id="currentNumberDisplay" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
                     Clique em OBTER
                 </div>
-                <button class="action-btn get-number" onclick="getNextNumberFromList()">OBTER</button>
+                <button class="action-btn get-number" id="getNumberBtn" onclick="getNextNumberFromList()">
+                    OBTER
+                    <span class="get-number-counter" id="remainingCounter" style="display: none;">0</span>
+                </button>
+            </div>
+            
+            <!-- Barra de progresso -->
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
             </div>
 
             <!-- Linha: Código do email (CRM Bonus) -->
@@ -843,6 +887,45 @@
         }
 
         // ================= NUMBER LIST =================
+        function updateRemainingCounter() {
+            const counter = document.getElementById('remainingCounter');
+            const progressBar = document.getElementById('progressBar');
+            const total = numberList.length;
+            const used = currentListIndex;
+            const remaining = total - used;
+            
+            if (total === 0) {
+                counter.style.display = 'none';
+                progressBar.style.width = '0%';
+                return;
+            }
+            
+            counter.style.display = 'block';
+            counter.textContent = remaining;
+            
+            // Atualiza cor baseado na quantidade restante
+            if (remaining === 0) {
+                counter.style.background = '#ef4444';
+                counter.textContent = '0';
+            } else if (remaining <= 3) {
+                counter.style.background = '#f59e0b';
+            } else {
+                counter.style.background = '#ef4444';
+            }
+            
+            // Barra de progresso
+            const progressPercent = (used / total) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            
+            if (progressPercent >= 100) {
+                progressBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+            } else if (progressPercent >= 75) {
+                progressBar.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+            } else {
+                progressBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+            }
+        }
+
         function updateNumberListDisplay() {
             const textarea = document.getElementById('numberListInput');
             textarea.value = numberList.join('\n');
@@ -854,6 +937,8 @@
                 document.getElementById('currentNumberDisplay').textContent = 'Lista finalizada';
                 document.getElementById('currentNumberDisplay').classList.add('empty');
             }
+            
+            updateRemainingCounter();
         }
 
         function getNextNumberFromList() {
@@ -880,6 +965,7 @@
             document.getElementById('currentNumberDisplay').classList.remove('empty');
             
             copyCurrentNumberFromList();
+            updateRemainingCounter();
             
             const remaining = numberList.length - currentListIndex;
             notify(`Número ${currentListIndex}/${numberList.length}${remaining > 0 ? ` (${remaining} restantes)` : ' (último!)'}`);
@@ -1106,8 +1192,12 @@
                     const lines = this.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                     numberList = lines;
                     localStorage.setItem('numberList', JSON.stringify(numberList));
+                    updateRemainingCounter();
                 });
             }
+            
+            // Inicializa o contador
+            updateRemainingCounter();
         });
     </script>
 </body>
