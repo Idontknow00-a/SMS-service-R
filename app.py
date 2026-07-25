@@ -20,14 +20,13 @@ SERVICE = 'mm'
 TIMEOUT_DURATION = 120  # segundos
 OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
 
-# Configuração do código via email (IMAP, sem API oficial do Gmail)
+# Configuração do código via email (IMAP)
 EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS', '')
 EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
 EMAIL_SENDER_FILTRO = 'no-reply@crmbonus.com'
-EMAIL_CODE_PATTERN = re.compile(r'(?:c[oó]digo|code|código)[\s\S]{0,200}?(\d{4,6})\b', re.IGNORECASE)
-ultimo_codigo_email = None  # guarda o último código entregue, pra nunca repetir
+ultimo_codigo_email = None
 
-# Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
+# Controle de bloqueio
 failed_attempts = {}
 MAX_FAILURES_BEFORE_COOLDOWN = 3
 COOLDOWN_MINUTES = 30
@@ -36,7 +35,7 @@ COOLDOWN_MINUTES = 30
 number_timeouts = {}
 active_numbers = {}
 successful_numbers = set()
-operator_info = {}  # Armazena info da operadora para cada número
+operator_info = {}
 
 # Configurar logging
 logging.basicConfig(
@@ -88,7 +87,7 @@ def filter_operators(available_operators):
 
 
 def get_service_price():
-    """Obtém o preço do serviço usando a API correta"""
+    """Obtém o preço do serviço"""
     try:
         url = f"{BASE_URL}?api_key={API_KEY}&action=getPrices&service={SERVICE}&country={COUNTRY_CODE}"
         response = requests.get(url, timeout=10)
@@ -103,7 +102,6 @@ def get_service_price():
                     if isinstance(service_info, dict) and 'cost' in service_info:
                         price = float(service_info['cost'])
                         formatted_price = f"${price:.4f}"
-                        logger.info(f"💰 Preço do serviço {SERVICE}: {formatted_price}")
                         return formatted_price
             
             elif isinstance(data, list):
@@ -112,10 +110,7 @@ def get_service_price():
                         service_info = item[SERVICE]
                         if isinstance(service_info, dict) and 'cost' in service_info:
                             price = float(service_info['cost'])
-                            formatted_price = f"${price:.4f}"
                             return formatted_price
-            
-            logger.warning(f"Formato de preço não reconhecido: {data}")
     except Exception as e:
         logger.error(f"Erro ao obter preço: {e}")
     
@@ -123,7 +118,7 @@ def get_service_price():
 
 
 def get_number():
-    """Obtém um número com filtro por operadora e preço real"""
+    """Obtém um número com filtro por operadora"""
     try:
         if check_failure_rate():
             logger.warning("⚠️ Período de espera para evitar bloqueio")
@@ -133,13 +128,11 @@ def get_number():
         available_operators = get_available_operators()
         
         if not available_operators:
-            logger.warning("Não foi possível obter a lista de operadoras")
             return 'NO_NUMBERS', price
         
         filtered_operators = filter_operators(available_operators)
         
         if not filtered_operators:
-            logger.warning("Nenhuma operadora TIM ou ARQIA disponível")
             return 'NO_NUMBERS', price
         
         for operator in filtered_operators:
@@ -153,24 +146,15 @@ def get_number():
                     parts = data.split(':')
                     number_id = parts[1].strip() if len(parts) > 1 else ''
                     operator_info[number_id] = operator.upper()
-                    
-                    logger.info(f"✓ Número obtido com sucesso (Operadora: {operator.upper()})")
+                    logger.info(f"✓ Número obtido (Operadora: {operator.upper()})")
                     return data, price
-                    
                 elif 'NO_NUMBERS' in data:
-                    logger.info(f"✗ Sem números para operadora {operator}")
                     continue
                 elif 'NO_BALANCE' in data:
-                    logger.error("✗ Saldo insuficiente!")
                     return 'NO_BALANCE', price
                 elif 'BAD_KEY' in data:
-                    logger.error("✗ API Key inválida!")
                     return 'BAD_KEY', price
-                else:
-                    logger.warning(f"Resposta inesperada para {operator}: {data}")
-                    continue
         
-        logger.info("✗ Nenhum número disponível para TIM e ARQIA")
         return 'NO_NUMBERS', price
         
     except Exception as e:
@@ -179,7 +163,7 @@ def get_number():
 
 
 def setup_timeout(number_id):
-    """Configura timeout apenas para limpeza de memória (sem cancelar na API)"""
+    """Configura timeout para limpeza de memória"""
     def cleanup_memory():
         try:
             if number_id in number_timeouts:
@@ -188,7 +172,7 @@ def setup_timeout(number_id):
                 del active_numbers[number_id]
             if number_id in operator_info:
                 del operator_info[number_id]
-            logger.info(f"⏰ Limpeza de memória para {number_id} (sem cancelar API)")
+            logger.info(f"⏰ Limpeza de memória para {number_id}")
         except Exception as e:
             logger.error(f"Erro na limpeza: {e}")
     
@@ -236,94 +220,114 @@ def _extrair_texto_email(msg):
         except:
             pass
 
-    # Prioriza texto plano, depois HTML limpo
     bruto = corpo_plain or corpo_html or ''
     
-    # Se for HTML, limpa melhor
     if corpo_html and not corpo_plain:
-        # Remove todas as tags HTML
         bruto = re.sub(r'<style[\s\S]*?</style>', ' ', bruto, flags=re.IGNORECASE)
         bruto = re.sub(r'<script[\s\S]*?</script>', ' ', bruto, flags=re.IGNORECASE)
         bruto = re.sub(r'<[^>]+>', ' ', bruto)
         bruto = bruto.replace('&nbsp;', ' ').replace('&amp;', '&')
-        # Remove múltiplos espaços
         bruto = re.sub(r'\s+', ' ', bruto).strip()
     
-    logger.info(f'📧 Texto extraído do email (primeiros 500 chars): {bruto[:500]}')
     return bruto
 
 
+def extrair_todos_codigos(texto):
+    """Extrai TODOS os códigos numéricos possíveis do texto do email."""
+    codigos = []
+    
+    # Padrão 1: "código/codigo/code" seguido de números
+    padrao1 = re.findall(r'(?:c[oó]digo|code|código|token|pin|chave)[\s\S]{0,50}?(\d{4,8})', texto, re.IGNORECASE)
+    codigos.extend(padrao1)
+    
+    # Padrão 2: Números isolados em linhas (4-6 dígitos)
+    padrao2 = re.findall(r'(?:^|\n)\s*(\d{4,6})\s*(?:\n|$)', texto, re.MULTILINE)
+    codigos.extend(padrao2)
+    
+    # Padrão 3: Números após ":" ou "="
+    padrao3 = re.findall(r'[:=]\s*(\d{4,6})\b', texto)
+    codigos.extend(padrao3)
+    
+    # Padrão 4: Qualquer número de 4-6 dígitos (fallback)
+    if not codigos:
+        padrao4 = re.findall(r'\b(\d{4,6})\b', texto)
+        for num in padrao4:
+            if not num.startswith(('19', '20')):  # Exclui anos
+                codigos.append(num)
+    
+    # Remove duplicatas mantendo a ordem
+    codigos_unicos = []
+    for codigo in codigos:
+        if codigo not in codigos_unicos:
+            codigos_unicos.append(codigo)
+    
+    return codigos_unicos
+
+
 def buscar_codigo_email():
-    """Busca o código de verificação mais recente vindo de EMAIL_SENDER_FILTRO via IMAP."""
+    """Busca TODOS os códigos do remetente, retorna o mais recente."""
     global ultimo_codigo_email
 
     if not EMAIL_ADDRESS or not EMAIL_APP_PASSWORD:
-        return {'success': False, 'message': 'EMAIL_ADDRESS/EMAIL_APP_PASSWORD não configurados no Render.'}
+        return {'success': False, 'message': 'EMAIL não configurado.'}
 
     try:
         imap = imaplib.IMAP4_SSL('imap.gmail.com')
         imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
         imap.select('INBOX')
 
-        # Busca emails do remetente específico
         status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
         if status != 'OK' or not dados[0]:
             imap.logout()
-            logger.info('✗ Nenhum email encontrado de %s', EMAIL_SENDER_FILTRO)
-            return {'success': False, 'message': 'Nenhum email encontrado desse remetente.'}
+            return {'success': False, 'message': 'Nenhum email encontrado.'}
 
         ids = dados[0].split()
-        ultimo_id = ids[-1]  # Pega o mais recente
-
-        status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
+        ultimos_ids = ids[-5:] if len(ids) > 5 else ids
+        
+        codigos_encontrados = []
+        
+        for email_id in reversed(ultimos_ids):
+            try:
+                status, msg_dados = imap.fetch(email_id, '(RFC822)')
+                if status != 'OK':
+                    continue
+                    
+                msg = email_lib.message_from_bytes(msg_dados[0][1])
+                texto = _extrair_texto_email(msg)
+                
+                codigos = extrair_todos_codigos(texto)
+                
+                for codigo in codigos:
+                    if codigo not in codigos_encontrados:
+                        codigos_encontrados.append(codigo)
+            except:
+                continue
+        
         imap.logout()
-
-        if status != 'OK':
-            return {'success': False, 'message': 'Não foi possível ler o email mais recente.'}
-
-        msg = email_lib.message_from_bytes(msg_dados[0][1])
-        texto = _extrair_texto_email(msg)
         
-        logger.info(f'📧 Processando email de: {msg.get("From", "Desconhecido")}')
-        logger.info(f'📧 Assunto: {msg.get("Subject", "Sem assunto")}')
-
-        # Tenta encontrar o código com o padrão principal
-        match = EMAIL_CODE_PATTERN.search(texto)
+        if not codigos_encontrados:
+            return {'success': False, 'message': 'Nenhum código encontrado.'}
         
-        # Se não encontrar, tenta um padrão mais simples (apenas números de 4-6 dígitos isolados)
-        if not match:
-            logger.info('🔍 Tentando padrão alternativo para encontrar código...')
-            # Procura por números de 4-6 dígitos que aparecem sozinhos em uma linha
-            alternative_pattern = re.compile(r'(?:^|\n|\s)(\d{4,6})(?:\s|$|\n)', re.MULTILINE)
-            matches = alternative_pattern.findall(texto)
-            
-            if matches:
-                # Pega o último número encontrado (geralmente o código)
-                novo_codigo = matches[-1]
-                logger.info(f'✅ Código encontrado com padrão alternativo: {novo_codigo}')
+        novo_codigo = codigos_encontrados[0]
+        
+        if ultimo_codigo_email is not None and novo_codigo == ultimo_codigo_email:
+            for codigo in codigos_encontrados[1:]:
+                if codigo != ultimo_codigo_email:
+                    novo_codigo = codigo
+                    break
             else:
-                preview = texto.strip()[:500]
-                logger.warning('✗ Nenhum código encontrado no email. Preview: %s', preview)
-                return {
-                    'success': False,
-                    'message': 'Padrão do código não encontrado no email.',
-                    'debug_preview': preview
-                }
-        else:
-            novo_codigo = match.group(1)
-            logger.info(f'✅ Código encontrado com padrão principal: {novo_codigo}')
-
-        # Verifica se é o mesmo código que já foi entregue
-        if ultimo_codigo_email is not None and ultimo_codigo_email == novo_codigo:
-            logger.info('ℹ️ Código %s repetido, ainda não chegou um novo', novo_codigo)
-            return {'success': False, 'message': 'Código rep'}
-
+                return {'success': False, 'message': 'Código repetido.'}
+        
         ultimo_codigo_email = novo_codigo
-        logger.info('✅ Código de email extraído: %s', novo_codigo)
-        return {'success': True, 'code': novo_codigo}
+        logger.info(f'✅ Código extraído: {novo_codigo}')
+        return {
+            'success': True, 
+            'code': novo_codigo,
+            'total_encontrados': len(codigos_encontrados)
+        }
 
     except Exception as e:
-        logger.error('Erro ao buscar código de email: %s', e)
+        logger.error(f'Erro ao buscar código: {e}')
         return {'success': False, 'message': f'Erro: {str(e)}'}
 
 
@@ -336,7 +340,6 @@ def index():
 
 @app.route('/get_number', methods=['GET'])
 def get_number_route():
-    """Obtém novo número com filtro por operadora (TIM/ARQIA)"""
     try:
         data, price = get_number()
         
@@ -357,10 +360,8 @@ def get_number_route():
                 'received_codes': []
             }
             
-            logger.info(f"✅ Número {phone_number} ({op}) obtido (ID: {number_id})")
             return jsonify({
                 'success': True,
-                'response': data,
                 'number_id': number_id,
                 'phone_number': phone_number,
                 'operator': op,
@@ -372,56 +373,27 @@ def get_number_route():
             
             msg_map = {
                 'NO_BALANCE': 'Saldo insuficiente!',
-                'NO_NUMBERS': 'Sem números TIM/ARQIA disponíveis',
-                'NO_NUMBER': 'Falha ao obter número',
+                'NO_NUMBERS': 'Sem números disponíveis',
                 'BAD_KEY': 'API Key inválida',
-                'RATE_LIMIT': 'Aguarde - Muitas tentativas recentes'
+                'RATE_LIMIT': 'Aguarde - Muitas tentativas'
             }
             return jsonify({
                 'success': False,
-                'response': data,
                 'message': msg_map.get(data, 'Erro desconhecido')
             })
     except Exception as e:
-        logger.error(f"Erro em /get_number: {e}")
         return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
-
-
-@app.route('/get_price/<number_id>', methods=['GET'])
-def get_price(number_id):
-    """Retorna o preço atualizado de um número específico"""
-    try:
-        if number_id in active_numbers:
-            price = active_numbers[number_id].get('price', '$0.00')
-            operator = active_numbers[number_id].get('operator', '')
-            return jsonify({
-                'success': True,
-                'number_id': number_id,
-                'price': price,
-                'operator': operator
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'Número não encontrado'
-            })
-    except Exception as e:
-        logger.error(f"Erro em /get_price: {e}")
-        return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
 
 
 @app.route('/get_status/<number_id>', methods=['GET'])
 def get_status(number_id):
-    """Verifica status e obtém código se disponível - SEM CANCELAMENTO"""
     try:
         url = f"{BASE_URL}?api_key={API_KEY}&action=getStatus&id={number_id}"
         response = requests.get(url, timeout=10)
         data = response.text.strip()
-        logger.info(f"Status check para {number_id}: {data}")
 
         result = {
             'success': True,
-            'response': data,
             'has_code': False,
             'code': None,
             'status': 'waiting'
@@ -434,7 +406,6 @@ def get_status(number_id):
                 received_codes = active_numbers[number_id].get('received_codes', [])
                 
                 if code in received_codes:
-                    logger.info(f"ℹ️ Código {code} já foi recebido para {number_id}")
                     result.update({
                         'has_code': False,
                         'code': None,
@@ -449,21 +420,12 @@ def get_status(number_id):
 
             if number_id not in successful_numbers:
                 successful_numbers.add(number_id)
-                logger.info(f"✅ Primeiro código recebido para {number_id}")
 
             if number_id in active_numbers:
                 active_numbers[number_id]['received_codes'].append(code)
                 active_numbers[number_id]['last_code'] = code
                 active_numbers[number_id]['status'] = 'code_received'
 
-            try:
-                retry_url = f"{BASE_URL}?api_key={API_KEY}&action=setStatus&status=3&id={number_id}"
-                retry_resp = requests.get(retry_url, timeout=5)
-                logger.info(f"🔄 Novo SMS solicitado: {retry_resp.text.strip()}")
-            except Exception as e:
-                logger.error(f"Erro ao solicitar novo SMS: {e}")
-
-            logger.info(f"✅ Código recebido para {number_id}: {code}")
             result.update({
                 'has_code': True,
                 'code': code,
@@ -478,7 +440,7 @@ def get_status(number_id):
 
         elif data == 'STATUS_CANCEL' or data == 'STATUS_WAIT_RETRY':
             result.update({
-                'message': 'Número expirado ou cancelado',
+                'message': 'Número expirado',
                 'status': 'cancelled'
             })
             active_numbers.pop(number_id, None)
@@ -493,18 +455,15 @@ def get_status(number_id):
         return jsonify(result)
 
     except Exception as e:
-        logger.error(f"Erro em /get_status: {e}")
         return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
 
 
 @app.route('/get_email_code', methods=['GET'])
 def get_email_code_route():
-    """Busca o código mais recente vindo por email (no-reply@crmbonus.com) via IMAP"""
     try:
         resultado = buscar_codigo_email()
         return jsonify(resultado)
     except Exception as e:
-        logger.error(f"Erro em /get_email_code: {e}")
         return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
 
 
@@ -524,8 +483,6 @@ if __name__ == '__main__':
     logger.info("🚀 Servidor SMS iniciado (HeroSMS)")
     logger.info("📞 Números brasileiros (73) - Serviço: mm")
     logger.info("📱 Operadoras: TIM e ARQIA")
-    logger.info("⏰ Timeout: 120s (sem cancelamento automático)")
-    logger.info("🛡️ Proteção contra bloqueio ativada")
+    logger.info("⏰ Timeout: 120s")
     logger.info("📧 Código via email: %s", EMAIL_SENDER_FILTRO)
-    print("\n" + "="*50)
     app.run(debug=True, port=3000, host='0.0.0.0')
