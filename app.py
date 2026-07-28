@@ -146,6 +146,7 @@ def get_number():
                 if data.startswith('ACCESS_NUMBER'):
                     parts = data.split(':')
                     number_id = parts[1].strip() if len(parts) > 1 else ''
+                    phone_number = parts[2].strip() if len(parts) > 2 else ''
                     operator_info[number_id] = operator.upper()
                     logger.info(f"✓ Número obtido (Operadora: {operator.upper()})")
                     return data, price
@@ -181,6 +182,26 @@ def setup_timeout(number_id):
     timer.start()
     number_timeouts[number_id] = timer
     return timer
+
+
+def request_sms_resend(number_id):
+    """Solicita o reenvio de SMS (status=3 na API)"""
+    try:
+        url = f"{BASE_URL}?api_key={API_KEY}&action=setStatus&id={number_id}&status=3"
+        response = requests.get(url, timeout=10)
+        data = response.text.strip()
+        
+        logger.info(f"📤 Solicitando reenvio SMS para {number_id}: {data}")
+        
+        if data == 'ACCESS_RETRY_GET':
+            return True, "SMS solicitado com sucesso"
+        elif data == 'ACCESS_ACTIVATION':
+            return True, "Ativação ainda ativa, aguardando SMS"
+        else:
+            return False, f"Erro ao solicitar SMS: {data}"
+    except Exception as e:
+        logger.error(f"Erro ao solicitar reenvio: {e}")
+        return False, str(e)
 
 
 # ---------- Funções auxiliares do código via email (IMAP) ----------
@@ -392,6 +413,33 @@ def get_number_route():
             })
     except Exception as e:
         return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+
+# NOVA ROTA: Solicitar reenvio de SMS
+@app.route('/request_new_sms/<number_id>', methods=['GET'])
+def request_new_sms_route(number_id):
+    """Solicita o reenvio de SMS para um número específico"""
+    try:
+        success, message = request_sms_resend(number_id)
+        
+        if success:
+            logger.info(f"✅ SMS solicitado para {number_id}: {message}")
+            return jsonify({
+                'success': True,
+                'message': message
+            })
+        else:
+            logger.warning(f"❌ Falha ao solicitar SMS para {number_id}: {message}")
+            return jsonify({
+                'success': False,
+                'message': message
+            })
+    except Exception as e:
+        logger.error(f"Erro ao solicitar SMS: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro: {str(e)}'
+        }), 500
 
 
 @app.route('/get_status/<number_id>', methods=['GET'])
