@@ -2,7 +2,7 @@ from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 import requests
 import time
-from threading import Timer, Thread, Lock
+from threading import Timer, Thread
 import logging
 import os
 import re
@@ -25,10 +25,6 @@ EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS', '')
 EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
 EMAIL_SENDER_FILTRO = 'no-reply@crmbonus.com'
 ultimo_codigo_email = None
-
-# Conexão IMAP persistente (evita handshake TLS + login a cada requisição)
-_imap_conn = None
-_imap_lock = Lock()
 
 # Controle de bloqueio
 failed_attempts = {}
@@ -150,6 +146,7 @@ def get_number():
                 if data.startswith('ACCESS_NUMBER'):
                     parts = data.split(':')
                     number_id = parts[1].strip() if len(parts) > 1 else ''
+                    phone_number = parts[2].strip() if len(parts) > 2 else ''
                     operator_info[number_id] = operator.upper()
                     logger.info(f"✓ Número obtido (Operadora: {operator.upper()})")
                     return data, price
@@ -187,31 +184,24 @@ def setup_timeout(number_id):
     return timer
 
 
-# ---------- Conexão IMAP persistente ----------
-
-def _get_imap_connection():
-    """Reaproveita a conexão IMAP entre chamadas. Só reconecta se necessário."""
-    global _imap_conn
-
-    if _imap_conn is not None:
-        try:
-            status, _ = _imap_conn.noop()
-            if status == 'OK':
-                return _imap_conn
-        except Exception:
-            pass
-        try:
-            _imap_conn.logout()
-        except Exception:
-            pass
-        _imap_conn = None
-
-    imap = imaplib.IMAP4_SSL('imap.gmail.com')
-    imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
-    imap.select('INBOX')
-    _imap_conn = imap
-    logger.info('📧 Nova conexão IMAP estabelecida')
-    return _imap_conn
+def request_sms_resend(number_id):
+    """Solicita o reenvio de SMS (status=3 na API)"""
+    try:
+        url = f"{BASE_URL}?api_key={API_KEY}&action=setStatus&id={number_id}&status=3"
+        response = requests.get(url, timeout=10)
+        data = response.text.strip()
+        
+        logger.info(f"📤 Solicitando reenvio SMS para {number_id}: {data}")
+        
+        if data == 'ACCESS_RETRY_GET':
+            return True, "SMS solicitado com sucesso"
+        elif data == 'ACCESS_ACTIVATION':
+            return True, "Ativação ainda ativa, aguardando SMS"
+        else:
+            return False, f"Erro ao solicitar SMS: {data}"
+    except Exception as e:
+        logger.error(f"Erro ao solicitar reenvio: {e}")
+        return False, str(e)
 
 
 # ---------- Funções auxiliares do código via email (IMAP) ----------
@@ -268,21 +258,26 @@ def extrair_todos_codigos(texto):
     """Extrai TODOS os códigos numéricos possíveis do texto do email."""
     codigos = []
     
+    # Padrão 1: "código/codigo/code" seguido de números
     padrao1 = re.findall(r'(?:c[oó]digo|code|código|token|pin|chave)[\s\S]{0,50}?(\d{4,8})', texto, re.IGNORECASE)
     codigos.extend(padrao1)
     
+    # Padrão 2: Números isolados em linhas (4-6 dígitos)
     padrao2 = re.findall(r'(?:^|\n)\s*(\d{4,6})\s*(?:\n|$)', texto, re.MULTILINE)
     codigos.extend(padrao2)
     
+    # Padrão 3: Números após ":" ou "="
     padrao3 = re.findall(r'[:=]\s*(\d{4,6})\b', texto)
     codigos.extend(padrao3)
     
+    # Padrão 4: Qualquer número de 4-6 dígitos (fallback)
     if not codigos:
         padrao4 = re.findall(r'\b(\d{4,6})\b', texto)
         for num in padrao4:
-            if not num.startswith(('19', '20')):
+            if not num.startswith(('19', '20')):  # Exclui anos
                 codigos.append(num)
     
+    # Remove duplicatas mantendo a ordem
     codigos_unicos = []
     for codigo in codigos:
         if codigo not in codigos_unicos:
@@ -292,64 +287,78 @@ def extrair_todos_codigos(texto):
 
 
 def buscar_codigo_email():
-    """Busca APENAS o código mais recente do último email, reaproveitando a conexão IMAP."""
-    global ultimo_codigo_email, _imap_conn
+    """Busca APENAS o código mais recente do último email."""
+    global ultimo_codigo_email
 
     if not EMAIL_ADDRESS or not EMAIL_APP_PASSWORD:
         return {'success': False, 'message': 'EMAIL não configurado.'}
 
-    with _imap_lock:
-        try:
-            imap = _get_imap_connection()
+    try:
+        imap = imaplib.IMAP4_SSL('imap.gmail.com')
+        imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
+        imap.select('INBOX')
 
-            status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
-            if status != 'OK' or not dados[0]:
-                return {'success': False, 'message': 'Nenhum email encontrado.'}
+        # Busca emails do remetente específico
+        status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
+        if status != 'OK' or not dados[0]:
+            imap.logout()
+            return {'success': False, 'message': 'Nenhum email encontrado.'}
 
-            ids = dados[0].split()
-            ultimo_id = ids[-1]
+        ids = dados[0].split()
+        # Pega APENAS o último email (mais recente)
+        ultimo_id = ids[-1]
+        
+        status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
+        imap.logout()
+        
+        if status != 'OK':
+            return {'success': False, 'message': 'Erro ao ler email.'}
 
-            status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
+        msg = email_lib.message_from_bytes(msg_dados[0][1])
+        texto = _extrair_texto_email(msg)
+        
+        logger.info(f'📧 Processando email mais recente')
+        logger.info(f'📧 Preview: {texto[:300]}')
+        
+        # Extrai todos os códigos encontrados
+        codigos = extrair_todos_codigos(texto)
+        
+        if not codigos:
+            logger.warning('❌ Nenhum código encontrado no email mais recente')
+            return {
+                'success': False, 
+                'message': 'Nenhum código encontrado.',
+                'debug_preview': texto[:200]
+            }
+        
+        # Pega o primeiro código encontrado (mais relevante)
+        novo_codigo = codigos[0]
+        
+        logger.info(f'📧 Códigos encontrados: {codigos}')
+        logger.info(f'📧 Último código entregue: {ultimo_codigo_email}')
+        logger.info(f'📧 Novo código: {novo_codigo}')
+        
+        # Verifica se é diferente do último entregue
+        if ultimo_codigo_email is not None and novo_codigo == ultimo_codigo_email:
+            logger.info(f'⚠️ Código {novo_codigo} é igual ao último entregue')
+            return {
+                'success': False, 
+                'message': 'Código repetido',
+                'code': novo_codigo
+            }
+        
+        # Atualiza o último código entregue
+        ultimo_codigo_email = novo_codigo
+        logger.info(f'✅ Novo código entregue: {novo_codigo}')
+        
+        return {
+            'success': True, 
+            'code': novo_codigo
+        }
 
-            if status != 'OK':
-                return {'success': False, 'message': 'Erro ao ler email.'}
-
-            msg = email_lib.message_from_bytes(msg_dados[0][1])
-            texto = _extrair_texto_email(msg)
-
-            logger.info(f'📧 Processando email mais recente')
-
-            codigos = extrair_todos_codigos(texto)
-
-            if not codigos:
-                logger.warning('❌ Nenhum código encontrado no email mais recente')
-                return {
-                    'success': False,
-                    'message': 'Nenhum código encontrado.',
-                    'debug_preview': texto[:200]
-                }
-
-            novo_codigo = codigos[0]
-
-            logger.info(f'📧 Códigos encontrados: {codigos}')
-
-            if ultimo_codigo_email is not None and novo_codigo == ultimo_codigo_email:
-                logger.info(f'⚠️ Código {novo_codigo} é igual ao último entregue')
-                return {
-                    'success': False,
-                    'message': 'Código repetido',
-                    'code': novo_codigo
-                }
-
-            ultimo_codigo_email = novo_codigo
-            logger.info(f'✅ Novo código entregue: {novo_codigo}')
-
-            return {'success': True, 'code': novo_codigo}
-
-        except Exception as e:
-            logger.error(f'Erro ao buscar código: {e}')
-            _imap_conn = None  # força reconectar na próxima tentativa
-            return {'success': False, 'message': f'Erro: {str(e)}'}
+    except Exception as e:
+        logger.error(f'Erro ao buscar código: {e}')
+        return {'success': False, 'message': f'Erro: {str(e)}'}
 
 
 # Rotas da API
@@ -404,6 +413,33 @@ def get_number_route():
             })
     except Exception as e:
         return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+
+# NOVA ROTA: Solicitar reenvio de SMS
+@app.route('/request_new_sms/<number_id>', methods=['GET'])
+def request_new_sms_route(number_id):
+    """Solicita o reenvio de SMS para um número específico"""
+    try:
+        success, message = request_sms_resend(number_id)
+        
+        if success:
+            logger.info(f"✅ SMS solicitado para {number_id}: {message}")
+            return jsonify({
+                'success': True,
+                'message': message
+            })
+        else:
+            logger.warning(f"❌ Falha ao solicitar SMS para {number_id}: {message}")
+            return jsonify({
+                'success': False,
+                'message': message
+            })
+    except Exception as e:
+        logger.error(f"Erro ao solicitar SMS: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro: {str(e)}'
+        }), 500
 
 
 @app.route('/get_status/<number_id>', methods=['GET'])
