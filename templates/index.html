@@ -1442,30 +1442,41 @@
         }
         
         function processCpfList(text) {
-            // Divide por linhas e processa cada CPF
-            const lines = text.split(/[\n\r]+/).filter(line => line.trim());
-            let addedCount = 0;
-            
-            lines.forEach(line => {
-                const cleaned = line.trim();
-                if (cleaned.match(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/)) {
-                    // Remove pontos e traços para armazenar limpo
-                    const cleanCpf = cleaned.replace(/[.\-]/g, '');
-                    const formattedCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                    
-                    if (!cpfList.includes(formattedCpf)) {
-                        cpfList.push(formattedCpf);
-                        addedCount++;
-                    }
+    // Primeiro, substitui espaços múltiplos e quebras de linha por um separador único
+    // Isso transforma tanto "242.585.153-45 058.512.450-77" quanto listas com enters em linhas separadas
+    const normalizedText = text.replace(/[\s\n\r]+/g, '\n');
+    
+    // Divide por linhas
+    const lines = normalizedText.split('\n').filter(line => line.trim());
+    let addedCount = 0;
+    
+    lines.forEach(line => {
+        const cleaned = line.trim();
+        // Verifica se a linha contém múltiplos CPFs separados por espaço
+        const cpfsInLine = cleaned.split(/\s+/);
+        
+        cpfsInLine.forEach(cpfText => {
+            const trimmedCpf = cpfText.trim();
+            // Verifica se é um CPF válido (com ou sem pontuação)
+            if (trimmedCpf.match(/^\d{3}[.\-]?\d{3}[.\-]?\d{3}[.\-]?\d{2}$/)) {
+                // Remove pontos e traços para armazenar limpo
+                const cleanCpf = trimmedCpf.replace(/[.\-]/g, '');
+                const formattedCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                
+                if (!cpfList.includes(formattedCpf)) {
+                    cpfList.push(formattedCpf);
+                    addedCount++;
                 }
-            });
-            
-            if (addedCount > 0) {
-                saveCpfList();
-                updateCpfList();
-                notify(`✓ ${addedCount} CPF(s) adicionado(s)! Total: ${cpfList.length}`);
             }
-        }
+        });
+    });
+    
+    if (addedCount > 0) {
+        saveCpfList();
+        updateCpfList();
+        notify(`✓ ${addedCount} CPF(s) adicionado(s)! Total: ${cpfList.length}`);
+    }
+}
         
         function addSingleCpf(cpfText) {
             // Remove pontos e traços
