@@ -1418,63 +1418,76 @@
         }
         
         function handleCpfInput(event) {
-            const cpfInput = document.getElementById('cpfInput');
-            const text = cpfInput.value.trim();
-            
-            if (!text) return;
-            
-            // Verifica se contém múltiplas linhas (lista colada)
-            if (text.includes('\n') || text.includes('\r')) {
-                clearTimeout(cpfInput.timer);
-                cpfInput.timer = setTimeout(() => {
-                    processCpfList(text);
-                    cpfInput.value = '';
-                }, 500);
-            }
-            // Verifica se é um CPF individual
-            else if (text.match(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/)) {
-                clearTimeout(cpfInput.timer);
-                cpfInput.timer = setTimeout(() => {
-                    addSingleCpf(text);
-                    cpfInput.value = '';
-                }, 500);
-            }
-        }
+    const cpfInput = document.getElementById('cpfInput');
+    const text = cpfInput.value.trim();
+    
+    if (!text) return;
+    
+    // Limpa timer anterior e configura novo
+    clearTimeout(cpfInput.timer);
+    cpfInput.timer = setTimeout(() => {
+        // Chama processCpfList para QUALQUER texto (ele já trata todos os formatos)
+        processCpfList(text);
+        cpfInput.value = '';
+    }, 800); // Aumentei para 800ms para dar tempo de colar listas grandes
+}
         
         function processCpfList(text) {
-    // Primeiro, substitui espaços múltiplos e quebras de linha por um separador único
-    // Isso transforma tanto "242.585.153-45 058.512.450-77" quanto listas com enters em linhas separadas
-    const normalizedText = text.replace(/[\s\n\r]+/g, '\n');
+    console.log('Processando CPFs:', text); // Debug
     
-    // Divide por linhas
+    // Normaliza: substitui qualquer sequência de espaços/tabs/quebras de linha por \n
+    const normalizedText = text.replace(/[\s\n\r\t]+/g, '\n').trim();
+    console.log('Normalizado:', normalizedText); // Debug
+    
+    if (!normalizedText) {
+        console.log('Texto vazio após normalização');
+        return;
+    }
+    
     const lines = normalizedText.split('\n').filter(line => line.trim());
+    console.log('Linhas encontradas:', lines); // Debug
+    
     let addedCount = 0;
+    const newCpfs = [];
     
     lines.forEach(line => {
         const cleaned = line.trim();
-        // Verifica se a linha contém múltiplos CPFs separados por espaço
-        const cpfsInLine = cleaned.split(/\s+/);
+        console.log('Processando linha:', cleaned); // Debug
         
-        cpfsInLine.forEach(cpfText => {
-            const trimmedCpf = cpfText.trim();
-            // Verifica se é um CPF válido (com ou sem pontuação)
-            if (trimmedCpf.match(/^\d{3}[.\-]?\d{3}[.\-]?\d{3}[.\-]?\d{2}$/)) {
-                // Remove pontos e traços para armazenar limpo
-                const cleanCpf = trimmedCpf.replace(/[.\-]/g, '');
-                const formattedCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        // Regex mais flexível: aceita CPF com ou sem pontuação
+        const cpfMatch = cleaned.match(/\d{3}[.\-]?\d{3}[.\-]?\d{3}[.\-]?\d{2}/g);
+        
+        if (cpfMatch) {
+            console.log('CPFs encontrados na linha:', cpfMatch); // Debug
+            
+            cpfMatch.forEach(rawCpf => {
+                // Remove qualquer pontuação
+                const cleanCpf = rawCpf.replace(/[.\-]/g, '');
                 
-                if (!cpfList.includes(formattedCpf)) {
-                    cpfList.push(formattedCpf);
-                    addedCount++;
+                // Valida se tem exatamente 11 dígitos
+                if (cleanCpf.length === 11 && /^\d{11}$/.test(cleanCpf)) {
+                    // Formata para exibição: XXX.XXX.XXX-XX
+                    const formattedCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    
+                    if (!cpfList.includes(formattedCpf)) {
+                        newCpfs.push(formattedCpf);
+                        addedCount++;
+                    }
                 }
-            }
-        });
+            });
+        }
     });
     
+    console.log('Novos CPFs:', newCpfs); // Debug
+    console.log('Total adicionado:', addedCount); // Debug
+    
     if (addedCount > 0) {
-        saveCpfList();
+        cpfList = [...cpfList, ...newCpfs];
+        localStorage.setItem('cpfList', JSON.stringify(cpfList));
         updateCpfList();
         notify(`✓ ${addedCount} CPF(s) adicionado(s)! Total: ${cpfList.length}`);
+    } else if (addedCount === 0 && normalizedText.length > 0) {
+        notify('Nenhum CPF válido encontrado', 'warning');
     }
 }
         
@@ -1498,52 +1511,60 @@
         }
         
         function updateCpfList() {
-            const cpfListEl = document.getElementById('cpfList');
-            const cpfCount = document.getElementById('cpfCount');
-            
-            if (!cpfListEl || !cpfCount) return;
-            
-            cpfCount.textContent = cpfList.length;
-            
-            if (cpfList.length === 0) {
-                cpfListEl.innerHTML = '<div class="cpf-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum CPF adicionado ainda</div>';
-                return;
-            }
-            
-            cpfListEl.innerHTML = '';
-            
-            // Mostra até 10 CPFs recentes
-            const recentCpfs = cpfList.slice(0, 10);
-            
-            recentCpfs.forEach((cpf, index) => {
-                const item = document.createElement('div');
-                item.className = 'cpf-item';
-                item.onclick = () => copySingleCpf(cpf);
-                item.style.cursor = 'pointer';
-                
-                // Mostra CPF formatado
-                item.innerHTML = `
-                    <span style="font-weight: 600; color: #1e293b;">${cpf}</span>
-                `;
-                
-                item.title = `Clique para copiar: ${cpf}`;
-                cpfListEl.appendChild(item);
-            });
-            
-            // Se tiver mais CPFs, mostra indicador
-            if (cpfList.length > 10) {
-                const moreItem = document.createElement('div');
-                moreItem.className = 'cpf-item';
-                moreItem.style.textAlign = 'center';
-                moreItem.style.color = '#64748b';
-                moreItem.style.fontStyle = 'italic';
-                moreItem.style.fontSize = '0.75rem';
-                moreItem.style.padding = '8px';
-                moreItem.style.background = '#f1f5f9';
-                moreItem.textContent = `📋 + ${cpfList.length - 10} CPFs restantes`;
-                cpfListEl.appendChild(moreItem);
-            }
-        }
+    const cpfListEl = document.getElementById('cpfList');
+    const cpfCount = document.getElementById('cpfCount');
+    
+    if (!cpfListEl || !cpfCount) {
+        console.error('Elementos da lista de CPFs não encontrados');
+        return;
+    }
+    
+    cpfCount.textContent = cpfList.length;
+    console.log('Atualizando lista. Total CPFs:', cpfList.length); // Debug
+    
+    if (cpfList.length === 0) {
+        cpfListEl.innerHTML = '<div class="cpf-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum CPF adicionado ainda</div>';
+        return;
+    }
+    
+    cpfListEl.innerHTML = '';
+    
+    // Mostra até 10 CPFs recentes
+    const recentCpfs = cpfList.slice(0, 10);
+    
+    recentCpfs.forEach((cpf, index) => {
+        const item = document.createElement('div');
+        item.className = 'cpf-item';
+        item.onclick = () => copySingleCpf(cpf);
+        item.style.cursor = 'pointer';
+        
+        // Mostra CPF formatado
+        item.innerHTML = `
+            <span style="font-weight: 600; color: #1e293b;">${cpf}</span>
+        `;
+        
+        item.title = `Clique para copiar: ${cpf}`;
+        cpfListEl.appendChild(item);
+    });
+    
+    // Se tiver mais CPFs, mostra indicador
+    if (cpfList.length > 10) {
+        const moreItem = document.createElement('div');
+        moreItem.className = 'cpf-item';
+        moreItem.style.textAlign = 'center';
+        moreItem.style.color = '#64748b';
+        moreItem.style.fontStyle = 'italic';
+        moreItem.style.fontSize = '0.75rem';
+        moreItem.style.padding = '8px';
+        moreItem.style.background = '#f1f5f9';
+        moreItem.textContent = `📋 + ${cpfList.length - 10} CPFs restantes`;
+        cpfListEl.appendChild(moreItem);
+    }
+    
+    // Garante que salvou no localStorage
+    localStorage.setItem('cpfList', JSON.stringify(cpfList));
+    console.log('CPFs salvos no localStorage:', cpfList); // Debug
+}
         
         function copySingleCpf(cpf) {
             // Copia sem pontos e traços
