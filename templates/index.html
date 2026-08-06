@@ -29,11 +29,35 @@
             overflow: hidden; 
         }
         
+        /* Group that joins SMS + Generator sections with no gap */
+        .sms-generator-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .sms-generator-group .section {
+            border-radius: 0;
+            box-shadow: none;
+        }
+        
+        .sms-generator-group .section:first-child {
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .sms-generator-group .section:last-child {
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .sms-generator-group {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+        
         /* SMS Section */
         .sms-section .boxes { 
             display: flex; 
             height: 85px;
-            gap: 0; /* Remove qualquer gap entre as boxes */
         }
         
         .sms-section .box { 
@@ -49,14 +73,7 @@
         }
         
         .sms-section .box:first-child { 
-    /* border-right: 1px solid #e2e8f0; */  ← REMOVA esta linha
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-        
-        .sms-section .box:last-child {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+            border-right: 1px solid #e2e8f0; 
         }
         
         .sms-section .box:hover { 
@@ -554,129 +571,128 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- SMS Section -->
-        <div class="section sms-section">
-            <div class="boxes">
-                <div class="box" id="numberBox" onclick="getNumber()" title="Clique para obter número">
-                    <div class="copy-indicator" id="numberCopy">✓</div>
-                    <div class="box-header">
-                        <div class="label">Número</div>
-                        <div class="price" id="numberPrice"></div>
+        <div class="sms-generator-group">
+            <!-- SMS Section -->
+            <div class="section sms-section">
+                <div class="boxes">
+                    <div class="box" id="numberBox" onclick="getNumber()" title="Clique para obter número">
+                        <div class="copy-indicator" id="numberCopy">✓</div>
+                        <div class="box-header">
+                            <div class="label">Número</div>
+                            <div class="price" id="numberPrice"></div>
+                        </div>
+                        <div class="value empty" id="numberValue">Obter</div>
+                        <div class="counter" id="attempts">0</div>
+                        <div class="status">
+                            <div class="dot"></div>
+                            <span id="numberStatus">Pronto</span>
+                        </div>
                     </div>
-                    <div class="value empty" id="numberValue">Obter</div>
-                    <div class="counter" id="attempts">0</div>
-                    <div class="status">
-                        <div class="dot"></div>
-                        <span id="numberStatus">Pronto</span>
+                    
+                    <div class="box" id="codeBox" onclick="getCode()" title="Clique para receber código">
+                        <div class="copy-indicator" id="codeCopy">✓</div>
+                        <div class="label">Código</div>
+                        <div class="value empty" id="codeValue">Receber</div>
+                        <div class="counter" id="successes">0</div>
+                        <div class="status">
+                            <div class="dot"></div>
+                            <span id="codeStatus">Aguardando</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Generator Section -->  
+            <div class="section data-section">  
+                <div class="action-buttons">  
+                    <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>  
+                    <button class="gender-btn male active" onclick="setGender('male')" id="maleBtn">MAS</button>  
+                    <button class="gender-btn female" onclick="setGender('female')" id="femaleBtn">FEM</button>  
+                    <button class="action-btn generate" onclick="generateData()">GERAR</button>  
+                </div>
+                
+                <div class="data-field" onclick="copyDataField('firstName')">
+                    <input type="text" class="data-input" id="firstName" readonly placeholder="Nome">
+                </div>
+                
+                <div class="data-field" onclick="copyDataField('lastName')">
+                    <input type="text" class="data-input" id="lastName" readonly placeholder="Sobrenome">
+                </div>
+                
+                <div class="data-field" onclick="copyDataField('cpf')">
+                    <input type="text" class="data-input" id="cpf" readonly placeholder="CPF">
+                </div>
+                
+                <div class="data-field" onclick="copyDataField('email')">
+                    <input type="text" class="data-input" id="email" readonly placeholder="Email">
+                </div>
+                
+                <div class="data-field" onclick="copyDataField('birthdate')">
+                    <input type="text" class="data-input" id="birthdate" readonly placeholder="Data Nascimento">
+                </div>
+                
+                <!-- Gift Section -->
+                <div class="gift-section">
+                    <input type="text" class="gift-input" id="giftInput" 
+                           placeholder="Cole o código do gift aqui (auto-salva)"
+                           oninput="handleGiftInput(event)">
+                    <div class="gift-list" id="giftList">
+                        <!-- Gift items will appear here -->
+                    </div>
+                    
+                    <div class="gift-footer">
+                        <button class="gift-footer-btn" onclick="clearAllGifts()" title="Limpar todos os gifts">🗑️</button>
+                        <div class="gift-count" id="giftCount">0</div>
+                        <button class="gift-footer-btn" onclick="copyAllGifts()" title="Copiar todos os gifts">📋</button>
                     </div>
                 </div>
                 
-                <div class="box" id="codeBox" onclick="getCode()" title="Clique para receber código">
-                    <div class="copy-indicator" id="codeCopy">✓</div>
-                    <div class="label">Código</div>
-                    <div class="value empty" id="codeValue">Receber</div>
-                    <div class="counter" id="successes">0</div>
-                    <div class="status">
-                        <div class="dot"></div>
-                        <span id="codeStatus">Aguardando</span>
+                <!-- Settings Section -->
+                <div class="settings-section">
+                    <h3>Configurações</h3>
+                    <div class="settings-row">
+                        <input type="number" class="settings-input" id="aliasNumber" placeholder="Número do alias">
+                        <button class="settings-btn" onclick="setAliasNumber()">Definir</button>
+                    </div>
+                    <div class="settings-row">
+                        <input type="email" class="settings-input" id="baseEmail" placeholder="seuemail@gmail.com">
+                        <button class="settings-btn" onclick="setBaseEmail()">Definir</button>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Data Generator Section -->  
-        <div class="section data-section">  
-            <div class="action-buttons">  
-                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número atual do SMS">📋</button>  
-                <button class="gender-btn male active" onclick="setGender('male')" id="maleBtn">MAS</button>  
-                <button class="gender-btn female" onclick="setGender('female')" id="femaleBtn">FEM</button>  
-                <button class="action-btn generate" onclick="generateData()">GERAR</button>  
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('firstName')">
-                <input type="text" class="data-input" id="firstName" readonly placeholder="Nome">
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('lastName')">
-                <input type="text" class="data-input" id="lastName" readonly placeholder="Sobrenome">
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('cpf')">
-                <input type="text" class="data-input" id="cpf" readonly placeholder="CPF">
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('email')">
-                <input type="text" class="data-input" id="email" readonly placeholder="Email">
-            </div>
-            
-            <div class="data-field" onclick="copyDataField('birthdate')">
-                <input type="text" class="data-input" id="birthdate" readonly placeholder="Data Nascimento">
-            </div>
-            
-            <!-- Gift Section -->
-            <div class="gift-section">
-                <input type="text" class="gift-input" id="giftInput" 
-                       placeholder="Cole o código do gift aqui (auto-salva)"
-                       oninput="handleGiftInput(event)">
-                <div class="gift-list" id="giftList">
-                    <!-- Gift items will appear here -->
-                </div>
                 
-                <div class="gift-footer">
-                    <button class="gift-footer-btn" onclick="clearAllGifts()" title="Limpar todos os gifts">🗑️</button>
-                    <div class="gift-count" id="giftCount">0</div>
-                    <button class="gift-footer-btn" onclick="copyAllGifts()" title="Copiar todos os gifts">📋</button>
-                </div>
-            </div>
-            
-            <!-- Settings Section -->
-            <div class="settings-section">
-                <h3>Configurações</h3>
-                <div class="settings-row">
-                    <input type="number" class="settings-input" id="aliasNumber" placeholder="Número do alias">
-                    <button class="settings-btn" onclick="setAliasNumber()">Definir</button>
-                </div>
-                <div class="settings-row">
-                    <input type="email" class="settings-input" id="baseEmail" placeholder="seuemail@gmail.com">
-                    <button class="settings-btn" onclick="setBaseEmail()">Definir</button>
-                </div>
-            </div>
-            
-            <!-- CPF List Section - ABAIXO DAS CONFIGURAÇÕES -->
-            <div class="cpf-section">
-                <div class="cpf-header">
-                    <span class="cpf-title">LISTA DE CPFs</span>
-                    <div class="toggle-container">
-                        <span class="toggle-label">Usar Lista</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="useCpfListToggle" onchange="toggleCpfList()">
-                            <span class="toggle-slider"></span>
-                        </label>
+                <!-- CPF List Section - ABAIXO DAS CONFIGURAÇÕES -->
+                <div class="cpf-section">
+                    <div class="cpf-header">
+                        <span class="cpf-title">LISTA DE CPFs</span>
+                        <div class="toggle-container">
+                            <span class="toggle-label">Usar Lista</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="useCpfListToggle" onchange="toggleCpfList()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <input type="text" class="cpf-input" id="cpfInput" 
+                           placeholder="Cole a lista de CPFs aqui (formato: 758.423.753-38)"
+                           oninput="handleCpfInput(event)">
+                    <div class="cpf-list" id="cpfList">
+                        <div class="cpf-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum CPF adicionado ainda</div>
+                    </div>
+                    
+                    <div class="cpf-footer">
+                        <button class="gift-footer-btn" onclick="clearAllCpfs()" title="Limpar todos os CPFs">🗑️</button>
+                        <div class="cpf-count" id="cpfCount">0</div>
+                        <button class="gift-footer-btn" onclick="copyAllCpfs()" title="Copiar todos os CPFs">📋</button>
                     </div>
                 </div>
-                <input type="text" class="cpf-input" id="cpfInput" 
-                       placeholder="Cole a lista de CPFs aqui (formato: 758.423.753-38)"
-                       oninput="handleCpfInput(event)">
-                <div class="cpf-list" id="cpfList">
-                    <div class="cpf-item" style="color: #475569; text-align: center; font-style: italic;">Nenhum CPF adicionado ainda</div>
-                </div>
                 
-                <div class="cpf-footer">
-                    <button class="gift-footer-btn" onclick="clearAllCpfs()" title="Limpar todos os CPFs">🗑️</button>
-                    <div class="cpf-count" id="cpfCount">0</div>
-                    <button class="gift-footer-btn" onclick="copyAllCpfs()" title="Copiar todos os CPFs">📋</button>
-                </div>
+                <!-- Reset Buttons -->
+                <button class="reset-btn" onclick="resetAll()">🔄 Resetar Tudo</button>
             </div>
-            
-            <!-- Reset Buttons -->
-            <button class="reset-btn" onclick="resetAlias()">Resetar Alias</button>
-            <button class="reset-btn" onclick="resetSMSStats()" style="margin-top: 8px; background: #64748b;">Resetar Tentativas BOT-SMS</button>
         </div>
     </div>
     
-    <!-- Notification -->
     <div class="notification" id="notification"></div>
-
     <script>
         // ================= SMS FUNCTIONS =================
         let smsState = {
