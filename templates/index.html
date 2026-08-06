@@ -48,9 +48,15 @@
             min-width: 45%; 
         }
         
-        /* Removida a borda direita do primeiro box */
         .sms-section .box:first-child { 
-            /* border-right removida */
+    /* border-right: 1px solid #e2e8f0; */  ← REMOVA esta linha
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+        
+        .sms-section .box:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
         }
         
         .sms-section .box:hover { 
