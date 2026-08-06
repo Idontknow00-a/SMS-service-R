@@ -33,7 +33,7 @@
         .sms-section .boxes { 
             display: flex; 
             height: 85px;
-            gap: 0;
+            gap: 0; /* Remove qualquer gap entre as boxes */
         }
         
         .sms-section .box { 
@@ -48,7 +48,9 @@
             min-width: 45%; 
         }
         
-        .sms-section .box:first-child {  
+        /* Removida a borda direita do primeiro box */
+        .sms-section .box:first-child { 
+            /* border-right removida */
         }
         
         .sms-section .box:hover { 
