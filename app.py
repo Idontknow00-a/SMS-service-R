@@ -15,10 +15,20 @@ CORS(app)
 
 # ================= CONFIGURAÇÃO =================
 API_KEY = os.environ.get('API_KEY_SMS', '')
-COUNTRY_CODE = 151         # 151 = Chile | 33 = Colômbia | 73 = Brasil
 SERVICE = 'ot'             # Any Other
 TIMEOUT_DURATION = 120     # segundos
 OPERATORS = []             # Lista vazia = TODAS as operadoras
+
+# 🔄 ROTAÇÃO DE PAÍSES (alterna a cada requisição)
+COUNTRIES_ROTATION = [151, 73]   # 151 = Chile | 73 = Brasil
+# Exemplos:
+# COUNTRIES_ROTATION = [151, 73]           # Alterna Chile ↔ Brasil
+# COUNTRIES_ROTATION = [151, 73, 33]       # Alterna Chile → Brasil → Colômbia
+# COUNTRIES_ROTATION = [151]               # Só Chile (sem rotação)
+# COUNTRIES_ROTATION = [73]                # Só Brasil (sem rotação)
+
+# Controle do índice da rotação
+current_country_index = 0
 
 # Mapeamento: código do HeroSMS -> DDI (código de discagem internacional)
 COUNTRY_DIAL_CODES = {
@@ -32,6 +42,19 @@ COUNTRY_DIAL_CODES = {
     16: '44',    # Reino Unido
     12: '1',     # USA (virtual)
     0: '1',      # USA (padrão)
+}
+
+# Nomes dos países (para logs)
+COUNTRY_NAMES = {
+    151: 'Chile',
+    33: 'Colômbia',
+    73: 'Brasil',
+    54: 'México',
+    39: 'Argentina',
+    152: 'Chile',
+    36: 'Canadá',
+    16: 'Reino Unido',
+    12: 'USA',
 }
 
 # Configuração do código via email (IMAP) - NÃO USADO, mas mantido
@@ -57,46 +80,54 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://hero-sms.com/stubs/handler_api.php"
 
 
+# ================= ROTAÇÃO DE PAÍSES =================
+def get_next_country():
+    """Retorna o próximo país da rotação e incrementa o índice"""
+    global current_country_index
+    
+    if not COUNTRIES_ROTATION:
+        return 151  # fallback
+    
+    country = COUNTRIES_ROTATION[current_country_index % len(COUNTRIES_ROTATION)]
+    current_country_index += 1
+    
+    logger.info(f"🔄 Rotação: usando país {country} ({COUNTRY_NAMES.get(country, '?')}) - índice {current_country_index}")
+    return country
+
+
 # ================= EXTRAÇÃO DE CÓDIGO =================
 def extrair_codigo(texto):
     """Extrai apenas o código numérico da mensagem SMS"""
     if not texto:
         return texto
     
-    # Se já é só número, retorna direto
     if texto.isdigit():
         return texto
     
-    # Padrão 1: "code is: 123456" ou "código: 123456" ou "code: 123456"
     match = re.search(r'(?:code|c[oó]digo|is)\s*[:=]?\s*(\d{4,8})', texto, re.IGNORECASE)
     if match:
         return match.group(1)
     
-    # Padrão 2: Número após ":" ou "="
     match = re.search(r'[:=]\s*(\d{4,8})', texto)
     if match:
         return match.group(1)
     
-    # Padrão 3: Primeiro número de 4-8 dígitos encontrado
     match = re.search(r'\b(\d{4,8})\b', texto)
     if match:
         return match.group(1)
     
-    # Se não achou nada, retorna o texto original
     return texto
 
 
 # ================= LIMPEZA DE NÚMERO =================
-def limpar_numero(raw_number):
+def limpar_numero(raw_number, country_code):
     """Remove formatação e DDI do número, retornando só os dígitos locais"""
     if not raw_number:
         return raw_number
     
-    # Remove tudo que não for dígito
     clean = re.sub(r'\D', '', raw_number)
     
-    # Remove o DDI do início se estiver presente
-    dial_code = COUNTRY_DIAL_CODES.get(COUNTRY_CODE)
+    dial_code = COUNTRY_DIAL_CODES.get(country_code)
     if dial_code and clean.startswith(dial_code):
         clean = clean[len(dial_code):]
     
@@ -114,17 +145,16 @@ def check_failure_rate():
     return False
 
 
-def get_available_operators():
-    """Obtém a lista de operadoras disponíveis para o país configurado"""
+def get_available_operators(country_code):
     try:
-        url = f"{BASE_URL}?api_key={API_KEY}&action=getOperators&country={COUNTRY_CODE}"
+        url = f"{BASE_URL}?api_key={API_KEY}&action=getOperators&country={country_code}"
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
             if data.get('status') == 'success':
                 country_operators = data.get('countryOperators', {})
-                operators = country_operators.get(str(COUNTRY_CODE), [])
-                logger.info(f"Operadoras disponíveis no país {COUNTRY_CODE}: {operators}")
+                operators = country_operators.get(str(country_code), [])
+                logger.info(f"Operadoras disponíveis no país {country_code}: {operators}")
                 return operators
         return []
     except Exception as e:
@@ -132,15 +162,14 @@ def get_available_operators():
         return []
 
 
-def get_service_price():
-    """Obtém o preço do serviço"""
+def get_service_price(country_code):
     try:
-        url = f"{BASE_URL}?api_key={API_KEY}&action=getPrices&service={SERVICE}&country={COUNTRY_CODE}"
+        url = f"{BASE_URL}?api_key={API_KEY}&action=getPrices&service={SERVICE}&country={country_code}"
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            if isinstance(data, dict) and str(COUNTRY_CODE) in data:
-                country_data = data[str(COUNTRY_CODE)]
+            if isinstance(data, dict) and str(country_code) in data:
+                country_data = data[str(country_code)]
                 if isinstance(country_data, dict) and SERVICE in country_data:
                     service_info = country_data[SERVICE]
                     if isinstance(service_info, dict) and 'cost' in service_info:
@@ -158,53 +187,40 @@ def get_service_price():
     return "$0.00"
 
 
-def get_number():
-    """Obtém um número. Se OPERATORS estiver vazio, usa TODAS as operadoras."""
+def get_number_from_country(country_code):
+    """Tenta obter um número de um país específico"""
     try:
-        if check_failure_rate():
-            logger.warning("⚠️ Período de espera para evitar bloqueio")
-            return 'RATE_LIMIT', "$0.00"
+        price = get_service_price(country_code)
 
-        price = get_service_price()
-
-        # Se OPERATORS está vazio → pede SEM filtro de operadora (API escolhe)
         if not OPERATORS:
-            url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={COUNTRY_CODE}"
-            logger.info(f"📞 Buscando número SEM filtro de operadora")
+            url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={country_code}"
+            logger.info(f"📞 Buscando número do país {country_code} ({COUNTRY_NAMES.get(country_code, '?')}) SEM filtro")
             response = requests.get(url, timeout=10)
 
             if response.status_code == 200:
                 data = response.text.strip()
-                logger.info(f"📥 Resposta da API: {data}")
+                logger.info(f"📥 Resposta: {data}")
 
                 if data.startswith('ACCESS_NUMBER'):
                     parts = data.split(':')
                     number_id = parts[1].strip() if len(parts) > 1 else ''
                     operator_info[number_id] = 'AUTO'
-                    logger.info(f"✓ Número obtido (operadora automática)")
-                    return data, price
-                elif 'NO_BALANCE' in data:
-                    return 'NO_BALANCE', price
-                elif 'BAD_KEY' in data:
-                    return 'BAD_KEY', price
-                elif 'NO_NUMBERS' in data:
-                    return 'NO_NUMBERS', price
+                    return data, price, country_code
                 else:
-                    return data, price
+                    return data, price, country_code
 
-            return 'NO_NUMBERS', price
+            return 'NO_NUMBERS', price, country_code
 
-        # Com filtro de operadoras específicas
-        available_operators = get_available_operators()
+        available_operators = get_available_operators(country_code)
         if not available_operators:
-            return 'NO_NUMBERS', price
+            return 'NO_NUMBERS', price, country_code
 
         filtered = [op for op in available_operators if op.lower() in [o.lower() for o in OPERATORS]]
         if not filtered:
-            return 'NO_NUMBERS', price
+            return 'NO_NUMBERS', price, country_code
 
         for operator in filtered:
-            url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={COUNTRY_CODE}&operator={operator}"
+            url = f"{BASE_URL}?api_key={API_KEY}&action=getNumber&service={SERVICE}&country={country_code}&operator={operator}"
             response = requests.get(url, timeout=10)
 
             if response.status_code == 200:
@@ -213,20 +229,43 @@ def get_number():
                     parts = data.split(':')
                     number_id = parts[1].strip() if len(parts) > 1 else ''
                     operator_info[number_id] = operator.upper()
-                    logger.info(f"✓ Número obtido (Operadora: {operator.upper()})")
-                    return data, price
+                    return data, price, country_code
                 elif 'NO_NUMBERS' in data:
                     continue
                 elif 'NO_BALANCE' in data:
-                    return 'NO_BALANCE', price
+                    return 'NO_BALANCE', price, country_code
                 elif 'BAD_KEY' in data:
-                    return 'BAD_KEY', price
+                    return 'BAD_KEY', price, country_code
 
-        return 'NO_NUMBERS', price
+        return 'NO_NUMBERS', price, country_code
 
     except Exception as e:
         logger.error(f"Erro ao obter número: {e}")
-        return 'NO_NUMBER', "$0.00"
+        return 'NO_NUMBER', "$0.00", country_code
+
+
+def get_number():
+    """Obtém um número rotacionando entre países"""
+    if check_failure_rate():
+        logger.warning("⚠️ Período de espera para evitar bloqueio")
+        return 'RATE_LIMIT', "$0.00", None
+
+    # Pega o próximo país da rotação
+    primary_country = get_next_country()
+
+    # Tenta o país principal
+    data, price, country = get_number_from_country(primary_country)
+
+    # Se falhou e há outros países na rotação, tenta os próximos
+    if not data.startswith('ACCESS_NUMBER'):
+        logger.warning(f"⚠️ Falha no país {primary_country} ({data}). Tentando outros...")
+        for _ in range(len(COUNTRIES_ROTATION) - 1):
+            next_country = get_next_country()
+            data, price, country = get_number_from_country(next_country)
+            if data.startswith('ACCESS_NUMBER'):
+                break
+
+    return data, price, country
 
 
 def setup_timeout(number_id):
@@ -246,7 +285,6 @@ def setup_timeout(number_id):
 
 
 def request_sms_resend(number_id):
-    """Solicita reenvio de SMS (status=3)"""
     try:
         url = f"{BASE_URL}?api_key={API_KEY}&action=setStatus&id={number_id}&status=3"
         response = requests.get(url, timeout=10)
@@ -264,7 +302,7 @@ def request_sms_resend(number_id):
         return False, str(e)
 
 
-# ================= FUNÇÕES DE EMAIL (mantidas, mas não usadas) =================
+# ================= FUNÇÕES DE EMAIL (mantidas) =================
 def _extrair_texto_email(msg):
     corpo_plain, corpo_html = None, None
 
@@ -359,16 +397,16 @@ def index():
 @app.route('/get_number', methods=['GET'])
 def get_number_route():
     try:
-        data, price = get_number()
+        data, price, country_used = get_number()
 
         if data.startswith('ACCESS_NUMBER'):
             parts = data.split(':', 2)
             number_id = parts[1].strip()
             raw_number = parts[2].strip()
 
-            # 👇 LIMPA O NÚMERO (remove formatação + DDI do país)
-            phone_number = limpar_numero(raw_number)
-            logger.info(f"📱 Número bruto: {raw_number} → Limpo: {phone_number}")
+            # Limpa o número usando o DDI do país correto
+            phone_number = limpar_numero(raw_number, country_used)
+            logger.info(f"📱 [{COUNTRY_NAMES.get(country_used, '?')}] Número bruto: {raw_number} → Limpo: {phone_number}")
 
             op = operator_info.get(number_id, 'AUTO')
 
@@ -378,6 +416,8 @@ def get_number_route():
                 'raw_number': raw_number,
                 'operator': op,
                 'price': price,
+                'country': country_used,
+                'country_name': COUNTRY_NAMES.get(country_used, '?'),
                 'status': 'waiting',
                 'created_at': time.time(),
                 'received_codes': []
@@ -389,6 +429,8 @@ def get_number_route():
                 'phone_number': phone_number,
                 'operator': op,
                 'price': price,
+                'country': country_used,
+                'country_name': COUNTRY_NAMES.get(country_used, '?'),
                 'message': f'Número obtido com sucesso'
             })
         else:
@@ -396,7 +438,7 @@ def get_number_route():
 
             msg_map = {
                 'NO_BALANCE': 'Saldo insuficiente!',
-                'NO_NUMBERS': 'Sem números disponíveis',
+                'NO_NUMBERS': 'Sem números disponíveis em nenhum país',
                 'BAD_KEY': 'API Key inválida',
                 'RATE_LIMIT': 'Aguarde - Muitas tentativas'
             }
@@ -430,7 +472,6 @@ def get_status(number_id):
             code_raw = data.split(':', 1)[1].strip()
             logger.info(f"📩 Mensagem bruta: {code_raw}")
             
-            # 👇 EXTRAI APENAS O CÓDIGO NUMÉRICO
             code = extrair_codigo(code_raw)
             logger.info(f"✅ Código extraído: {code}")
 
@@ -488,20 +529,21 @@ def get_email_code_route():
 def get_stats():
     return jsonify({
         'success': True,
-        'country': COUNTRY_CODE,
-        'country_dial_code': COUNTRY_DIAL_CODES.get(COUNTRY_CODE),
+        'countries_rotation': COUNTRIES_ROTATION,
+        'countries_rotation_names': [COUNTRY_NAMES.get(c, str(c)) for c in COUNTRIES_ROTATION],
+        'current_index': current_country_index,
+        'next_country': COUNTRIES_ROTATION[current_country_index % len(COUNTRIES_ROTATION)] if COUNTRIES_ROTATION else None,
         'service': SERVICE,
         'operators_filter': OPERATORS,
         'successful_numbers': len(successful_numbers),
         'active_numbers': len(active_numbers),
         'total_codes': sum(len(num.get('received_codes', [])) for num in active_numbers.values()),
-        'current_price': get_service_price()
     })
 
 
 if __name__ == '__main__':
     logger.info("🚀 Servidor SMS iniciado (HeroSMS)")
-    logger.info(f"🌎 País: Chile ({COUNTRY_CODE}) | DDI: +{COUNTRY_DIAL_CODES.get(COUNTRY_CODE, '?')}")
+    logger.info(f"🔄 Rotação de países: {' → '.join([COUNTRY_NAMES.get(c, str(c)) for c in COUNTRIES_ROTATION])}")
     logger.info(f"📦 Serviço: {SERVICE} (Any Other)")
     logger.info(f"📱 Operadoras: TODAS (filtro desativado)")
     logger.info("⏰ Timeout: 120s")
