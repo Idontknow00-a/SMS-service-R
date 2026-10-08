@@ -379,45 +379,33 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Lista de Números -->
-        <div class="section numberlist-section">
-            <!-- Número Atual -->
-            <div class="action-row">
-                <button class="action-btn copy-sms" onclick="copyCurrentSMSNumber()" title="Copiar número SMS">📋</button>
-                <div class="current-number-display empty" id="currentNumberDisplay" onclick="copyCurrentNumberFromList()" title="Clique para copiar">
-                    Clique em OBTER
-                </div>
-            </div>
 
             <!-- ===== GERADOR DE DADOS ===== -->
             <div class="generator-section">
                 <div class="gen-row">
                     <div class="gen-field gen-field-label">
-                        <span class="gen-field-text" onclick="copyText('Nome')" title="Clique para copiar">Nome</span>
-                        <button class="gen-copy-mini" onclick="copyText('Nome')" title="Copiar">📋</button>
                     </div>
                     <div class="gen-field gen-field-value">
                         <span class="gen-field-text" id="gen-nome" onclick="copyGenField('gen-nome')" title="Clique para copiar">-</span>
-                        <button class="gen-copy-mini" onclick="copyGenField('gen-nome')" title="Copiar">📋</button>
+                        <button class="gen-copy-mini" onclick="copyGenField('gen-nome')" title="Copiar"></button>
                     </div>
                 </div>
                 
                 <div class="gen-row">
                     <div class="gen-field gen-field-label">
                         <span class="gen-field-text" onclick="copyText('Minute5')" title="Clique para copiar">Minute5</span>
-                        <button class="gen-copy-mini" onclick="copyText('Minute5')" title="Copiar">📋</button>
+                        <button class="gen-copy-mini" onclick="copyText('Minute5')" title="Copiar"></button>
                     </div>
                     <div class="gen-field gen-field-value">
                         <span class="gen-field-text" id="gen-minute5" onclick="copyGenField('gen-minute5')" title="Clique para copiar">sim</span>
-                        <button class="gen-copy-mini" onclick="copyGenField('gen-minute5')" title="Copiar">📋</button>
+                        <button class="gen-copy-mini" onclick="copyGenField('gen-minute5')" title="Copiar"></button>
                     </div>
                 </div>
                 
                 <!-- BLOCO ÚNICO -->
                 <div class="gen-bloco-wrapper">
                     <div class="gen-bloco" id="gen-bloco" onclick="copyGenField('gen-bloco')" title="Clique para copiar tudo">-</div>
-                    <button class="gen-bloco-copy" onclick="copyGenField('gen-bloco')" title="Copiar tudo">📋</button>
+                    <button class="gen-bloco-copy" onclick="copyGenField('gen-bloco')" title="Copiar tudo"></button>
                 </div>
             </div>
             
