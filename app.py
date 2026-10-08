@@ -15,12 +15,26 @@ CORS(app)
 
 # ================= CONFIGURAÇÃO =================
 API_KEY = os.environ.get('API_KEY_SMS', '')
-COUNTRY_CODE = 151          # 33 = Colômbia (73 = Brasil)
+COUNTRY_CODE = 151         # 151 = Chile | 33 = Colômbia | 73 = Brasil
 SERVICE = 'ot'             # Any Other
 TIMEOUT_DURATION = 120     # segundos
 OPERATORS = []             # Lista vazia = TODAS as operadoras
 
-# Configuração do código via email (IMAP) - NÃO USADO AGORA, mas mantido
+# Mapeamento: código do HeroSMS -> DDI (código de discagem internacional)
+COUNTRY_DIAL_CODES = {
+    151: '56',   # Chile
+    33: '57',    # Colômbia
+    73: '55',    # Brasil
+    54: '52',    # México
+    39: '54',    # Argentina
+    152: '56',   # Chile (alternativo)
+    36: '1',     # Canadá
+    16: '44',    # Reino Unido
+    12: '1',     # USA (virtual)
+    0: '1',      # USA (padrão)
+}
+
+# Configuração do código via email (IMAP) - NÃO USADO, mas mantido
 EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS', '')
 EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
 EMAIL_SENDER_FILTRO = 'no-reply@crmbonus.com'
@@ -70,6 +84,23 @@ def extrair_codigo(texto):
     
     # Se não achou nada, retorna o texto original
     return texto
+
+
+# ================= LIMPEZA DE NÚMERO =================
+def limpar_numero(raw_number):
+    """Remove formatação e DDI do número, retornando só os dígitos locais"""
+    if not raw_number:
+        return raw_number
+    
+    # Remove tudo que não for dígito
+    clean = re.sub(r'\D', '', raw_number)
+    
+    # Remove o DDI do início se estiver presente
+    dial_code = COUNTRY_DIAL_CODES.get(COUNTRY_CODE)
+    if dial_code and clean.startswith(dial_code):
+        clean = clean[len(dial_code):]
+    
+    return clean
 
 
 # ================= FUNÇÕES AUXILIARES =================
@@ -333,25 +364,18 @@ def get_number_route():
         if data.startswith('ACCESS_NUMBER'):
             parts = data.split(':', 2)
             number_id = parts[1].strip()
-            phone_number = parts[2].strip()
+            raw_number = parts[2].strip()
 
-            # --- LIMPEZA DO NÚMERO ---
-               # 1. Remove qualquer caractere que não seja dígito
-               clean_number = re.sub(r'\D', '', raw_number)
-   
-               # 2. Remove o DDI se estiver no início
-               dial_code = COUNTRY_DIAL_CODES.get(COUNTRY_CODE)
-               if dial_code and clean_number.startswith(dial_code):
-                   clean_number = clean_number[len(dial_code):]
-   
-               phone_number = clean_number
-               # -------------------------
+            # 👇 LIMPA O NÚMERO (remove formatação + DDI do país)
+            phone_number = limpar_numero(raw_number)
+            logger.info(f"📱 Número bruto: {raw_number} → Limpo: {phone_number}")
 
             op = operator_info.get(number_id, 'AUTO')
 
             setup_timeout(number_id)
             active_numbers[number_id] = {
                 'phone_number': phone_number,
+                'raw_number': raw_number,
                 'operator': op,
                 'price': price,
                 'status': 'waiting',
@@ -465,6 +489,7 @@ def get_stats():
     return jsonify({
         'success': True,
         'country': COUNTRY_CODE,
+        'country_dial_code': COUNTRY_DIAL_CODES.get(COUNTRY_CODE),
         'service': SERVICE,
         'operators_filter': OPERATORS,
         'successful_numbers': len(successful_numbers),
@@ -476,9 +501,10 @@ def get_stats():
 
 if __name__ == '__main__':
     logger.info("🚀 Servidor SMS iniciado (HeroSMS)")
-    logger.info(f"🌎 País: Colômbia ({COUNTRY_CODE})")
+    logger.info(f"🌎 País: Chile ({COUNTRY_CODE}) | DDI: +{COUNTRY_DIAL_CODES.get(COUNTRY_CODE, '?')}")
     logger.info(f"📦 Serviço: {SERVICE} (Any Other)")
     logger.info(f"📱 Operadoras: TODAS (filtro desativado)")
     logger.info("⏰ Timeout: 120s")
     logger.info("✂️  Extração automática de código ativada")
+    logger.info("🧹 Remoção automática de DDI ativada")
     app.run(debug=True, port=3000, host='0.0.0.0')
