@@ -15,7 +15,7 @@ CORS(app)
 
 # ================= CONFIGURAÇÃO =================
 API_KEY = os.environ.get('API_KEY_SMS', '')
-COUNTRY_CODE = 33          # 33 = Colômbia (73 = Brasil)
+COUNTRY_CODE = 73          # 33 = Colômbia (73 = Brasil)
 SERVICE = 'ot'             # Any Other
 TIMEOUT_DURATION = 120     # segundos
 OPERATORS = []             # Lista vazia = TODAS as operadoras
