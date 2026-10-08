@@ -15,7 +15,7 @@ CORS(app)
 
 # ================= CONFIGURAÇÃO =================
 API_KEY = os.environ.get('API_KEY_SMS', '')
-COUNTRY_CODE = 73          # 33 = Colômbia (73 = Brasil)
+COUNTRY_CODE = 151          # 33 = Colômbia (73 = Brasil)
 SERVICE = 'ot'             # Any Other
 TIMEOUT_DURATION = 120     # segundos
 OPERATORS = []             # Lista vazia = TODAS as operadoras
@@ -334,6 +334,18 @@ def get_number_route():
             parts = data.split(':', 2)
             number_id = parts[1].strip()
             phone_number = parts[2].strip()
+
+            # --- LIMPEZA DO NÚMERO ---
+               # 1. Remove qualquer caractere que não seja dígito
+               clean_number = re.sub(r'\D', '', raw_number)
+   
+               # 2. Remove o DDI se estiver no início
+               dial_code = COUNTRY_DIAL_CODES.get(COUNTRY_CODE)
+               if dial_code and clean_number.startswith(dial_code):
+                   clean_number = clean_number[len(dial_code):]
+   
+               phone_number = clean_number
+               # -------------------------
 
             op = operator_info.get(number_id, 'AUTO')
 
