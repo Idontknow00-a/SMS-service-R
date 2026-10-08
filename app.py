@@ -43,6 +43,36 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://hero-sms.com/stubs/handler_api.php"
 
 
+# ================= EXTRAÇÃO DE CÓDIGO =================
+def extrair_codigo(texto):
+    """Extrai apenas o código numérico da mensagem SMS"""
+    if not texto:
+        return texto
+    
+    # Se já é só número, retorna direto
+    if texto.isdigit():
+        return texto
+    
+    # Padrão 1: "code is: 123456" ou "código: 123456" ou "code: 123456"
+    match = re.search(r'(?:code|c[oó]digo|is)\s*[:=]?\s*(\d{4,8})', texto, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    
+    # Padrão 2: Número após ":" ou "="
+    match = re.search(r'[:=]\s*(\d{4,8})', texto)
+    if match:
+        return match.group(1)
+    
+    # Padrão 3: Primeiro número de 4-8 dígitos encontrado
+    match = re.search(r'\b(\d{4,8})\b', texto)
+    if match:
+        return match.group(1)
+    
+    # Se não achou nada, retorna o texto original
+    return texto
+
+
+# ================= FUNÇÕES AUXILIARES =================
 def check_failure_rate():
     now = datetime.now()
     recent_failures = sum(1 for t in failed_attempts.values()
@@ -203,6 +233,91 @@ def request_sms_resend(number_id):
         return False, str(e)
 
 
+# ================= FUNÇÕES DE EMAIL (mantidas, mas não usadas) =================
+def _extrair_texto_email(msg):
+    corpo_plain, corpo_html = None, None
+
+    if msg.is_multipart():
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            try:
+                payload = part.get_payload(decode=True)
+                if payload:
+                    if content_type == 'text/plain' and corpo_plain is None:
+                        corpo_plain = payload.decode('utf-8', errors='ignore')
+                    elif content_type == 'text/html' and corpo_html is None:
+                        corpo_html = payload.decode('utf-8', errors='ignore')
+            except:
+                continue
+    else:
+        try:
+            payload = msg.get_payload(decode=True)
+            if payload:
+                texto = payload.decode('utf-8', errors='ignore')
+                if msg.get_content_type() == 'text/html':
+                    corpo_html = texto
+                else:
+                    corpo_plain = texto
+        except:
+            pass
+
+    bruto = corpo_plain or corpo_html or ''
+    
+    if corpo_html and not corpo_plain:
+        bruto = re.sub(r'<style[\s\S]*?</style>', ' ', bruto, flags=re.IGNORECASE)
+        bruto = re.sub(r'<script[\s\S]*?</script>', ' ', bruto, flags=re.IGNORECASE)
+        bruto = re.sub(r'<[^>]+>', ' ', bruto)
+        bruto = bruto.replace('&nbsp;', ' ').replace('&amp;', '&')
+        bruto = re.sub(r'\s+', ' ', bruto).strip()
+    
+    return bruto
+
+
+def buscar_codigo_email():
+    global ultimo_codigo_email
+
+    if not EMAIL_ADDRESS or not EMAIL_APP_PASSWORD:
+        return {'success': False, 'message': 'EMAIL não configurado.'}
+
+    try:
+        imap = imaplib.IMAP4_SSL('imap.gmail.com')
+        imap.login(EMAIL_ADDRESS, EMAIL_APP_PASSWORD)
+        imap.select('INBOX')
+
+        status, dados = imap.search(None, f'(FROM "{EMAIL_SENDER_FILTRO}")')
+        if status != 'OK' or not dados[0]:
+            imap.logout()
+            return {'success': False, 'message': 'Nenhum email encontrado.'}
+
+        ids = dados[0].split()
+        ultimo_id = ids[-1]
+        
+        status, msg_dados = imap.fetch(ultimo_id, '(RFC822)')
+        imap.logout()
+        
+        if status != 'OK':
+            return {'success': False, 'message': 'Erro ao ler email.'}
+
+        msg = email_lib.message_from_bytes(msg_dados[0][1])
+        texto = _extrair_texto_email(msg)
+        
+        match = re.search(r'\b(\d{4,8})\b', texto)
+        if not match:
+            return {'success': False, 'message': 'Nenhum código encontrado.'}
+        
+        novo_codigo = match.group(1)
+        
+        if ultimo_codigo_email is not None and novo_codigo == ultimo_codigo_email:
+            return {'success': False, 'message': 'Código repetido', 'code': novo_codigo}
+        
+        ultimo_codigo_email = novo_codigo
+        return {'success': True, 'code': novo_codigo}
+
+    except Exception as e:
+        logger.error(f'Erro ao buscar código: {e}')
+        return {'success': False, 'message': f'Erro: {str(e)}'}
+
+
 # ================= ROTAS =================
 
 @app.route('/')
@@ -276,7 +391,12 @@ def get_status(number_id):
         result = {'success': True, 'has_code': False, 'code': None, 'status': 'waiting'}
 
         if data.startswith('STATUS_OK:'):
-            code = data.split(':', 1)[1].strip()
+            code_raw = data.split(':', 1)[1].strip()
+            logger.info(f"📩 Mensagem bruta: {code_raw}")
+            
+            # 👇 EXTRAI APENAS O CÓDIGO NUMÉRICO
+            code = extrair_codigo(code_raw)
+            logger.info(f"✅ Código extraído: {code}")
 
             if number_id in active_numbers:
                 received_codes = active_numbers[number_id].get('received_codes', [])
@@ -319,6 +439,15 @@ def get_status(number_id):
         return jsonify({'success': False, 'message': f'Erro: {str(e)}'}), 500
 
 
+@app.route('/get_email_code', methods=['GET'])
+def get_email_code_route():
+    try:
+        resultado = buscar_codigo_email()
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+
 @app.route('/stats', methods=['GET'])
 def get_stats():
     return jsonify({
@@ -339,4 +468,5 @@ if __name__ == '__main__':
     logger.info(f"📦 Serviço: {SERVICE} (Any Other)")
     logger.info(f"📱 Operadoras: TODAS (filtro desativado)")
     logger.info("⏰ Timeout: 120s")
+    logger.info("✂️  Extração automática de código ativada")
     app.run(debug=True, port=3000, host='0.0.0.0')
