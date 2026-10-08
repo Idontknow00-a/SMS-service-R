@@ -29,124 +29,73 @@
             overflow: hidden; 
         }
         
-        .sms-section {
-            border-radius: 12px 12px 0 0;
-        }
+        .sms-section { border-radius: 12px 12px 0 0; }
         
-        .sms-section .boxes { 
-            display: flex; 
-            height: 85px;
-        }
+        .sms-section .boxes { display: flex; height: 85px; }
         
         .sms-section .box { 
-            flex: 1; 
-            padding: 12px;
-            display: flex; 
-            flex-direction: column; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            border-bottom: 3px solid transparent; 
-            position: relative; 
-            min-width: 45%; 
+            flex: 1; padding: 12px;
+            display: flex; flex-direction: column; cursor: pointer; 
+            transition: all 0.2s; border-bottom: 3px solid transparent; 
+            position: relative; min-width: 45%; 
         }
         
-        .sms-section .box:first-child { 
-            border-right: 1px solid #e2e8f0; 
-        }
-        
+        .sms-section .box:first-child { border-right: 1px solid #e2e8f0; }
         .sms-section .box:hover { background: #f8fafc; }
         .sms-section .box.active { border-bottom-color: #10b981; background: #f0fdf4; }
         .sms-section .box.cancelled { border-bottom-color: #ef4444; background: #fef2f2; }
         
         .sms-section .box-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 5px;
         }
         
         .sms-section .label { 
-            font-size: 0.7rem;
-            color: #64748b; 
-            text-transform: uppercase; 
-            letter-spacing: 0.3px; 
-            font-weight: 600; 
-            white-space: nowrap; 
+            font-size: 0.7rem; color: #64748b; 
+            text-transform: uppercase; letter-spacing: 0.3px; 
+            font-weight: 600; white-space: nowrap; 
         }
         
         .sms-section .price {
-            font-size: 0.65rem;
-            color: #10b981;
-            font-weight: 600;
-            background: #f0fdf4;
-            padding: 1px 5px;
-            border-radius: 8px;
-            border: 1px solid #d1fae5;
+            font-size: 0.65rem; color: #10b981; font-weight: 600;
+            background: #f0fdf4; padding: 1px 5px;
+            border-radius: 8px; border: 1px solid #d1fae5;
         }
         
         .sms-section .value { 
-            font-size: 1.15rem;
-            font-weight: 700; 
-            color: #1e293b; 
-            flex: 1; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            word-break: break-all; 
-            padding: 0 3px; 
-            min-height: 25px;
+            font-size: 1.15rem; font-weight: 700; color: #1e293b; 
+            flex: 1; display: flex; align-items: center; 
+            justify-content: center; text-align: center; 
+            word-break: break-all; padding: 0 3px; min-height: 25px;
         }
         
         .sms-section .value.empty { 
-            color: #94a3b8; 
-            font-size: 0.85rem;
-            font-weight: 500; 
+            color: #94a3b8; font-size: 0.85rem; font-weight: 500; 
         }
         
         .sms-section .counter {
-            font-size: 0.7rem;
-            color: #475569;
-            font-weight: 600;
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 8px;
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
+            font-size: 0.7rem; color: #475569; font-weight: 600;
+            background: #f1f5f9; padding: 2px 6px; border-radius: 8px;
+            position: absolute; bottom: 8px; right: 8px;
         }
         
         .sms-section .copy-indicator { 
-            position: absolute; 
-            top: 8px;
-            right: 8px;
-            background: #10b981; 
-            color: white; 
-            padding: 2px 5px; 
-            border-radius: 8px; 
-            font-size: 0.6rem;
-            opacity: 0; 
-            transition: opacity 0.2s; 
-            z-index: 2;
+            position: absolute; top: 8px; right: 8px;
+            background: #10b981; color: white; padding: 2px 5px; 
+            border-radius: 8px; font-size: 0.6rem;
+            opacity: 0; transition: opacity 0.2s; z-index: 2;
         }
         
         .sms-section .copy-indicator.show { opacity: 1; }
         
         .sms-section .status { 
-            font-size: 0.65rem;
-            color: #64748b; 
-            display: flex; 
-            align-items: center; 
-            gap: 4px; 
-            margin-top: 3px;
+            font-size: 0.65rem; color: #64748b; 
+            display: flex; align-items: center; gap: 4px; margin-top: 3px;
         }
         
         .sms-section .dot { 
-            width: 5px;
-            height: 5px;
-            border-radius: 50%; 
-            background: #f59e0b; 
-            animation: pulse 1.5s infinite; 
+            width: 5px; height: 5px; border-radius: 50%; 
+            background: #f59e0b; animation: pulse 1.5s infinite; 
         }
         
         .sms-section .dot.received { background: #10b981; animation: none; }
@@ -154,140 +103,88 @@
         .sms-section .dot.waiting-new { background: #f59e0b; animation: pulse 1.5s infinite; }
         
         .numberlist-section {
-            padding: 15px;
-            margin-top: -12px;
+            padding: 15px; margin-top: -12px;
             border-radius: 0 0 12px 12px;
         }
         
         .action-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-            align-items: center;
+            display: flex; gap: 8px; margin-bottom: 10px; align-items: center;
         }
         
         .action-btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
-            min-width: 70px;
+            padding: 8px 12px; border: none; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            white-space: nowrap; min-width: 70px;
         }
         
         .action-btn.copy-sms { 
-            background: #f1f5f9; 
-            color: #64748b; 
-            width: 36px;
-            min-width: 36px;
-            padding: 0;
-            font-size: 1.2rem;
-            flex-shrink: 0;
+            background: #f1f5f9; color: #64748b; 
+            width: 36px; min-width: 36px; padding: 0;
+            font-size: 1.2rem; flex-shrink: 0;
         }
         
         .action-btn.copy-sms:hover { background: #e2e8f0; }
         
         .current-number-display {
-            flex: 1;
-            padding: 8px 12px;
-            background: #f0fdf4;
-            border: 2px solid #10b981;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1e293b;
-            font-family: monospace;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            flex: 1; padding: 8px 12px;
+            background: #f0fdf4; border: 2px solid #10b981;
+            border-radius: 8px; text-align: center;
+            font-size: 1rem; font-weight: 700; color: #1e293b;
+            font-family: monospace; cursor: pointer;
+            transition: all 0.2s; min-width: 0;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         
         .current-number-display:hover {
-            background: #d1fae5;
-            transform: scale(1.02);
+            background: #d1fae5; transform: scale(1.02);
         }
         
         .current-number-display.empty {
-            color: #94a3b8;
-            font-weight: 500;
-            font-size: 0.8rem;
-            border-color: #e2e8f0;
-            background: #f8fafc;
+            color: #94a3b8; font-weight: 500; font-size: 0.8rem;
+            border-color: #e2e8f0; background: #f8fafc;
         }
         
         .action-btn.get-number { 
-            background: #64748b; 
-            color: white;
-            flex-shrink: 0;
-            min-width: 70px;
-            position: relative;
+            background: #64748b; color: white;
+            flex-shrink: 0; min-width: 70px; position: relative;
         }
         
         .action-btn.get-number:hover { background: #475569; }
         .action-btn.get-number:active { transform: scale(0.95); }
         
         .get-number-counter {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #ef4444;
-            color: white;
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
+            position: absolute; top: -8px; right: -8px;
+            background: #ef4444; color: white;
+            font-size: 0.65rem; font-weight: 700;
+            padding: 2px 6px; border-radius: 10px;
+            min-width: 18px; text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .gift-section {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 12px; margin-bottom: 10px;
         }
         
         .gift-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-            background: white;
+            width: 100%; padding: 10px;
+            border: 1px solid #cbd5e1; border-radius: 6px;
+            font-size: 0.9rem; margin-bottom: 8px; background: white;
         }
         
         .gift-input:focus { outline: none; border-color: #0ea5e9; }
         
         .gift-list {
-            max-height: 60px;
-            overflow-y: auto;
-            background: white;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 8px;
-            margin-bottom: 8px;
+            max-height: 60px; overflow-y: auto;
+            background: white; border: 1px solid #cbd5e1;
+            border-radius: 6px; padding: 8px; margin-bottom: 8px;
         }
         
         .gift-item {
-            padding: 6px 8px;
-            border-bottom: 1px solid #cbd5e1;
-            font-size: 0.8rem;
-            color: #64748b;
-            cursor: pointer;
+            padding: 6px 8px; border-bottom: 1px solid #cbd5e1;
+            font-size: 0.8rem; color: #64748b; cursor: pointer;
             transition: background 0.2s;
         }
         
@@ -295,125 +192,131 @@
         .gift-item:last-child { border-bottom: none; }
         
         .gift-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #64748b;
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; color: #64748b;
         }
         
         .gift-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
         }
         
         .gift-footer-btn {
-            background: #cbd5e1;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: #cbd5e1; color: white; border: none;
+            border-radius: 6px; padding: 6px 12px;
+            font-size: 0.8rem; cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
         }
         
         .gift-count {
-            font-weight: 700;
-            color: #64748b;
-            font-size: 0.9rem;
+            font-weight: 700; color: #64748b; font-size: 0.9rem;
         }
         
         /* ===== GERADOR DE DADOS ===== */
         .generator-section {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 1px solid #bae6fd;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+            border: 1px solid #bae6fd; border-radius: 8px;
+            padding: 12px; margin-bottom: 10px;
         }
         
         .generator-section h3 {
-            font-size: 0.85rem;
-            color: #0369a1;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+            font-size: 0.85rem; color: #0369a1;
+            text-transform: uppercase; margin-bottom: 10px;
             letter-spacing: 0.3px;
         }
         
         .gen-row {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            margin-bottom: 6px;
+            display: flex; gap: 6px; align-items: stretch; margin-bottom: 6px;
         }
         
-        .gen-label {
-            font-size: 0.68rem;
-            color: #0c4a6e;
-            text-transform: uppercase;
-            font-weight: 700;
-            min-width: 78px;
+        .gen-field {
+            display: flex; align-items: center; gap: 3px;
+            background: white; border: 1px solid #7dd3fc;
+            border-radius: 6px; padding: 4px 5px 4px 8px;
+            transition: all 0.2s; min-width: 0;
+        }
+        
+        .gen-field:hover {
+            background: #f0fdf4; border-color: #10b981;
+        }
+        
+        .gen-field-label {
             flex-shrink: 0;
+            min-width: 90px;
+            max-width: 110px;
+        }
+        
+        .gen-field-value {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .gen-field-text {
+            font-size: 0.78rem;
+            color: #0c4a6e;
+            font-weight: 500;
+            cursor: pointer;
+            overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; flex: 1;
+        }
+        
+        .gen-field-label .gen-field-text {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.65rem;
             letter-spacing: 0.2px;
         }
         
-        .gen-value {
+        .gen-copy-mini {
+            background: transparent; color: #0369a1;
+            border: none; border-radius: 4px;
+            padding: 2px 4px; cursor: pointer;
+            font-size: 0.75rem; flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        
+        .gen-copy-mini:hover {
+            background: #0ea5e9; color: white;
+        }
+        
+        /* Campo único grande */
+        .gen-bloco-wrapper {
+            display: flex; gap: 6px; align-items: stretch; margin-bottom: 6px;
+        }
+        
+        .gen-bloco {
             flex: 1;
-            padding: 6px 10px;
-            background: white;
-            border: 1px solid #7dd3fc;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            color: #0c4a6e;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 500;
+            background: white; border: 1px solid #7dd3fc;
+            border-radius: 6px; padding: 10px 12px;
+            font-size: 0.82rem; color: #0c4a6e;
+            font-weight: 500; line-height: 1.5;
+            cursor: pointer; transition: all 0.2s;
+            min-height: 130px;
+            white-space: pre-wrap; word-break: break-word;
         }
         
-        .gen-value:hover {
-            background: #f0fdf4;
-            border-color: #10b981;
-            transform: scale(1.01);
+        .gen-bloco:hover {
+            background: #f0fdf4; border-color: #10b981;
         }
         
-        .gen-copy-btn {
-            background: white;
-            color: #0369a1;
-            border: 1px solid #7dd3fc;
-            border-radius: 6px;
-            padding: 5px 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            flex-shrink: 0;
+        .gen-bloco-copy {
+            display: flex; align-items: flex-start;
+            background: white; color: #0369a1;
+            border: 1px solid #7dd3fc; border-radius: 6px;
+            padding: 6px 8px; cursor: pointer;
+            font-size: 1rem; flex-shrink: 0;
             transition: all 0.2s;
         }
         
-        .gen-copy-btn:hover {
-            background: #0ea5e9;
-            color: white;
-            border-color: #0ea5e9;
+        .gen-bloco-copy:hover {
+            background: #0ea5e9; color: white; border-color: #0ea5e9;
         }
         
         .gen-regenerate-btn {
-            width: 100%;
-            padding: 9px;
+            width: 100%; padding: 9px;
             background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            margin-top: 4px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            transition: all 0.2s;
+            color: white; border: none; border-radius: 6px;
+            font-size: 0.85rem; cursor: pointer; margin-top: 4px;
+            font-weight: 700; letter-spacing: 0.3px; transition: all 0.2s;
         }
         
         .gen-regenerate-btn:hover {
@@ -421,76 +324,48 @@
             transform: translateY(-1px);
         }
         
-        .gen-regenerate-btn:active {
-            transform: scale(0.98);
-        }
+        .gen-regenerate-btn:active { transform: scale(0.98); }
         
         .settings-section {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 5px;
+            background: #f8fafc; border-radius: 8px;
+            padding: 12px; margin-top: 5px;
         }
         
         .settings-section h3 {
-            font-size: 0.85rem;
-            color: #64748b;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+            font-size: 0.85rem; color: #64748b;
+            text-transform: uppercase; margin-bottom: 10px;
         }
         
         .settings-section label {
-            font-size: 0.7rem;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
+            font-size: 0.7rem; color: #64748b;
+            text-transform: uppercase; letter-spacing: 0.3px;
+            font-weight: 600; display: block; margin-bottom: 4px;
         }
         
         .number-list-textarea {
-            width: 100%;
-            min-height: 100px;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-family: monospace;
-            resize: vertical;
-            margin-bottom: 10px;
-            background: white;
+            width: 100%; min-height: 100px; padding: 10px;
+            border: 1px solid #e2e8f0; border-radius: 8px;
+            font-size: 0.85rem; font-family: monospace;
+            resize: vertical; margin-bottom: 10px; background: white;
         }
         
         .number-list-textarea:focus { outline: none; border-color: #64748b; }
         
         .reset-btn {
-            width: 100%;
-            padding: 10px;
-            background: #64748b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            margin-top: 8px;
+            width: 100%; padding: 10px;
+            background: #64748b; color: white; border: none;
+            border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; margin-top: 8px;
         }
         
         .notification { 
-            position: fixed; 
-            top: 15px; 
-            right: 15px; 
-            background: #10b981;
-            color: white; 
-            padding: 8px 14px;
-            border-radius: 6px; 
+            position: fixed; top: 15px; right: 15px; 
+            background: #10b981; color: white; 
+            padding: 8px 14px; border-radius: 6px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-            opacity: 0; 
-            transform: translateX(100%); 
-            transition: all 0.2s; 
-            font-size: 0.8rem;
-            max-width: 280px; 
-            z-index: 1000; 
+            opacity: 0; transform: translateX(100%); 
+            transition: all 0.2s; font-size: 0.8rem;
+            max-width: 280px; z-index: 1000; 
         }
         
         .notification.show { opacity: 1; transform: translateX(0); }
@@ -561,33 +436,31 @@
                 <h3>🎲 Gerador de Dados</h3>
                 
                 <div class="gen-row">
-                    <div class="gen-label">Minute5</div>
-                    <div class="gen-value" id="gen-minute5" onclick="copyGenField('gen-minute5')" title="Clique para copiar">sim</div>
-                    <button class="gen-copy-btn" onclick="copyGenField('gen-minute5')" title="Copiar">📋</button>
+                    <div class="gen-field gen-field-label">
+                        <span class="gen-field-text" onclick="copyText('Nome')" title="Clique para copiar">Nome</span>
+                        <button class="gen-copy-mini" onclick="copyText('Nome')" title="Copiar">📋</button>
+                    </div>
+                    <div class="gen-field gen-field-value">
+                        <span class="gen-field-text" id="gen-nome" onclick="copyGenField('gen-nome')" title="Clique para copiar">-</span>
+                        <button class="gen-copy-mini" onclick="copyGenField('gen-nome')" title="Copiar">📋</button>
+                    </div>
                 </div>
                 
                 <div class="gen-row">
-                    <div class="gen-label">Cidade</div>
-                    <div class="gen-value" id="gen-cidade" onclick="copyGenField('gen-cidade')" title="Clique para copiar">-</div>
-                    <button class="gen-copy-btn" onclick="copyGenField('gen-cidade')" title="Copiar">📋</button>
+                    <div class="gen-field gen-field-label">
+                        <span class="gen-field-text" onclick="copyText('Minute5')" title="Clique para copiar">Minute5</span>
+                        <button class="gen-copy-mini" onclick="copyText('Minute5')" title="Copiar">📋</button>
+                    </div>
+                    <div class="gen-field gen-field-value">
+                        <span class="gen-field-text" id="gen-minute5" onclick="copyGenField('gen-minute5')" title="Clique para copiar">sim</span>
+                        <button class="gen-copy-mini" onclick="copyGenField('gen-minute5')" title="Copiar">📋</button>
+                    </div>
                 </div>
                 
-                <div class="gen-row">
-                    <div class="gen-label">Atividades</div>
-                    <div class="gen-value" id="gen-atividades" onclick="copyGenField('gen-atividades')" title="Clique para copiar">-</div>
-                    <button class="gen-copy-btn" onclick="copyGenField('gen-atividades')" title="Copiar">📋</button>
-                </div>
-                
-                <div class="gen-row">
-                    <div class="gen-label">Restaurantes</div>
-                    <div class="gen-value" id="gen-restaurantes" onclick="copyGenField('gen-restaurantes')" title="Clique para copiar">-</div>
-                    <button class="gen-copy-btn" onclick="copyGenField('gen-restaurantes')" title="Copiar">📋</button>
-                </div>
-                
-                <div class="gen-row">
-                    <div class="gen-label">Redes Sociais</div>
-                    <div class="gen-value" id="gen-redes" onclick="copyGenField('gen-redes')" title="Clique para copiar">-</div>
-                    <button class="gen-copy-btn" onclick="copyGenField('gen-redes')" title="Copiar">📋</button>
+                <!-- CAMPO ÚNICO COM TUDO JUNTO -->
+                <div class="gen-bloco-wrapper">
+                    <div class="gen-bloco" id="gen-bloco" onclick="copyGenField('gen-bloco')" title="Clique para copiar tudo">-</div>
+                    <button class="gen-bloco-copy" onclick="copyGenField('gen-bloco')" title="Copiar tudo">📋</button>
                 </div>
                 
                 <button class="gen-regenerate-btn" onclick="generateData()">🎲 Gerar Novamente</button>
@@ -641,37 +514,116 @@
         let gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
 
         // ================= GERADOR DE DADOS =================
+        
+        const NOMES_MASCULINOS = [
+            'João', 'Pedro', 'Lucas', 'Gabriel', 'Matheus', 'Rafael', 'Bruno',
+            'Felipe', 'Thiago', 'Carlos', 'Eduardo', 'Vinícius', 'Leonardo',
+            'Diego', 'Rodrigo', 'André', 'Fernando', 'Gustavo', 'Henrique',
+            'Igor', 'Jonas', 'Kaio', 'Leandro', 'Marcelo', 'Nicolas',
+            'Otávio', 'Paulo', 'Renato', 'Samuel', 'Tomás', 'Victor',
+            'Wesley', 'Yuri', 'Alan', 'Breno', 'Caio', 'Davi', 'Enzo',
+            'Fábio', 'Guilherme', 'Heitor', 'Ítalo', 'Júlio', 'Kevin',
+            'Luan', 'Miguel', 'Noah', 'Osvaldo', 'Pietro', 'Ryan'
+        ];
+        
+        const NOMES_FEMININOS = [
+            'Maria', 'Ana', 'Juliana', 'Fernanda', 'Camila', 'Beatriz',
+            'Larissa', 'Amanda', 'Bruna', 'Carla', 'Daniela', 'Eduarda',
+            'Flávia', 'Gabriela', 'Helena', 'Isabela', 'Jéssica', 'Karina',
+            'Letícia', 'Mariana', 'Natália', 'Olívia', 'Patrícia', 'Renata',
+            'Sofia', 'Tatiane', 'Vanessa', 'Yasmin', 'Alice', 'Bianca',
+            'Clara', 'Débora', 'Elisa', 'Fátima', 'Giovanna', 'Heloísa',
+            'Ingrid', 'Júlia', 'Kelly', 'Lívia', 'Manuela', 'Nicole',
+            'Priscila', 'Rafaela', 'Sabrina', 'Thaís', 'Valentina', 'Vitória'
+        ];
+        
+        const SOBRENOMES = [
+            'Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira',
+            'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro',
+            'Martins', 'Carvalho', 'Almeida', 'Lopes', 'Soares', 'Fernandes',
+            'Vieira', 'Barbosa', 'Rocha', 'Dias', 'Nascimento', 'Andrade',
+            'Moreira', 'Nunes', 'Marques', 'Machado', 'Mendes', 'Freitas',
+            'Cardoso', 'Ramos', 'Gonçalves', 'Santana', 'Teixeira', 'Araújo',
+            'Correia', 'Cavalcanti', 'Monteiro', 'Moura', 'Batista', 'Castro',
+            'Campos', 'Cunha', 'Pinto', 'Miranda', 'Brito', 'Duarte'
+        ];
+        
+        // Cidades com UF
         const CIDADES = [
-            'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Brasília', 'Salvador',
-            'Fortaleza', 'Recife', 'Porto Alegre', 'Manaus', 'Curitiba',
-            'Belém', 'Goiânia', 'Campinas', 'São Luís', 'Maceió',
-            'Natal', 'Campo Grande', 'Teresina', 'Florianópolis', 'João Pessoa',
-            'Aracaju', 'Cuiabá', 'Vitória', 'Porto Velho', 'Macapá',
-            'Rio Branco', 'Boa Vista', 'Palmas', 'Santos', 'Ribeirão Preto',
-            'Uberlândia', 'Sorocaba', 'Contagem', 'Aracaju', 'Feira de Santana',
-            'Londrina', 'Juiz de Fora', 'Belford Roxo', 'Niterói', 'Ananindeua',
-            'Joinville', 'Blumenau', 'Caxias do Sul', 'Pelotas', 'Maringá',
-            'Foz do Iguaçu', 'Petrolina', 'Caruaru', 'Olinda', 'Ilhéus',
-            'Angical', 'Barreiras', 'Vitória da Conquista', 'Jequié', 'Itabuna'
+            { nome: 'São Paulo', uf: 'SP' },
+            { nome: 'Rio de Janeiro', uf: 'RJ' },
+            { nome: 'Belo Horizonte', uf: 'MG' },
+            { nome: 'Brasília', uf: 'DF' },
+            { nome: 'Salvador', uf: 'BA' },
+            { nome: 'Fortaleza', uf: 'CE' },
+            { nome: 'Recife', uf: 'PE' },
+            { nome: 'Porto Alegre', uf: 'RS' },
+            { nome: 'Manaus', uf: 'AM' },
+            { nome: 'Curitiba', uf: 'PR' },
+            { nome: 'Belém', uf: 'PA' },
+            { nome: 'Goiânia', uf: 'GO' },
+            { nome: 'Campinas', uf: 'SP' },
+            { nome: 'São Luís', uf: 'MA' },
+            { nome: 'Maceió', uf: 'AL' },
+            { nome: 'Natal', uf: 'RN' },
+            { nome: 'Campo Grande', uf: 'MS' },
+            { nome: 'Teresina', uf: 'PI' },
+            { nome: 'Florianópolis', uf: 'SC' },
+            { nome: 'João Pessoa', uf: 'PB' },
+            { nome: 'Aracaju', uf: 'SE' },
+            { nome: 'Cuiabá', uf: 'MT' },
+            { nome: 'Vitória', uf: 'ES' },
+            { nome: 'Porto Velho', uf: 'RO' },
+            { nome: 'Macapá', uf: 'AP' },
+            { nome: 'Rio Branco', uf: 'AC' },
+            { nome: 'Boa Vista', uf: 'RR' },
+            { nome: 'Palmas', uf: 'TO' },
+            { nome: 'Santos', uf: 'SP' },
+            { nome: 'Ribeirão Preto', uf: 'SP' },
+            { nome: 'Uberlândia', uf: 'MG' },
+            { nome: 'Sorocaba', uf: 'SP' },
+            { nome: 'Contagem', uf: 'MG' },
+            { nome: 'Feira de Santana', uf: 'BA' },
+            { nome: 'Londrina', uf: 'PR' },
+            { nome: 'Juiz de Fora', uf: 'MG' },
+            { nome: 'Niterói', uf: 'RJ' },
+            { nome: 'Ananindeua', uf: 'PA' },
+            { nome: 'Joinville', uf: 'SC' },
+            { nome: 'Blumenau', uf: 'SC' },
+            { nome: 'Caxias do Sul', uf: 'RS' },
+            { nome: 'Pelotas', uf: 'RS' },
+            { nome: 'Maringá', uf: 'PR' },
+            { nome: 'Foz do Iguaçu', uf: 'PR' },
+            { nome: 'Petrolina', uf: 'PE' },
+            { nome: 'Caruaru', uf: 'PE' },
+            { nome: 'Olinda', uf: 'PE' },
+            { nome: 'Ilhéus', uf: 'BA' },
+            { nome: 'Barreiras', uf: 'BA' },
+            { nome: 'Vitória da Conquista', uf: 'BA' },
+            { nome: 'Jequié', uf: 'BA' },
+            { nome: 'Itabuna', uf: 'BA' },
+            { nome: 'Paulista', uf: 'PE' },
+            { nome: 'Jaboatão dos Guararapes', uf: 'PE' }
         ];
 
         const ATIVIDADES = [
-            'Andar de bike', 'Shopping', 'Cinema', 'Parque', 'Praia',
-            'Museu', 'Teatro', 'Trilha', 'Barzinho', 'Academia',
-            'Piquenique', 'Corrida', 'Feira livre', 'Boliche', 'Karaokê',
-            'Stand-up comedy', 'Rolê de carro', 'Passeio no centro', 'Mirante', 'Cachoeira'
+            'praia', 'cinema', 'teatro', 'parque', 'shopping',
+            'andar de bike', 'museu', 'trilha', 'barzinho', 'academia',
+            'piquenique', 'corrida', 'feira livre', 'boliche', 'karaokê',
+            'stand-up', 'rolê de carro', 'passeio no centro', 'mirante', 'cachoeira'
         ];
 
         const RESTAURANTES = [
-            'Angical', 'Cajuíno', 'Âmbar', 'Outback', 'Madero',
-            'Coco Bambu', 'Fogo de Chão', 'Pobre Juan', 'Paris 6', 'Bráz Pizzaria',
-            'Mocotó', 'Maní', 'Tordesilhas', 'A Figueira Rubaiyat', 'Famiglia Mancini',
+            'Ordones', 'Jóquei', 'Mamamia', 'Coco Bambu', 'Outback',
+            'Madero', 'Fogo de Chão', 'Pobre Juan', 'Paris 6', 'Bráz Pizzaria',
+            'Mocotó', 'Maní', 'Tordesilhas', 'Rubaiyat', 'Famiglia Mancini',
             'Temakeria', 'Yakisoba', 'Churrascaria', 'Comida caseira', 'Açaí'
         ];
 
         const REDES_SOCIAIS = [
-            'Instagram', 'X', 'Telegram', 'TikTok', 'Facebook',
-            'WhatsApp', 'Snapchat', 'Pinterest', 'Reddit', 'LinkedIn'
+            'ZAP', 'Insta', 'X', 'Telegram', 'TikTok',
+            'Face', 'Ifood', 'Snap', 'Pinterest', 'Reddit',
+            'LinkedIn', 'Kwai', 'YouTube', 'Uber', '99'
         ];
 
         function getRandomItems(arr, count) {
@@ -679,25 +631,43 @@
             return shuffled.slice(0, count);
         }
 
+        function joinWithE(items) {
+            if (items.length === 0) return '';
+            if (items.length === 1) return items[0];
+            if (items.length === 2) return items.join(' e ');
+            return items.slice(0, -1).join(', ') + ' e ' + items[items.length - 1];
+        }
+
+        function gerarNome() {
+            const isMasculino = Math.random() < 0.5;
+            const listaNomes = isMasculino ? NOMES_MASCULINOS : NOMES_FEMININOS;
+            const primeiroNome = listaNomes[Math.floor(Math.random() * listaNomes.length)];
+            const sobrenome1 = SOBRENOMES[Math.floor(Math.random() * SOBRENOMES.length)];
+            const sobrenome2 = SOBRENOMES[Math.floor(Math.random() * SOBRENOMES.length)];
+            
+            if (Math.random() < 0.5) {
+                return `${primeiroNome} ${sobrenome1}`;
+            }
+            return `${primeiroNome} ${sobrenome1} ${sobrenome2}`;
+        }
+
         function generateData() {
-            // Minute5 fixo
+            // Nome
+            document.getElementById('gen-nome').textContent = gerarNome();
+            
+            // Minute5
             document.getElementById('gen-minute5').textContent = 'sim';
             
-            // Cidade aleatória
+            // Bloco único com tudo
             const cidade = CIDADES[Math.floor(Math.random() * CIDADES.length)];
-            document.getElementById('gen-cidade').textContent = cidade;
+            const linhaCidade = `${cidade.nome} ${cidade.uf} Brasil`;
             
-            // 3 atividades aleatórias
-            const atividades = getRandomItems(ATIVIDADES, 3).join(', ');
-            document.getElementById('gen-atividades').textContent = atividades;
+            const atividades = joinWithE(getRandomItems(ATIVIDADES, 3));
+            const restaurantes = joinWithE(getRandomItems(RESTAURANTES, 3));
+            const redes = joinWithE(getRandomItems(REDES_SOCIAIS, 3));
             
-            // 3 restaurantes aleatórios
-            const restaurantes = getRandomItems(RESTAURANTES, 3).join(', ');
-            document.getElementById('gen-restaurantes').textContent = restaurantes;
-            
-            // 3 redes sociais aleatórias
-            const redes = getRandomItems(REDES_SOCIAIS, 3).join(', ');
-            document.getElementById('gen-redes').textContent = redes;
+            const bloco = `${linhaCidade}\n\n${atividades}\n\n${restaurantes}\n\n${redes}`;
+            document.getElementById('gen-bloco').textContent = bloco;
             
             notify('🎲 Dados gerados!');
         }
@@ -720,6 +690,24 @@
                 document.execCommand('copy');
                 document.body.removeChild(ta);
                 notify('Copiado!');
+            });
+        }
+
+        function copyText(text) {
+            if (!text) {
+                notify('Nada para copiar', 'warning');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                notify(`"${text}" copiado!`);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                notify(`"${text}" copiado!`);
             });
         }
 
@@ -1313,7 +1301,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadSmsState();
             updateGiftList();
-            generateData(); // Gera dados iniciais
+            generateData();
             
             const giftInput = document.getElementById('giftInput');
             if (giftInput) {
