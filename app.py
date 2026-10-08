@@ -12,10 +12,10 @@ CORS(app)
 
 # Configuração
 API_KEY = os.environ.get('API_KEY_SMS', '')
-COUNTRY_CODE = 73  # Brasil
+COUNTRY_CODE = 33  # Brasil
 SERVICE = 'ot'
 TIMEOUT_DURATION = 120  # segundos
-OPERATORS = ['tim', 'arqia']  # Operadoras permitidas
+OPERATORS = []  # Operadoras permitidas
 
 # Controle de bloqueio - EVITA CANCELAMENTOS EXCESSIVOS
 failed_attempts = {}
